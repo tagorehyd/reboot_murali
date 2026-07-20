@@ -1,0 +1,1813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FraudShield - Blockchain Architecture</title>
+<style>
+  :root{--bg:#050b18;--panel:rgba(255,255,255,0.04);--bdr:rgba(255,255,255,0.08);}
+  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);font-family:'Segoe UI',system-ui,sans-serif;color:#e2e8f0;overflow:hidden;height:100vh;width:100vw;}
+
+  /* -- HEADER -- */
+  #hdr{position:fixed;top:0;left:0;right:0;height:44px;background:rgba(5,11,24,.96);backdrop-filter:blur(12px);border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;padding:0 16px;z-index:100;}
+  #hdr h1{font-size:13px;font-weight:700;background:linear-gradient(90deg,#3b82f6,#06b6d4);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+  .leg{display:flex;gap:10px;align-items:center;}
+  .ld{display:flex;align-items:center;gap:4px;font-size:10px;color:#64748b;}
+  .ld span{width:7px;height:7px;border-radius:50%;display:inline-block;}
+
+  /* -- SCROLL CANVAS -- */
+  #cv{position:fixed;top:82px;left:0;right:0;bottom:0;overflow:auto;background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(59,130,246,.06) 0%,transparent 70%),var(--bg);display:flex;justify-content:center;}
+  #cv::-webkit-scrollbar{width:5px;height:5px;}
+  #cv::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:3px;}
+
+  /* -- DIAGRAM: flex column, flow-based, NO absolute positions for main content -- */
+  #dg{width:2400px;padding:18px 18px 28px;transform-origin:top left;position:relative;display:flex;flex-direction:column;gap:0;}
+
+  /* Grid lines bg */
+  #dg::before{content:'';position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.013) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.013) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;}
+
+  /* -- FLOW ROW -- */
+  .row{display:flex;gap:12px;align-items:stretch;position:relative;z-index:1;}
+  #r1, #r2, #r4{margin-left:280px;margin-right:280px;}
+  #r3{padding:0 280px;}
+
+  /* -- DIVIDER (arrow row between sections) -- */
+  .div-row{height:26px;display:flex;align-items:center;position:relative;z-index:1;}
+
+  /* -- CARD -- */
+  .card{background:var(--panel);border:1px solid var(--bdr);border-radius:10px;padding:10px 13px;}
+  .ct{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px;}
+  .cb{font-size:10px;color:#94a3b8;line-height:1.55;}
+  .cb ul{padding-left:14px;margin-top:4px;line-height:1.65;}
+  .c-b{border-color:rgba(59,130,246,.42); box-shadow:0 0 14px rgba(59,130,246,.07);}
+  .c-c{border-color:rgba(6,182,212,.42);  box-shadow:0 0 14px rgba(6,182,212,.07);}
+  .c-g{border-color:rgba(34,197,94,.42);  box-shadow:0 0 14px rgba(34,197,94,.07);}
+  .c-a{border-color:rgba(245,158,11,.42); box-shadow:0 0 14px rgba(245,158,11,.07);}
+  .c-r{border-color:rgba(239,68,68,.42);  box-shadow:0 0 14px rgba(239,68,68,.07);}
+  .c-p{border-color:rgba(168,85,247,.42); box-shadow:0 0 14px rgba(168,85,247,.07);}
+
+  /* -- MEM-POOL -- */
+  .mp{border-radius:10px;background:rgba(6,182,212,.05);border:1px solid rgba(6,182,212,.3);padding:13px 18px;display:flex;flex-direction:column;align-items:center;gap:4px;}
+
+  /* -- RULE GRID (inside fraud engine) -- */
+  .rg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin:7px 0 9px;}
+  .rb{border-radius:8px;padding:8px;display:flex;align-items:flex-start;gap:5px;font-size:9.5px;color:#94a3b8;}
+  .rn{width:16px;height:16px;border-radius:50%;font-size:8px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;}
+
+  /* -- SCORE BAR -- */
+  .sbar{display:flex;height:20px;border-radius:5px;overflow:hidden;border:1px solid rgba(255,255,255,.06);}
+  .sb-g{flex:1;background:linear-gradient(90deg,rgba(34,197,94,.35),rgba(34,197,94,.15));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#86efac;}
+  .sb-a{flex:1;background:linear-gradient(90deg,rgba(245,158,11,.35),rgba(245,158,11,.15));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fcd34d;border-left:1px solid rgba(255,255,255,.06);border-right:1px solid rgba(255,255,255,.06);}
+  .sb-r{flex:1;background:linear-gradient(90deg,rgba(239,68,68,.35),rgba(239,68,68,.15));display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;color:#fca5a5;}
+
+  /* -- RISK OUTCOME CARDS -- */
+  .risk-col{flex-shrink:0;width:152px;display:flex;flex-direction:column;gap:6px;}
+  .risk-card{flex:1;border-radius:10px;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;text-align:center;border:1px solid;}
+
+  /* -- SMART CONTRACT AREA -- */
+  .sc-wrap{flex-shrink:0;width:190px;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+
+  /* -- BANK BOX -- */
+  .bank{flex:1;border-radius:14px;border:1px dashed;padding:22px 12px 14px;position:relative;}
+  .bl{position:absolute;top:-13px;left:14px;font-size:10px;font-weight:800;letter-spacing:.7px;text-transform:uppercase;padding:2px 10px;border-radius:6px;}
+  /* 2-col node grid inside bank */
+  .bg{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  /* analytical row */
+  .ar{display:flex;gap:8px;margin-top:8px;}
+  /* analytics stack */
+  .as{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05);}
+
+  /* -- NODE -- */
+  .nd{border-radius:10px;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;font-size:9px;font-weight:700;padding:10px 6px;border:1px solid;min-height:76px;transition:transform .2s,box-shadow .2s;cursor:default;position:relative;overflow:hidden;}
+  .nd::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(135deg,rgba(255,255,255,.04),transparent);pointer-events:none;}
+  .nd:hover{transform:translateY(-3px) scale(1.04);z-index:5;}
+  .ni{font-size:24px;margin-bottom:4px;line-height:1;}
+  .nlbl{font-size:9px;font-weight:700;line-height:1.3;}
+  .nsub{font-size:7.5px;font-weight:500;opacity:.6;margin-top:2px;letter-spacing:.3px;}
+  /* type pill in corner */
+  .nd-type{position:absolute;top:4px;right:5px;font-size:6.5px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;opacity:.65;}
+  /* Validator - prominent hex feel */
+  .nd-val{border-width:1.5px;}
+  .nb{background:linear-gradient(135deg,rgba(59,130,246,.18),rgba(59,130,246,.06));border-color:rgba(59,130,246,.55);color:#93c5fd;}
+  .nb:hover{box-shadow:0 0 22px rgba(59,130,246,.35);}
+  .ng{background:linear-gradient(135deg,rgba(34,197,94,.18),rgba(34,197,94,.06)); border-color:rgba(34,197,94,.55); color:#86efac;}
+  .ng:hover{box-shadow:0 0 22px rgba(34,197,94,.35);}
+  .na{background:linear-gradient(135deg,rgba(245,158,11,.18),rgba(245,158,11,.06));border-color:rgba(245,158,11,.55);color:#fcd34d;}
+  .na:hover{box-shadow:0 0 22px rgba(245,158,11,.35);}
+  .np{background:linear-gradient(135deg,rgba(168,85,247,.18),rgba(168,85,247,.06));border-color:rgba(168,85,247,.55);color:#d8b4fe;}
+  .np:hover{box-shadow:0 0 22px rgba(168,85,247,.35);}
+  .nr{background:linear-gradient(135deg,rgba(239,68,68,.18),rgba(239,68,68,.06)); border-color:rgba(239,68,68,.55); color:#fca5a5;}
+  .nr:hover{box-shadow:0 0 22px rgba(239,68,68,.35);}
+  .nc{background:linear-gradient(135deg,rgba(6,182,212,.18),rgba(6,182,212,.06)); border-color:rgba(6,182,212,.55); color:#67e8f9;}
+  .nc:hover{box-shadow:0 0 22px rgba(6,182,212,.35);}
+  /* DB / Ledger cylinder shape */
+  .nd-db{border-radius:10px 10px 6px 6px;border-top-width:3px;}
+  .nd-db::before{content:'';position:absolute;top:0;left:0;right:0;height:6px;border-radius:50%;background:rgba(255,255,255,.06);pointer-events:none;}
+  /* Pulse animations */
+  @keyframes npb2{0%,100%{box-shadow:0 0 0 0 rgba(59,130,246,.5),0 0 14px rgba(59,130,246,.15)}50%{box-shadow:0 0 0 10px rgba(59,130,246,0),0 0 22px rgba(59,130,246,.3)}}
+  @keyframes npg2{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.5), 0 0 14px rgba(34,197,94,.15)} 50%{box-shadow:0 0 0 10px rgba(34,197,94,0), 0 0 22px rgba(34,197,94,.3)}}
+  @keyframes npa2{0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.5),0 0 14px rgba(245,158,11,.15)}50%{box-shadow:0 0 0 10px rgba(245,158,11,0),0 0 22px rgba(245,158,11,.3)}}
+  .pb{animation:npb2 2.4s ease-in-out infinite;}
+  .pg{animation:npg2 2.4s ease-in-out infinite .5s;}
+  .pa{animation:npa2 2.4s ease-in-out infinite 1s;}
+
+  /* -- TAGS -- */
+  .tg{display:inline-flex;border-radius:4px;padding:1px 6px;font-size:8.5px;font-weight:600;}
+  .tb{background:rgba(59,130,246,.15);color:#93c5fd;}
+  .tg2{background:rgba(34,197,94,.15);color:#86efac;}
+  .ta{background:rgba(245,158,11,.15);color:#fcd34d;}
+  .tr{background:rgba(239,68,68,.15);color:#fca5a5;}
+  .tp{background:rgba(168,85,247,.15);color:#d8b4fe;}
+  .tc{background:rgba(6,182,212,.15);color:#67e8f9;}
+
+  /* -- LIVE DOT -- */
+  .ld2{display:inline-block;width:6px;height:6px;border-radius:50%;background:#22c55e;animation:blk 1.5s ease-in-out infinite;margin-right:4px;}
+  @keyframes blk{0%,100%{opacity:1}50%{opacity:.2}}
+
+  /* -- ANIMATIONS -- */
+  @keyframes alr{0%{box-shadow:0 0 0 0 rgba(239,68,68,.7)}70%{box-shadow:0 0 0 11px rgba(239,68,68,0)}100%{box-shadow:0 0 0 0 rgba(239,68,68,0)}}
+  @keyframes frz{0%,100%{box-shadow:0 0 8px rgba(6,182,212,.1)}50%{box-shadow:0 0 24px rgba(6,182,212,.35)}}
+  @keyframes dbrk{0%{transform:rotateY(0deg) scale(1);filter:drop-shadow(0 0 8px rgba(6,182,212,.3))}50%{transform:rotateY(180deg) scale(1.08);filter:drop-shadow(0 0 16px rgba(6,182,212,.6))}100%{transform:rotateY(360deg) scale(1);filter:drop-shadow(0 0 8px rgba(6,182,212,.3))}}
+  .alr{animation:alr 1.8s ease-in-out infinite;}
+  .frz{animation:frz 2s ease-in-out infinite;}
+  .dbrk{animation:dbrk 3s ease-in-out infinite;}
+
+  /* -- PAGE TOGGLE TAB BAR -- */
+  #tab-bar{position:fixed;top:44px;left:0;right:0;height:38px;background:rgba(5,11,24,.96);backdrop-filter:blur(12px);border-bottom:1px solid rgba(59,130,246,.2);display:flex;align-items:center;padding:0 16px;gap:6px;z-index:99;}
+  .pg-btn{background:transparent;border:none;border-bottom:2px solid transparent;color:#64748b;padding:8px 16px;font-size:11px;font-weight:600;cursor:pointer;transition:all .25s;letter-spacing:.4px;border-radius:0;}
+  .pg-btn:hover{color:#93c5fd;background:rgba(59,130,246,.08);}
+  .pg-btn.active{color:#93c5fd;border-bottom-color:#3b82f6;background:rgba(59,130,246,.1);}
+
+  /* -- BANK DETAIL PAGE -- */
+  .bd-page{display:none;position:fixed;top:82px;left:0;right:0;bottom:0;overflow:auto;background:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(59,130,246,.06) 0%,transparent 70%),var(--bg);}
+  .bd-page.active{display:flex;align-items:flex-start;justify-content:center;}
+  .bd-page::-webkit-scrollbar{width:5px;height:5px;}
+  .bd-page::-webkit-scrollbar-thumb{background:rgba(255,255,255,.07);border-radius:3px;}
+
+  /* -- BANK DETAIL GRID -- */
+  .bd-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;padding:40px;max-width:1600px;width:100%;}
+  .bd-col{display:flex;flex-direction:column;gap:20px;}
+
+  /* -- BANK DETAIL CARD -- */
+  .bd-card{background:linear-gradient(135deg,rgba(255,255,255,.05),rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:20px;box-shadow:0 8px 32px rgba(0,0,0,.3);}
+  .bd-card h3{font-size:14px;font-weight:800;margin-bottom:12px;letter-spacing:.8px;text-transform:uppercase;}
+  .bd-card.db-highlight{border:2px solid rgba(6,182,212,.6);background:linear-gradient(135deg,rgba(6,182,212,.12),rgba(6,182,212,.04));box-shadow:0 0 20px rgba(6,182,212,.2),inset 0 0 20px rgba(6,182,212,.05);}
+
+  /* -- NODE DETAIL -- */
+  .nd-detail{border-radius:12px;padding:14px;border:1px solid;display:flex;flex-direction:column;align-items:center;text-align:center;min-height:120px;justify-content:center;transition:all .3s;}
+  .nd-detail .ni{font-size:32px;margin-bottom:8px;}
+  .nd-detail .nlbl{font-size:11px;font-weight:800;margin-bottom:4px;}
+  .nd-detail .nsub{font-size:9px;opacity:.7;}
+  .nd-detail .ndesc{font-size:8.5px;margin-top:8px;color:#94a3b8;line-height:1.5;}
+
+  /* -- HYPERLEDGER SPECIAL -- */
+  .dbrk-detail{position:relative;}
+  .dbrk-detail .ni{animation:dbrk 3s ease-in-out infinite;}
+  .dbrk-detail::before{content:'';position:absolute;inset:-8px;border-radius:14px;background:radial-gradient(circle,rgba(6,182,212,.3),transparent 70%);animation:pulse-glow 2.5s ease-in-out infinite;pointer-events:none;}
+  @keyframes pulse-glow{0%,100%{opacity:.3}50%{opacity:.8}}
+
+  /* -- DETAILED GRID -- */
+  .dtl-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+  .dtl-item{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:8px;padding:10px;font-size:9px;}
+  .dtl-item-label{font-weight:700;color:#93c5fd;margin-bottom:4px;text-transform:uppercase;letter-spacing:.5px;}
+  .dtl-item-val{color:#e2e8f0;font-family:'Courier New',monospace;}
+
+  /* -- HEADER NAV -- */
+  #hdr{display:flex;align-items:center;justify-content:space-between;padding:0 16px;}
+  .hdr-left{display:flex;align-items:center;gap:20px;flex:1;}
+
+  /* -- SVG overlay -- */
+  #so{position:absolute;top:0;left:0;pointer-events:none;overflow:visible;}
+
+  /* -- ZOOM BAR -- */
+  .zb{position:fixed;bottom:12px;right:12px;display:flex;gap:6px;z-index:200;}
+  .zbn{background:rgba(15,23,42,.9);border:1px solid rgba(255,255,255,.1);color:#94a3b8;border-radius:8px;padding:5px 11px;font-size:11px;cursor:pointer;transition:background .2s;}
+  .zbn:hover,.zbn.act{background:rgba(59,130,246,.2);color:#93c5fd;}
+  .zbn.fit{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.4);color:#93c5fd;font-weight:600;}
+  .zbn.fit:hover{background:rgba(59,130,246,.3);}
+
+  /* -- ARROW CONNECTORS inline (used in row dividers) -- */
+  .arr-dn{width:1px;background:rgba(255,255,255,.06);height:26px;position:relative;margin:0 auto;}
+  .arr-dn::after{content:'?';position:absolute;bottom:-4px;left:-4px;font-size:10px;}
+
+  /* -- RESYNC BOARD -- */
+  #rs-board{transform-origin:top center;}
+  .rs-title{position:relative;z-index:1;text-align:center;margin-bottom:14px;}
+  .rs-top{position:relative;z-index:1;display:grid;grid-template-columns:250px 52px 230px 52px 250px 52px 250px 52px 230px;justify-content:center;align-items:center;column-gap:0;}
+  .rs-bottom{position:relative;z-index:1;display:grid;grid-template-columns:250px 52px 250px 52px 250px 52px 250px;justify-content:center;align-items:center;column-gap:0;margin-top:56px;}
+  .rs-card{width:100%;min-height:112px;text-align:center;}
+  .rs-card-compact{min-height:84px;}
+  .rs-arrow{height:2px;background:rgba(148,163,184,.55);position:relative;}
+  .rs-arrow::after{content:'?';position:absolute;right:-3px;top:50%;transform:translateY(-56%);font-size:10px;}
+  .rs-arrow.red{background:rgba(239,68,68,.55);}
+  .rs-arrow.red::after{color:#ef4444;}
+  .rs-arrow.purple{background:rgba(168,85,247,.55);}
+  .rs-arrow.purple::after{color:#a855f7;}
+  .rs-arrow.green{background:rgba(34,197,94,.55);}
+  .rs-arrow.green::after{color:#22c55e;}
+  .rs-arrow.blue{background:rgba(59,130,246,.55);}
+  .rs-arrow.blue::after{color:#3b82f6;}
+  .rs-arrow.cyan{background:rgba(6,182,212,.55);}
+  .rs-arrow.cyan::after{color:#06b6d4;}
+  .rs-diamond{position:relative;display:flex;justify-content:center;align-items:center;}
+  .rs-drop{position:absolute;width:2px;background:rgba(100,116,139,.55);}
+  .rs-drop.v1{left:125px;top:248px;height:74px;background:rgba(34,197,94,.6);}  /* validator -> bottom halt */
+  .rs-drop.v2{left:409px;top:248px;height:44px;background:rgba(34,197,94,.55);}  /* threshold -> reset */
+  .rs-drop.v3{left:409px;top:338px;height:52px;background:rgba(99,102,241,.55);}  /* reset -> best source */
+  .rs-drop.v4{left:1195px;top:248px;height:126px;background:rgba(100,116,139,.45);} /* snapshot -> bottom */
+  .rs-bridge{position:absolute;left:125px;top:390px;width:1070px;height:2px;background:rgba(100,116,139,.5);} /* bottom row starter */
+
+  @media (max-width: 1200px){
+    .rs-top,.rs-bottom{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;}
+    .rs-arrow{width:34px;}
+    .rs-drop,.rs-bridge{display:none;}
+  }
+
+  /* -- PRE-NETWORK INTERACTIONS -- */
+  #page-pre-network .pre-node{position:relative;cursor:pointer;transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;}
+  #page-pre-network .pre-node:hover{transform:translateY(-3px);}
+  #page-pre-network .pre-node::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(120deg,rgba(255,255,255,.06),transparent 45%);opacity:0;transition:opacity .25s ease;pointer-events:none;}
+  #page-pre-network .pre-node:hover::after{opacity:1;}
+  #page-pre-network .pre-node.pre-active{box-shadow:0 0 0 1px rgba(147,197,253,.45),0 0 20px rgba(59,130,246,.22);transform:translateY(-2px) scale(1.01);}
+  #page-pre-network .pre-flow{margin-top:6px;font-size:8px;color:#94a3b8;letter-spacing:.35px;line-height:1.35;border-top:1px dashed rgba(148,163,184,.25);padding-top:5px;}
+  #page-pre-network .pre-flow strong{font-size:7.5px;color:#cbd5e1;text-transform:uppercase;letter-spacing:.5px;}
+  #page-pre-network .pre-flow-svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1;overflow:visible;}
+  #page-pre-network .pre-flow-line{stroke-width:1.2;fill:none;opacity:.42;stroke-dasharray:5 4;}
+  #page-pre-network .flow-arrow{animation:preArrowBlink 1.15s ease-in-out infinite;}
+  #page-pre-network .pre-divider > div{animation:prePulseLine 1.9s ease-in-out infinite;}
+  #page-pre-network .sc-wrap svg{animation:preFloat 3.4s ease-in-out infinite;}
+  @keyframes preArrowBlink{0%,100%{opacity:.55}50%{opacity:1}}
+  @keyframes prePulseLine{0%,100%{opacity:.35}50%{opacity:.9}}
+  @keyframes preFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+  @media (prefers-reduced-motion: reduce){
+    #page-pre-network .flow-arrow,
+    #page-pre-network .pre-divider > div,
+    #page-pre-network .sc-wrap svg{animation:none !important;}
+  }
+</style>
+</head>
+<body>
+
+<!-- --- HEADER --- -->
+<div id="hdr">
+  <h1>FraudShield - Blockchain-Augmented Fraud Detection Architecture</h1>
+  <div class="leg">
+    <div class="ld"><span style="background:#3b82f6"></span>Blockchain Nodes</div>
+    <div class="ld"><span style="background:#22c55e"></span>Low Risk (0-30)</div>
+    <div class="ld"><span style="background:#f59e0b"></span>Medium Risk (30-60)</div>
+    <div class="ld"><span style="background:#ef4444"></span>High Risk (60-100)</div>
+    <div class="ld"><span style="background:#a855f7"></span>AI / LLM</div>
+    <div class="ld"><span style="background:#06b6d4"></span>Smart Contract</div>
+    <span style="font-size:10px;color:#64748b"><span class="ld2"></span>Live</span>
+  </div>
+</div>
+
+<!-- --- TAB BAR --- -->
+<div id="tab-bar">
+  <button class="pg-btn active" onclick="switchPage('arch')">Overall Architecture</button>
+  <button class="pg-btn" onclick="switchPage('pre-network')">Pre-Blockchain Network</button>
+  <button class="pg-btn" onclick="switchPage('bank-a')">Bank-A Details</button>
+  <button class="pg-btn" onclick="switchPage('bank-b')">Bank-B Details</button>
+  <button class="pg-btn" onclick="switchPage('bank-c')">Bank-C Details</button>
+  <button class="pg-btn" onclick="switchPage('resync')">Ledger Resync</button>
+  <button class="pg-btn" onclick="switchPage('txn-flow')">Txn Flow</button>
+</div>
+
+<!-- --- CANVAS --- -->
+<div id="cv"><div id="dg">
+
+<!-- ------------------------------------------------------
+     ROW 1 - Payment Initiation
+------------------------------------------------------ -->
+<div class="row" id="r1">
+
+  <!-- User Bank Account -->
+  <div class="card c-b" id="c-acc" style="width:214px;flex-shrink:0;">
+    <div class="ct" style="color:#93c5fd;">User's Bank Account</div>
+    <div class="cb">A <strong style="color:#93c5fd">unique Wallet ID</strong> is allocated to each User's Bank Account, enabling on-chain identity across the consortium.</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">
+      <span class="tg tb">Wallet ID</span><span class="tg tc">KYC Verified</span>
+    </div>
+  </div>
+
+  <!-- inline arrow -->
+  <div style="flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:15px;">*</div>
+
+  <!-- Payment Initiation -->
+  <div class="card c-c" id="c-pay" style="width:200px;flex-shrink:0;">
+    <div class="ct" style="color:#67e8f9;">Payment Initiation</div>
+    <div class="cb">Transaction submitted via mobile, web or SWIFT with amount, beneficiary &amp; metadata.</div>
+    <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;">
+      <span class="tg tc">Channel Agnostic</span><span class="tg tb">Real-time</span>
+    </div>
+  </div>
+
+  <!-- inline arrow -->
+  <div style="flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center;color:#06b6d4;font-size:15px;">*</div>
+
+  <!-- Current Banking System -->
+  <div class="card c-b" id="c-cbs" style="width:222px;flex-shrink:0;">
+    <div class="ct" style="color:#93c5fd;">Current Banking System</div>
+    <div class="cb">Core banking middleware intercepts transactions and forwards enriched payload to the Fraud Rule Engine for real-time scoring.</div>
+  </div>
+
+  <!-- flexible spacer pushes LLM to the right -->
+  <div style="flex:1;min-width:20px;"></div>
+
+  <!-- LLM Engine - right side, feeds down into Fraud Engine -->
+  <div class="card c-p" id="c-llm" style="width:264px;flex-shrink:0;">
+    <div class="ct" style="color:#d8b4fe;">LLM Engine</div>
+    <div class="cb">Reads Bank's EFT history using a fine-tuned LLM. Scores anomaly probability based on:
+      <ul>
+        <li>Payment pattern deviation</li>
+        <li>Beneficiary trust graph</li>
+        <li>Time-of-day profiling</li>
+        <li>Amount anomaly detection</li>
+      </ul>
+    </div>
+  </div>
+
+</div><!-- /row 1 -->
+
+<!-- DIV 1?2 -->
+<div class="div-row" style="padding-left:313px;gap:0;justify-content:flex-start;">
+  <div id="a-cbs-fraud" style="display:flex;align-items:center;gap:0;">
+    <div style="width:1px;height:26px;background:rgba(59,130,246,.25);"></div>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------
+     ROW 2 - Fraud Rule Engine + Risk Outcomes
+------------------------------------------------------ -->
+<div class="row" id="r2">
+
+  <!-- Fraud Rule Engine -->
+  <div class="card c-r" id="c-fre" style="flex:1;min-width:0;">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+      <div style="font-size:11px;font-weight:800;letter-spacing:.8px;color:#fca5a5;text-transform:uppercase;">Fraud Rule Engine</div>
+      <span class="tg tr" style="font-size:8px;">Scores Every Transaction</span>
+      <span style="margin-left:auto;font-size:9px;color:#64748b;white-space:nowrap;"><span class="ld2"></span>Processing</span>
+    </div>
+    <div style="font-size:9px;color:#64748b;margin-bottom:6px;letter-spacing:.3px;">Composite scoring from 3 independent signal sources:</div>
+    <div class="rg" style="gap:6px;margin:0 0 7px;">
+      <div class="rb" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.22);padding:6px;">
+        <div class="rn" style="background:rgba(168,85,247,.25);color:#d8b4fe;flex-shrink:0;">1</div>
+        <div style="font-size:9px;"><strong style="color:#d8b4fe;">User Rules</strong><br><span style="color:#64748b;">Limits, velocity &amp; geo locks</span></div>
+      </div>
+      <div class="rb" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.22);padding:6px;">
+        <div class="rn" style="background:rgba(59,130,246,.25);color:#93c5fd;flex-shrink:0;">2</div>
+        <div style="font-size:9px;"><strong style="color:#93c5fd;">LLM Score</strong><br><span style="color:#64748b;">Pattern &amp; anomaly detection</span></div>
+      </div>
+      <div class="rb" style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.22);padding:6px;">
+        <div class="rn" style="background:rgba(6,182,212,.25);color:#67e8f9;flex-shrink:0;">3</div>
+        <div style="font-size:9px;"><strong style="color:#67e8f9;">Shared Fraud Data</strong><br><span style="color:#64748b;">Consortium blockchain signals</span></div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <div style="font-size:8px;font-weight:700;color:#64748b;letter-spacing:.7px;text-transform:uppercase;white-space:nowrap;">SCORE</div>
+      <div class="sbar" style="flex:1;height:18px;"><div class="sb-g" style="font-size:8px;">LOW 0-30</div><div class="sb-a" style="font-size:8px;">MEDIUM 30-60</div><div class="sb-r" style="font-size:8px;">HIGH 60-100</div></div>
+    </div>
+  </div>
+
+  <!-- Arrow column to risk boxes -->
+  <div style="flex-shrink:0;width:18px;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;">
+    <span style="color:#22c55e;font-size:13px;">*</span>
+    <span style="color:#f59e0b;font-size:13px;">*</span>
+    <span style="color:#ef4444;font-size:13px;">*</span>
+  </div>
+
+  <!-- Risk outcome column (stacked) -->
+  <div class="risk-col">
+    <!-- Low -->
+    <div class="risk-card" style="background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.4);">
+      <div style="font-size:20px;">*</div>
+      <div style="font-size:10px;font-weight:700;color:#86efac;text-transform:uppercase;letter-spacing:.7px;">Low Risk</div>
+      <div style="font-size:9.5px;color:#94a3b8;">Score: 0-30<br>Auto-approved.<br>Direct settlement.</div>
+    </div>
+    <!-- Medium -->
+    <div class="risk-card" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.4);">
+      <div style="font-size:20px;">*</div>
+      <div style="font-size:10px;font-weight:700;color:#fcd34d;text-transform:uppercase;letter-spacing:.7px;">Medium Risk</div>
+      <div style="font-size:9.5px;color:#94a3b8;">Score: 30-60<br>Soft flag. User<br>notified. 2-4hr delay.</div>
+    </div>
+    <!-- High -->
+    <div class="risk-card alr" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);">
+      <div style="font-size:20px;">*</div>
+      <div style="font-size:10px;font-weight:700;color:#fca5a5;text-transform:uppercase;letter-spacing:.7px;">High Risk</div>
+      <div style="font-size:9.5px;color:#94a3b8;">Score: 60-100<br>Smart Contract triggered.<br>Funds held. Manual review.</div>
+    </div>
+  </div>
+
+</div><!-- /row 2 -->
+
+<!-- DIV 2?3 -->
+<div class="div-row" style="padding-left:200px;">
+  <div style="width:1px;height:26px;background:rgba(6,182,212,.25);"></div>
+</div>
+
+<!-- ------------------------------------------------------
+     ROW 3 - Unified Mem-Pool (full width)
+------------------------------------------------------ -->
+<div id="r3">
+  <div class="mp" id="c-mp">
+    <div style="font-size:12px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#67e8f9;">Unified Mem-Pool</div>
+    <div style="font-size:10px;color:#94a3b8;">Transaction data broadcast to <strong style="color:#67e8f9;">ALL member banks</strong> in the consortium blockchain network simultaneously</div>
+  </div>
+</div>
+
+<!-- DIV 3?4 -->
+<div class="div-row" style="justify-content:space-between;padding:0 220px;">
+  <div style="width:1px;height:26px;background:rgba(245,158,11,.25);"></div>
+  <div style="width:1px;height:26px;background:rgba(168,85,247,.25);"></div>
+  <div style="width:1px;height:26px;background:rgba(6,182,212,.25);"></div>
+</div>
+
+<!-- ------------------------------------------------------
+     ROW 4 - Smart Contract + Scenario cards
+------------------------------------------------------ -->
+<div class="row" id="r4" style="align-items:stretch;">
+
+  <!-- Non-BC Bank scenario -->
+  <div class="card c-a" id="c-nbc" style="flex:1;">
+    <div class="ct" style="color:#fcd34d;">Non-Blockchain Bank Scenario</div>
+    <div class="cb"><strong style="color:#fcd34d;">Caution:</strong> Non-Blockchain Banks operate outside the permissioned network.<br><br>Very <strong style="color:#fca5a5;">High Risk</strong> scores (especially due to transaction value) trigger <strong style="color:#fcd34d;">manual Bank Officer review</strong> of counterparties.<br><br><span style="color:#86efac;">Smart Contract Service:</span> Available as standalone Escrow when user decides transaction value &amp; terms.</div>
+  </div>
+
+  <!-- Smart Contract triangle (centred between the two cards) -->
+  <div class="sc-wrap" id="c-sc">
+    <svg width="160" height="136" viewBox="0 0 160 136">
+      <defs>
+        <linearGradient id="scG" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" stop-color="#a855f7" stop-opacity=".45"/>
+          <stop offset="100%" stop-color="#06b6d4" stop-opacity=".2"/>
+        </linearGradient>
+        <filter id="glo"><feGaussianBlur stdDeviation="3" result="cb"/><feMerge><feMergeNode in="cb"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <polygon points="80,6 156,130 4,130" fill="url(#scG)" stroke="#a855f7" stroke-width="1.5" filter="url(#glo)"/>
+      <polygon points="80,116 24,20 136,20" fill="none" stroke="rgba(6,182,212,.28)" stroke-width=".8" stroke-dasharray="4 3"/>
+      <circle cx="80" cy="76" r="4" fill="#c084fc">
+        <animate attributeName="r" values="4;8;4" dur="2s" repeatCount="indefinite"/>
+        <animate attributeName="opacity" values="1;.2;1" dur="2s" repeatCount="indefinite"/>
+      </circle>
+    </svg>
+    <div style="font-size:12px;font-weight:800;color:#c084fc;letter-spacing:1.5px;margin-top:3px;">SMART</div>
+    <div style="font-size:12px;font-weight:800;color:#c084fc;letter-spacing:1.5px;">CONTRACT</div>
+    <div style="font-size:8.5px;color:#94a3b8;margin-top:5px;text-align:center;">Autonomous execution<br>on High-Risk transactions</div>
+  </div>
+
+  <!-- Freeze Protocol -->
+  <div class="card c-c frz" id="c-frz" style="flex:1;">
+    <div class="ct" style="color:#67e8f9;">High-Risk Blockchain Freeze Protocol</div>
+    <div class="cb">When a <strong style="color:#fca5a5;">High-Risk, High-Value txn</strong> is initiated and <strong style="color:#67e8f9;">Receiver's Bank is NOT on the same Blockchain Network</strong>:<br><br>
+    <strong style="color:#67e8f9;">*</strong> Receiver's Bank pulls funds into Receiver's account, but only up to a <strong style="color:#fcd34d;">designated time window</strong>.<br>
+    <strong style="color:#67e8f9;">*</strong> If Sender confirms fraud within that window, funds are <strong style="color:#fcd34d;">locked</strong> and transaction is <strong style="color:#fcd34d;">reversed &amp; blocked</strong> in the Unified Ledger.<br>
+    <strong style="color:#67e8f9;">*</strong> <strong style="color:#d8b4fe;">Smart Contract Services</strong> provisioned to user based on transaction type &amp; initiation method.<br><br>
+    <span style="color:#fcd34d;">Escrow protection until sender fraud signal or action window expires.</span></div>
+  </div>
+
+</div><!-- /row 4 -->
+
+<!-- DIV 4?5 -->
+<div class="div-row" style="justify-content:space-between;padding:0 260px;">
+  <div style="width:1px;height:26px;background:rgba(59,130,246,.25);"></div>
+  <div style="width:1px;height:26px;background:rgba(34,197,94,.25);"></div>
+  <div style="width:1px;height:26px;background:rgba(245,158,11,.25);"></div>
+</div>
+
+<!-- ------------------------------------------------------
+     ROW 5 - Bank Containers
+------------------------------------------------------ -->
+<div class="row" id="r5">
+
+  <!-- BANK A -->
+  <div class="bank" id="bk-a" style="border-color:rgba(59,130,246,.4);background:linear-gradient(160deg,rgba(59,130,246,.04),rgba(59,130,246,.01));">
+    <div class="bl" style="background:rgba(59,130,246,.18);color:#93c5fd;border:1px solid rgba(59,130,246,.35);">Bank-A - Sender's Bank</div>
+    <div class="bg">
+      <!-- Validator -->
+      <div class="nd nb nd-val pb">
+        <div class="nd-type" style="color:#3b82f6;">VALIDATOR</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Validator Node</div>
+        <div class="nsub">BFT Consensus</div>
+      </div>
+      <!-- Shared Ledger -->
+      <div class="nd nc nd-db">
+        <div class="nd-type" style="color:#06b6d4;">LEDGER</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Shared Ledger</div>
+        <div class="nsub">Hyperledger</div>
+      </div>
+      <!-- Standby -->
+      <div class="nd nb">
+        <div class="nd-type" style="color:#3b82f6;">STANDBY</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Stand By Node</div>
+        <div class="nsub">Failover Ready</div>
+      </div>
+      <div></div>
+      <!-- Replica -->
+      <div class="nd nb">
+        <div class="nd-type" style="color:#3b82f6;">REPLICA</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Replica Node</div>
+        <div class="nsub">Sync'd</div>
+      </div>
+      <!-- Ledger Copy -->
+      <div class="nd nc nd-db">
+        <div class="nd-type" style="color:#06b6d4;">COPY</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Ledger Copy</div>
+        <div class="nsub">Hyperledger Replica</div>
+      </div>
+    </div>
+    <div class="ar">
+      <div class="nd np" style="flex:1;">
+        <div class="nd-type" style="color:#a855f7;">ANALYTICS</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Analytical Node</div>
+      </div>
+      <div class="nd nr" style="flex:1;">
+        <div class="nd-type" style="color:#ef4444;">FRAUD</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Fraud Data</div>
+      </div>
+      <div class="nd np" style="flex:1;">
+        <div class="nd-type" style="color:#a855f7;">AI</div>
+        <div class="ni">*</div>
+        <div class="nlbl">LLM Training</div>
+      </div>
+    </div>
+    <div class="as">
+      <div style="font-size:8px;color:#475569;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;">Analytics Stack</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <span class="tg tb" style="font-size:8px;">Grafana</span><span class="tg tb" style="font-size:8px;">Prometheus</span><span class="tg tb" style="font-size:8px;">OpenSearch</span><span class="tg tp" style="font-size:8px;">Tableau</span><span class="tg tp" style="font-size:8px;">Power BI</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANK B -->
+  <div class="bank" id="bk-b" style="border-color:rgba(34,197,94,.4);background:linear-gradient(160deg,rgba(34,197,94,.04),rgba(34,197,94,.01));">
+    <div class="bl" style="background:rgba(34,197,94,.18);color:#86efac;border:1px solid rgba(34,197,94,.35);">Bank-B - Network Bank</div>
+    <div class="bg">
+      <div class="nd ng nd-val pg">
+        <div class="nd-type" style="color:#22c55e;">VALIDATOR</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Validator Node</div>
+        <div class="nsub">BFT Consensus</div>
+      </div>
+      <div class="nd nc nd-db">
+        <div class="nd-type" style="color:#06b6d4;">LEDGER</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Shared Ledger</div>
+        <div class="nsub">Hyperledger</div>
+      </div>
+      <div class="nd ng">
+        <div class="nd-type" style="color:#22c55e;">STANDBY</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Stand By Node</div>
+        <div class="nsub">Failover Ready</div>
+      </div>
+      <div></div>
+      <div class="nd ng">
+        <div class="nd-type" style="color:#22c55e;">REPLICA</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Replica Node</div>
+        <div class="nsub">Sync'd</div>
+      </div>
+      <div class="nd nc nd-db">
+        <div class="nd-type" style="color:#06b6d4;">COPY</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Ledger Copy</div>
+        <div class="nsub">Hyperledger Replica</div>
+      </div>
+    </div>
+    <div class="ar">
+      <div class="nd np" style="flex:1;">
+        <div class="nd-type" style="color:#a855f7;">ANALYTICS</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Analytical Node</div>
+      </div>
+      <div class="nd nr" style="flex:1;">
+        <div class="nd-type" style="color:#ef4444;">FRAUD</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Fraud Data</div>
+      </div>
+      <div class="nd np" style="flex:1;">
+        <div class="nd-type" style="color:#a855f7;">AI</div>
+        <div class="ni">*</div>
+        <div class="nlbl">LLM Training</div>
+      </div>
+    </div>
+    <div class="as">
+      <div style="font-size:8px;color:#475569;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;">Analytics Stack</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <span class="tg tg2" style="font-size:8px;">Grafana</span><span class="tg tg2" style="font-size:8px;">Prometheus</span><span class="tg tg2" style="font-size:8px;">OpenSearch</span><span class="tg tp" style="font-size:8px;">Tableau</span><span class="tg tp" style="font-size:8px;">Power BI</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- BANK C -->
+  <div class="bank" id="bk-c" style="border-color:rgba(245,158,11,.4);background:linear-gradient(160deg,rgba(245,158,11,.04),rgba(245,158,11,.01));">
+    <div class="bl" style="background:rgba(245,158,11,.18);color:#fcd34d;border:1px solid rgba(245,158,11,.35);">Bank-C - Receiver's Bank</div>
+    <div class="bg">
+      <div class="nd na nd-val pa">
+        <div class="nd-type" style="color:#f59e0b;">VALIDATOR</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Validator Node</div>
+        <div class="nsub">BFT Consensus</div>
+      </div>
+      <div class="nd nc nd-db">
+        <div class="nd-type" style="color:#06b6d4;">LEDGER</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Shared Ledger</div>
+        <div class="nsub">Hyperledger</div>
+      </div>
+      <div class="nd na">
+        <div class="nd-type" style="color:#f59e0b;">STANDBY</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Stand By Node</div>
+        <div class="nsub">Failover Ready</div>
+      </div>
+      <div></div>
+      <div class="nd na">
+        <div class="nd-type" style="color:#f59e0b;">REPLICA</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Replica Node</div>
+        <div class="nsub">Sync'd</div>
+      </div>
+      <div class="nd nc nd-db">
+        <div class="nd-type" style="color:#06b6d4;">COPY</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Ledger Copy</div>
+        <div class="nsub">Hyperledger Replica</div>
+      </div>
+    </div>
+    <div class="ar">
+      <div class="nd np" style="flex:1;">
+        <div class="nd-type" style="color:#a855f7;">ANALYTICS</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Analytical Node</div>
+      </div>
+      <div class="nd nr" style="flex:1;">
+        <div class="nd-type" style="color:#ef4444;">FRAUD</div>
+        <div class="ni">*</div>
+        <div class="nlbl">Fraud Data</div>
+      </div>
+      <div class="nd np" style="flex:1;">
+        <div class="nd-type" style="color:#a855f7;">AI</div>
+        <div class="ni">*</div>
+        <div class="nlbl">LLM Training</div>
+      </div>
+    </div>
+    <div class="as">
+      <div style="font-size:8px;color:#475569;font-weight:700;letter-spacing:.6px;text-transform:uppercase;margin-bottom:4px;">Analytics Stack</div>
+      <div style="display:flex;gap:4px;flex-wrap:wrap;">
+        <span class="tg ta" style="font-size:8px;">Grafana</span><span class="tg ta" style="font-size:8px;">Prometheus</span><span class="tg ta" style="font-size:8px;">OpenSearch</span><span class="tg tp" style="font-size:8px;">Tableau</span><span class="tg tp" style="font-size:8px;">Power BI</span>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /row 5 -->
+
+<!-- SVG animated connections (dynamically positioned by JS) -->
+<svg id="so" width="1" height="1"></svg>
+
+</div><!-- /dg -->
+</div><!-- /cv -->
+
+<!-- PRE-BLOCKCHAIN NETWORK PAGE -->
+<div id="page-pre-network" class="bd-page" style="align-items:flex-start;justify-content:center;overflow:hidden;">
+  <div id="pre-board" style="width:2400px;max-width:2400px;padding:18px 18px 24px;position:relative;transform-origin:top center;display:flex;flex-direction:column;gap:0;">
+    <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.013) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.013) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;"></div>
+
+    <div style="position:relative;z-index:2;text-align:center;margin-bottom:12px;">
+      <div style="font-size:18px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;background:linear-gradient(90deg,#60a5fa,#22d3ee);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Pre-Blockchain Network Architecture</div>
+      <div style="font-size:10px;color:#64748b;margin-top:4px;letter-spacing:.4px;">Same visual flow as Overall Architecture, focused on pre-blockchain components and what each does</div>
+    </div>
+
+    <div class="card c-p" style="position:relative;z-index:2;margin:0 280px 10px;min-height:66px;display:flex;flex-direction:column;justify-content:center;">
+      <div id="pre-focus-title" style="font-size:10px;font-weight:800;color:#d8b4fe;letter-spacing:.7px;text-transform:uppercase;">Interactive Guide</div>
+      <div id="pre-focus-desc" style="font-size:9px;color:#94a3b8;line-height:1.45;">Hover or click any component to focus it. A guided highlight sequence runs automatically.</div>
+    </div>
+
+    <svg class="pre-flow-svg" viewBox="0 0 2400 980" preserveAspectRatio="none" aria-hidden="true">
+      <defs>
+        <path id="preTxnMain" d="M496,205 L730,205 L950,205 C1070,205 1080,320 1180,320"/>
+        <path id="preTxnRisk" d="M1180,358 C1320,358 1480,360 1665,360"/>
+        <path id="preTxnMem" d="M1180,430 L1180,560"/>
+        <path id="preTxnSplitA" d="M1180,596 C1060,640 920,680 820,735"/>
+        <path id="preTxnSplitB" d="M1180,596 L1180,735"/>
+        <path id="preTxnSplitC" d="M1180,596 C1300,640 1440,680 1540,735"/>
+      </defs>
+
+      <use href="#preTxnMain" class="pre-flow-line" stroke="#60a5fa"/>
+      <use href="#preTxnRisk" class="pre-flow-line" stroke="#f59e0b"/>
+      <use href="#preTxnMem" class="pre-flow-line" stroke="#22d3ee"/>
+      <use href="#preTxnSplitA" class="pre-flow-line" stroke="#f59e0b"/>
+      <use href="#preTxnSplitB" class="pre-flow-line" stroke="#a855f7"/>
+      <use href="#preTxnSplitC" class="pre-flow-line" stroke="#06b6d4"/>
+
+      <circle r="3" fill="#67e8f9" opacity=".9">
+        <animateMotion dur="3.2s" repeatCount="indefinite"><mpath href="#preTxnMain"/></animateMotion>
+      </circle>
+      <circle r="3" fill="#a855f7" opacity=".9">
+        <animateMotion dur="3.2s" begin="1.0s" repeatCount="indefinite"><mpath href="#preTxnMain"/></animateMotion>
+      </circle>
+      <circle r="2.8" fill="#fcd34d" opacity=".88">
+        <animateMotion dur="2.5s" repeatCount="indefinite"><mpath href="#preTxnRisk"/></animateMotion>
+      </circle>
+      <circle r="2.8" fill="#22d3ee" opacity=".9">
+        <animateMotion dur="2.4s" repeatCount="indefinite"><mpath href="#preTxnMem"/></animateMotion>
+      </circle>
+      <circle r="2.6" fill="#f59e0b" opacity=".9">
+        <animateMotion dur="2.8s" begin=".3s" repeatCount="indefinite"><mpath href="#preTxnSplitA"/></animateMotion>
+      </circle>
+      <circle r="2.6" fill="#a855f7" opacity=".9">
+        <animateMotion dur="2.8s" begin=".6s" repeatCount="indefinite"><mpath href="#preTxnSplitB"/></animateMotion>
+      </circle>
+      <circle r="2.6" fill="#06b6d4" opacity=".9">
+        <animateMotion dur="2.8s" begin=".9s" repeatCount="indefinite"><mpath href="#preTxnSplitC"/></animateMotion>
+      </circle>
+    </svg>
+
+    <div style="position:relative;z-index:2;display:flex;gap:12px;align-items:stretch;margin:0 280px;">
+      <div class="card c-b pre-node" style="width:214px;flex-shrink:0;" data-title="1) User Bank Account" data-desc="Wallet-linked sender identity and KYC context for trust baseline.">
+        <div class="ct" style="color:#93c5fd;">1) User Bank Account</div>
+        <div class="cb">Wallet-linked sender identity and KYC context for transaction trust baseline.</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;"><span class="tg tb">Wallet ID</span><span class="tg tc">KYC Verified</span></div>
+        <div class="pre-flow"><strong>Txn Flow:</strong> user intent created -> sent to Payment Initiation.</div>
+      </div>
+      <div class="flow-arrow" style="flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center;color:#3b82f6;font-size:15px;">-></div>
+      <div class="card c-c pre-node" style="width:200px;flex-shrink:0;" data-title="2) Payment Initiation" data-desc="Captures transfer intent from mobile, web, or branch channels with metadata.">
+        <div class="ct" style="color:#67e8f9;">2) Payment Initiation</div>
+        <div class="cb">Captures transfer intent from mobile, web, or branch channels with beneficiary metadata.</div>
+        <div style="display:flex;gap:5px;flex-wrap:wrap;margin-top:6px;"><span class="tg tc">Channel Agnostic</span><span class="tg tb">Real-time</span></div>
+        <div class="pre-flow"><strong>Txn Flow:</strong> normalized payload -> Current Banking System.</div>
+      </div>
+      <div class="flow-arrow" style="flex-shrink:0;width:20px;display:flex;align-items:center;justify-content:center;color:#06b6d4;font-size:15px;">-></div>
+      <div class="card c-b pre-node" style="width:222px;flex-shrink:0;" data-title="3) Current Banking System" data-desc="Enriches transaction with account posture, limits, velocity counters, and policy attributes.">
+        <div class="ct" style="color:#93c5fd;">3) Current Banking System</div>
+        <div class="cb">Enriches transaction with account limits, velocity counters, and policy attributes.</div>
+        <div class="pre-flow"><strong>Txn Flow:</strong> enriched context -> Fraud Rule Engine.</div>
+      </div>
+      <div style="flex:1;min-width:20px;"></div>
+      <div class="card c-p pre-node" style="width:264px;flex-shrink:0;" data-title="4) LLM Engine" data-desc="Builds anomaly probability from historical behavior, beneficiary graph, and timing profile.">
+        <div class="ct" style="color:#d8b4fe;">4) LLM Engine</div>
+        <div class="cb">Builds anomaly probability from historical behavior, beneficiary graph, and timing profile.</div>
+        <div class="pre-flow"><strong>Txn Flow:</strong> anomaly score -> Fraud Rule Engine.</div>
+      </div>
+    </div>
+
+    <div class="pre-divider" style="height:26px;display:flex;align-items:center;position:relative;z-index:2;padding-left:593px;">
+      <div style="width:1px;height:26px;background:rgba(59,130,246,.25);"></div>
+    </div>
+
+    <div style="position:relative;z-index:2;display:flex;gap:12px;align-items:stretch;margin:0 280px;">
+      <div class="card c-r pre-node" style="flex:1;min-width:0;" data-title="5) Fraud Rule Engine" data-desc="Combines User Rules, LLM score, and Shared Fraud Data to compute pre-chain risk band.">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:5px;">
+          <div style="font-size:11px;font-weight:800;letter-spacing:.8px;color:#fca5a5;text-transform:uppercase;">5) Fraud Rule Engine</div>
+          <span class="tg tr" style="font-size:8px;">Pre-chain Scoring</span>
+        </div>
+        <div style="font-size:9px;color:#64748b;margin-bottom:6px;">Composite scoring sources used before blockchain commit:</div>
+        <div class="rg" style="gap:6px;margin:0 0 7px;">
+          <div class="rb" style="background:rgba(168,85,247,.08);border:1px solid rgba(168,85,247,.22);padding:6px;">
+            <div class="rn" style="background:rgba(168,85,247,.25);color:#d8b4fe;">6</div>
+            <div style="font-size:9px;"><strong style="color:#d8b4fe;">User Rules</strong><br><span style="color:#64748b;">Limits and velocity checks</span></div>
+          </div>
+          <div class="rb" style="background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.22);padding:6px;">
+            <div class="rn" style="background:rgba(59,130,246,.25);color:#93c5fd;">7</div>
+            <div style="font-size:9px;"><strong style="color:#93c5fd;">LLM Score</strong><br><span style="color:#64748b;">Behavior anomaly output</span></div>
+          </div>
+          <div class="rb" style="background:rgba(6,182,212,.08);border:1px solid rgba(6,182,212,.22);padding:6px;">
+            <div class="rn" style="background:rgba(6,182,212,.25);color:#67e8f9;">8</div>
+            <div style="font-size:9px;"><strong style="color:#67e8f9;">Shared Fraud Data</strong><br><span style="color:#64748b;">Cross-bank warning signals</span></div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <div style="font-size:8px;font-weight:700;color:#64748b;letter-spacing:.7px;text-transform:uppercase;white-space:nowrap;">Score</div>
+          <div class="sbar" style="flex:1;height:18px;"><div class="sb-g" style="font-size:8px;">LOW 0-30</div><div class="sb-a" style="font-size:8px;">MEDIUM 30-60</div><div class="sb-r" style="font-size:8px;">HIGH 60-100</div></div>
+        </div>
+        <div class="pre-flow"><strong>Txn Flow:</strong> risk-banded transaction -> Low / Medium / High paths.</div>
+      </div>
+
+      <div style="flex-shrink:0;width:18px;display:flex;flex-direction:column;justify-content:space-evenly;align-items:center;">
+        <span style="color:#22c55e;font-size:13px;">-></span>
+        <span style="color:#f59e0b;font-size:13px;">-></span>
+        <span style="color:#ef4444;font-size:13px;">-></span>
+      </div>
+
+      <div class="risk-col">
+        <div class="risk-card pre-node" style="background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.4);" data-title="9) Low Risk Path" data-desc="Direct settlement path with minimal intervention.">
+          <div style="font-size:10px;font-weight:900;color:#86efac;">LOW RISK</div>
+          <div style="font-size:9px;color:#86efac;">9) Direct settlement path.</div>
+          <div class="pre-flow" style="border-top-color:rgba(134,239,172,.3);color:#86efac;"><strong>Txn Flow:</strong> direct -> mem-pool staging.</div>
+        </div>
+        <div class="risk-card pre-node" style="background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.4);" data-title="10) Medium Risk Path" data-desc="Soft hold with user notification and additional scrutiny.">
+          <div style="font-size:10px;font-weight:900;color:#fcd34d;">MEDIUM RISK</div>
+          <div style="font-size:9px;color:#fcd34d;">10) Soft hold and notify user.</div>
+          <div class="pre-flow" style="border-top-color:rgba(252,211,77,.3);color:#fcd34d;"><strong>Txn Flow:</strong> soft hold -> mem-pool staging.</div>
+        </div>
+        <div class="risk-card pre-node" style="background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.4);" data-title="11) High Risk Path" data-desc="Escrow or freeze path for pre-commit fraud protection.">
+          <div style="font-size:10px;font-weight:900;color:#fca5a5;">HIGH RISK</div>
+          <div style="font-size:9px;color:#fca5a5;">11) Escrow/freeze pre-commit review.</div>
+          <div class="pre-flow" style="border-top-color:rgba(252,165,165,.28);color:#fca5a5;"><strong>Txn Flow:</strong> protected route -> mem-pool staging.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="pre-divider" style="height:24px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;">
+      <div style="width:1px;height:20px;background:rgba(6,182,212,.35);"></div>
+    </div>
+
+    <div style="position:relative;z-index:2;margin:0 280px;" class="mp pre-node" data-title="12) Unified Pre-Blockchain Mem-Pool" data-desc="Staging layer where scored transactions await contract checks and final routing.">
+      <div style="font-size:11px;font-weight:900;letter-spacing:1px;color:#67e8f9;text-transform:uppercase;">12) Unified Pre-Blockchain Mem-Pool</div>
+      <div style="font-size:10px;color:#94a3b8;">Staging layer where transactions await contract checks, policy confirmation, and final routing.</div>
+      <div class="pre-flow" style="border-top-color:rgba(103,232,249,.25);"><strong>Txn Flow:</strong> consolidated pre-commit stream -> scenario and contract checks.</div>
+    </div>
+
+    <div class="pre-divider" style="height:24px;display:flex;align-items:center;justify-content:center;position:relative;z-index:2;">
+      <div style="width:1px;height:20px;background:rgba(168,85,247,.35);"></div>
+    </div>
+
+    <div style="position:relative;z-index:2;display:flex;gap:12px;align-items:stretch;margin:0 280px;">
+      <div class="card c-a pre-node" style="flex:1;min-height:158px;" data-title="13) Non-Blockchain Scenario" data-desc="Manual officer review path for banks outside consortium chain.">
+        <div class="ct" style="color:#fcd34d;">13) Non-Blockchain Scenario</div>
+        <div class="cb">Banks outside consortium chain use manual officer review for high-risk transfers.</div>
+        <div class="cb" style="margin-top:6px;">Smart Escrow can still be used as standalone hold service with explicit sender consent.</div>
+        <div class="pre-flow"><strong>Txn Flow:</strong> manual review route -> validation gate.</div>
+      </div>
+
+      <div class="sc-wrap pre-node" style="width:220px;" data-title="14) Smart Contract Gateway" data-desc="Executes escrow lock and release rules before final ledger write.">
+        <svg viewBox="0 0 160 140" width="160" height="140" style="overflow:visible;">
+          <defs>
+            <linearGradient id="preScG" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="rgba(6,182,212,.36)"/>
+              <stop offset="100%" stop-color="rgba(168,85,247,.48)"/>
+            </linearGradient>
+            <filter id="preGlo" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="0" dy="0" stdDeviation="3" flood-color="#a855f7" flood-opacity=".5"/>
+            </filter>
+          </defs>
+          <polygon points="80,6 156,130 4,130" fill="url(#preScG)" stroke="#a855f7" stroke-width="1.5" filter="url(#preGlo)"/>
+          <polygon points="80,116 24,20 136,20" fill="none" stroke="rgba(6,182,212,.28)" stroke-width=".8" stroke-dasharray="4 3"/>
+          <circle cx="80" cy="79" r="7" fill="rgba(168,85,247,.45)"/>
+          <circle cx="80" cy="56" r="2.6" fill="rgba(103,232,249,.85)"/>
+          <circle cx="80" cy="103" r="2.6" fill="rgba(103,232,249,.85)"/>
+        </svg>
+        <div style="margin-top:6px;text-align:center;">
+          <div style="font-size:10px;font-weight:800;letter-spacing:1px;color:#d8b4fe;text-transform:uppercase;">14) Smart Contract Gateway</div>
+          <div style="font-size:9px;color:#64748b;line-height:1.35;">Executes escrow lock/release rules before final ledger write.</div>
+          <div class="pre-flow" style="border-top-color:rgba(216,180,254,.28);"><strong>Txn Flow:</strong> escrow rule execution -> validation gate.</div>
+        </div>
+      </div>
+
+      <div class="card c-c pre-node" style="flex:1;min-height:158px;" data-title="15) Pre-Blockchain Validation" data-desc="Final pre-commit checks before blockchain or core-bank ledger update.">
+        <div class="ct" style="color:#67e8f9;">15) Pre-Blockchain Validation</div>
+        <div class="cb">Checks completion of scoring, hold decisions, beneficiary locks, and review status.</div>
+        <div class="cb" style="margin-top:6px;">Validated transactions are then sent to blockchain ledger or bank core ledger update modules.</div>
+        <div class="pre-flow"><strong>Txn Flow:</strong> validated transaction -> blockchain ledger / core banking ledger.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- -----------------------------------------------------
+     BANK DETAIL PAGES
+----------------------------------------------------- -->
+
+<!-- BANK-A DETAIL PAGE -->
+<div id="page-bank-a" class="bd-page">
+  <div class="bd-grid">
+    <!-- COL 1: Core Consensus -->
+    <div class="bd-col">
+      <div class="bd-card" style="border-color:rgba(59,130,246,.5);background:linear-gradient(135deg,rgba(59,130,246,.1),rgba(59,130,246,.02));">
+        <h3 style="color:#93c5fd;">Validator Node</h3>
+        <div class="nd-detail nb nd-val" style="min-height:140px;">
+          <div class="ni">*</div>
+          <div class="nlbl">BFT Consensus Engine</div>
+          <div class="nsub">Byzantine Fault Tolerant</div>
+          <div class="ndesc">Participates in 3-phase consensus protocol. Validates all transactions, broadcasts votes, reaches agreement on block order.</div>
+        </div>
+        <div class="dtl-grid" style="margin-top:12px;">
+          <div class="dtl-item">
+            <div class="dtl-item-label">Role</div>
+            <div class="dtl-item-val">Primary Validator</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">State</div>
+            <div class="dtl-item-val" style="color:#86efac;"><span class="ld2"></span>Active</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">Consensus Rounds</div>
+            <div class="dtl-item-val">2-3 per block</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">Quorum Size</div>
+            <div class="dtl-item-val">Q = ?2N/3? + 1</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bd-card" style="border-color:rgba(59,130,246,.5);background:linear-gradient(135deg,rgba(59,130,246,.08),rgba(59,130,246,.01));">
+        <h3 style="color:#93c5fd;">Standby Node</h3>
+        <div class="nd-detail nb" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Hot Standby</div>
+          <div class="nsub">Failover Ready</div>
+          <div class="ndesc">Synced replica waiting for validator promotion. Takes over if primary fails. Zero downtime.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 2: Storage & Persistence -->
+    <div class="bd-col">
+      <div class="bd-card db-highlight dbrk-detail">
+        <h3 style="color:#67e8f9;">Shared Ledger (Hyperledger)</h3>
+        <div class="nd-detail nc nd-db" style="min-height:160px;position:relative;z-index:1;">
+          <div class="ni">*</div>
+          <div class="nlbl">Hyperledger Distributed Ledger</div>
+          <div class="nsub">Permissioned Distributed Ledger</div>
+          <div class="ndesc">Persists all transactions, account states, and block hashes. Channel world state and block data persisted across consortium peers.</div>
+        </div>
+        <div class="dtl-grid" style="margin-top:12px;">
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Format</div>
+            <div class="dtl-item-val">Embedded KV</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Compression</div>
+            <div class="dtl-item-val">LZ4 / Snappy</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Throughput</div>
+            <div class="dtl-item-val">100k+ ops/sec</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Replication</div>
+            <div class="dtl-item-val">Read-only copies</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="bd-card" style="border-color:rgba(6,182,212,.4);background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(6,182,212,.01));">
+        <h3 style="color:#67e8f9;">Ledger Copy (Hyperledger Replica)</h3>
+        <div class="nd-detail nc nd-db" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Backup Replica</div>
+          <div class="nsub">Point-in-time snapshot</div>
+          <div class="ndesc">Read-only copy for analytics and recovery. Independently compacted.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COL 3: Analytics & Monitoring -->
+    <div class="bd-col">
+      <div class="bd-card" style="border-color:rgba(168,85,247,.4);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.01));">
+        <h3 style="color:#d8b4fe;">Analytical Node</h3>
+        <div class="nd-detail np" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Data Warehouse</div>
+          <div class="nsub">Time-series Analytics</div>
+          <div class="ndesc">Consumes ledger events, builds indices for business intelligence and reporting.</div>
+        </div>
+      </div>
+
+      <div class="bd-card" style="border-color:rgba(239,68,68,.4);background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.01));">
+        <h3 style="color:#fca5a5;">Fraud Data Node</h3>
+        <div class="nd-detail nr" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Fraud Signal Aggregator</div>
+          <div class="nsub">Risk Pattern Detection</div>
+          <div class="ndesc">Collects anomalies, suspicious patterns, and consensus fraud verdicts across consortium.</div>
+        </div>
+      </div>
+
+      <div class="bd-card" style="border-color:rgba(168,85,247,.4);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.01));">
+        <h3 style="color:#d8b4fe;">LLM Training Node</h3>
+        <div class="nd-detail np" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Model Training Pipeline</div>
+          <div class="nsub">Continuous Learning</div>
+          <div class="ndesc">Fine-tunes anomaly detection models on real transactions, improves fraud scoring accuracy.</div>
+        </div>
+      </div>
+
+      <div class="bd-card" style="border-color:rgba(34,197,94,.4);background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.01));">
+        <h3 style="color:#86efac;">Analytics Stack</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <span class="tg tb" style="font-size:8px;justify-content:center;padding:8px;">Grafana</span>
+          <span class="tg tb" style="font-size:8px;justify-content:center;padding:8px;">Prometheus</span>
+          <span class="tg tb" style="font-size:8px;justify-content:center;padding:8px;">OpenSearch</span>
+          <span class="tg tp" style="font-size:8px;justify-content:center;padding:8px;">Tableau</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BANK-B DETAIL PAGE (Same structure, Green theme) -->
+<div id="page-bank-b" class="bd-page">
+  <div class="bd-grid">
+    <div class="bd-col">
+      <div class="bd-card" style="border-color:rgba(34,197,94,.5);background:linear-gradient(135deg,rgba(34,197,94,.1),rgba(34,197,94,.02));">
+        <h3 style="color:#86efac;">Validator Node</h3>
+        <div class="nd-detail ng nd-val" style="min-height:140px;">
+          <div class="ni">*</div>
+          <div class="nlbl">BFT Consensus Engine</div>
+          <div class="nsub">Byzantine Fault Tolerant</div>
+          <div class="ndesc">Participates in 3-phase consensus protocol. Validates all transactions, broadcasts votes, reaches agreement on block order.</div>
+        </div>
+        <div class="dtl-grid" style="margin-top:12px;">
+          <div class="dtl-item">
+            <div class="dtl-item-label">Role</div>
+            <div class="dtl-item-val">Primary Validator</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">State</div>
+            <div class="dtl-item-val" style="color:#86efac;"><span class="ld2"></span>Active</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">Consensus Rounds</div>
+            <div class="dtl-item-val">2-3 per block</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">Quorum Size</div>
+            <div class="dtl-item-val">Q = ?2N/3? + 1</div>
+          </div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(34,197,94,.5);background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.01));">
+        <h3 style="color:#86efac;">Standby Node</h3>
+        <div class="nd-detail ng" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Hot Standby</div>
+          <div class="nsub">Failover Ready</div>
+          <div class="ndesc">Synced replica waiting for validator promotion. Takes over if primary fails. Zero downtime.</div>
+        </div>
+      </div>
+    </div>
+    <div class="bd-col">
+      <div class="bd-card db-highlight dbrk-detail">
+        <h3 style="color:#67e8f9;">Shared Ledger (Hyperledger)</h3>
+        <div class="nd-detail nc nd-db" style="min-height:160px;position:relative;z-index:1;">
+          <div class="ni">*</div>
+          <div class="nlbl">Hyperledger Distributed Ledger</div>
+          <div class="nsub">Permissioned Distributed Ledger</div>
+          <div class="ndesc">Persists all transactions, account states, and block hashes. Channel world state and block data persisted across consortium peers.</div>
+        </div>
+        <div class="dtl-grid" style="margin-top:12px;">
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Format</div>
+            <div class="dtl-item-val">Embedded KV</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Compression</div>
+            <div class="dtl-item-val">LZ4 / Snappy</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Throughput</div>
+            <div class="dtl-item-val">100k+ ops/sec</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Replication</div>
+            <div class="dtl-item-val">Read-only copies</div>
+          </div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(6,182,212,.4);background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(6,182,212,.01));">
+        <h3 style="color:#67e8f9;">Ledger Copy (Hyperledger Replica)</h3>
+        <div class="nd-detail nc nd-db" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Backup Replica</div>
+          <div class="nsub">Point-in-time snapshot</div>
+          <div class="ndesc">Read-only copy for analytics and recovery. Independently compacted.</div>
+        </div>
+      </div>
+    </div>
+    <div class="bd-col">
+      <div class="bd-card" style="border-color:rgba(168,85,247,.4);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.01));">
+        <h3 style="color:#d8b4fe;">Analytical Node</h3>
+        <div class="nd-detail np" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Data Warehouse</div>
+          <div class="nsub">Time-series Analytics</div>
+          <div class="ndesc">Consumes ledger events, builds indices for business intelligence and reporting.</div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(239,68,68,.4);background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.01));">
+        <h3 style="color:#fca5a5;">Fraud Data Node</h3>
+        <div class="nd-detail nr" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Fraud Signal Aggregator</div>
+          <div class="nsub">Risk Pattern Detection</div>
+          <div class="ndesc">Collects anomalies, suspicious patterns, and consensus fraud verdicts across consortium.</div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(168,85,247,.4);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.01));">
+        <h3 style="color:#d8b4fe;">LLM Training Node</h3>
+        <div class="nd-detail np" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Model Training Pipeline</div>
+          <div class="nsub">Continuous Learning</div>
+          <div class="ndesc">Fine-tunes anomaly detection models on real transactions, improves fraud scoring accuracy.</div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(34,197,94,.4);background:linear-gradient(135deg,rgba(34,197,94,.08),rgba(34,197,94,.01));">
+        <h3 style="color:#86efac;">Analytics Stack</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <span class="tg tg2" style="font-size:8px;justify-content:center;padding:8px;">Grafana</span>
+          <span class="tg tg2" style="font-size:8px;justify-content:center;padding:8px;">Prometheus</span>
+          <span class="tg tg2" style="font-size:8px;justify-content:center;padding:8px;">OpenSearch</span>
+          <span class="tg tp" style="font-size:8px;justify-content:center;padding:8px;">Tableau</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- BANK-C DETAIL PAGE (Same structure, Amber theme) -->
+<div id="page-bank-c" class="bd-page">
+  <div class="bd-grid">
+    <div class="bd-col">
+      <div class="bd-card" style="border-color:rgba(245,158,11,.5);background:linear-gradient(135deg,rgba(245,158,11,.1),rgba(245,158,11,.02));">
+        <h3 style="color:#fcd34d;">Validator Node</h3>
+        <div class="nd-detail na nd-val" style="min-height:140px;">
+          <div class="ni">*</div>
+          <div class="nlbl">BFT Consensus Engine</div>
+          <div class="nsub">Byzantine Fault Tolerant</div>
+          <div class="ndesc">Participates in 3-phase consensus protocol. Validates all transactions, broadcasts votes, reaches agreement on block order.</div>
+        </div>
+        <div class="dtl-grid" style="margin-top:12px;">
+          <div class="dtl-item">
+            <div class="dtl-item-label">Role</div>
+            <div class="dtl-item-val">Primary Validator</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">State</div>
+            <div class="dtl-item-val" style="color:#86efac;"><span class="ld2"></span>Active</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">Consensus Rounds</div>
+            <div class="dtl-item-val">2-3 per block</div>
+          </div>
+          <div class="dtl-item">
+            <div class="dtl-item-label">Quorum Size</div>
+            <div class="dtl-item-val">Q = ?2N/3? + 1</div>
+          </div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(245,158,11,.5);background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.01));">
+        <h3 style="color:#fcd34d;">Standby Node</h3>
+        <div class="nd-detail na" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Hot Standby</div>
+          <div class="nsub">Failover Ready</div>
+          <div class="ndesc">Synced replica waiting for validator promotion. Takes over if primary fails. Zero downtime.</div>
+        </div>
+      </div>
+    </div>
+    <div class="bd-col">
+      <div class="bd-card db-highlight dbrk-detail">
+        <h3 style="color:#67e8f9;">Shared Ledger (Hyperledger)</h3>
+        <div class="nd-detail nc nd-db" style="min-height:160px;position:relative;z-index:1;">
+          <div class="ni">*</div>
+          <div class="nlbl">Hyperledger Distributed Ledger</div>
+          <div class="nsub">Permissioned Distributed Ledger</div>
+          <div class="ndesc">Persists all transactions, account states, and block hashes. Channel world state and block data persisted across consortium peers.</div>
+        </div>
+        <div class="dtl-grid" style="margin-top:12px;">
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Format</div>
+            <div class="dtl-item-val">Embedded KV</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Compression</div>
+            <div class="dtl-item-val">LZ4 / Snappy</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Throughput</div>
+            <div class="dtl-item-val">100k+ ops/sec</div>
+          </div>
+          <div class="dtl-item" style="border-color:rgba(6,182,212,.4);">
+            <div class="dtl-item-label">Replication</div>
+            <div class="dtl-item-val">Read-only copies</div>
+          </div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(6,182,212,.4);background:linear-gradient(135deg,rgba(6,182,212,.08),rgba(6,182,212,.01));">
+        <h3 style="color:#67e8f9;">Ledger Copy (Hyperledger Replica)</h3>
+        <div class="nd-detail nc nd-db" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Backup Replica</div>
+          <div class="nsub">Point-in-time snapshot</div>
+          <div class="ndesc">Read-only copy for analytics and recovery. Independently compacted.</div>
+        </div>
+      </div>
+    </div>
+    <div class="bd-col">
+      <div class="bd-card" style="border-color:rgba(168,85,247,.4);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.01));">
+        <h3 style="color:#d8b4fe;">Analytical Node</h3>
+        <div class="nd-detail np" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Data Warehouse</div>
+          <div class="nsub">Time-series Analytics</div>
+          <div class="ndesc">Consumes ledger events, builds indices for business intelligence and reporting.</div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(239,68,68,.4);background:linear-gradient(135deg,rgba(239,68,68,.08),rgba(239,68,68,.01));">
+        <h3 style="color:#fca5a5;">Fraud Data Node</h3>
+        <div class="nd-detail nr" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Fraud Signal Aggregator</div>
+          <div class="nsub">Risk Pattern Detection</div>
+          <div class="ndesc">Collects anomalies, suspicious patterns, and consensus fraud verdicts across consortium.</div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(168,85,247,.4);background:linear-gradient(135deg,rgba(168,85,247,.08),rgba(168,85,247,.01));">
+        <h3 style="color:#d8b4fe;">LLM Training Node</h3>
+        <div class="nd-detail np" style="min-height:120px;">
+          <div class="ni">*</div>
+          <div class="nlbl">Model Training Pipeline</div>
+          <div class="nsub">Continuous Learning</div>
+          <div class="ndesc">Fine-tunes anomaly detection models on real transactions, improves fraud scoring accuracy.</div>
+        </div>
+      </div>
+      <div class="bd-card" style="border-color:rgba(245,158,11,.4);background:linear-gradient(135deg,rgba(245,158,11,.08),rgba(245,158,11,.01));">
+        <h3 style="color:#fcd34d;">Analytics Stack</h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+          <span class="tg ta" style="font-size:8px;justify-content:center;padding:8px;">Grafana</span>
+          <span class="tg ta" style="font-size:8px;justify-content:center;padding:8px;">Prometheus</span>
+          <span class="tg ta" style="font-size:8px;justify-content:center;padding:8px;">OpenSearch</span>
+          <span class="tg tp" style="font-size:8px;justify-content:center;padding:8px;">Tableau</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- LEDGER RESYNC PAGE -->
+<div id="page-resync" class="bd-page" style="align-items:flex-start;justify-content:center;overflow:hidden;">
+<div id="rs-board" style="width:1520px;max-width:1520px;padding:16px 16px 14px;position:relative;transform-origin:top center;">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.013) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.013) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;"></div>
+
+  <div style="position:relative;z-index:2;text-align:center;margin-bottom:12px;">
+    <div style="font-size:18px;font-weight:900;letter-spacing:2px;text-transform:uppercase;background:linear-gradient(90deg,#06b6d4,#3b82f6);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;">LEDGER RE-SYNC PROTOCOL</div>
+    <div style="font-size:10px;color:#64748b;margin-top:4px;letter-spacing:.5px;">Triggered when a Bank Validator continuously produces faulty hashes beyond threshold</div>
+  </div>
+
+  <div id="rs-flow" style="position:relative;height:680px;z-index:2;">
+    <svg id="rs-svg" viewBox="0 0 1520 680" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
+      <defs>
+        <marker id="rsa-r" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#ef4444" stroke-width="1.5"/></marker>
+        <marker id="rsa-b" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#3b82f6" stroke-width="1.5"/></marker>
+        <marker id="rsa-c" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#06b6d4" stroke-width="1.5"/></marker>
+        <marker id="rsa-g" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#22c55e" stroke-width="1.5"/></marker>
+        <marker id="rsa-p" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#a855f7" stroke-width="1.5"/></marker>
+      </defs>
+      <!-- Top row arrows -->
+      <line x1="208" y1="170" x2="320" y2="170" stroke="#ef4444" stroke-width="1.5" marker-end="url(#rsa-r)"/>
+      <line x1="496" y1="170" x2="600" y2="170" stroke="#ef4444" stroke-width="1.5" marker-end="url(#rsa-r)"/>
+      <line x1="780" y1="171" x2="900" y2="171" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#rsa-b)"/>
+      <line x1="1080" y1="171" x2="1188" y2="171" stroke="#06b6d4" stroke-width="1.5" marker-end="url(#rsa-c)"/>
+
+      <!-- Vertical / decision branches -->
+      <line x1="690" y1="232" x2="690" y2="450" stroke="#a855f7" stroke-width="1.4" marker-end="url(#rsa-p)"/>
+
+      <!-- Decision-2 YES route: continue to Rejoin -->
+      <path d="M1268,248 C1274,310 1278,360 1278,450" stroke="#3b82f6" stroke-width="1.4" fill="none" marker-end="url(#rsa-b)"/>
+      <text x="1286" y="320" fill="#3b82f6" font-size="8" font-weight="800">YES</text>
+
+      <!-- Decision-2 NO route: go to Share Snapshot -->
+      <path d="M1268,248 C1268,320 420,320 220,320 L220,450" stroke="#22c55e" stroke-width="1.2" fill="none" marker-end="url(#rsa-g)"/>
+      <text x="1252" y="318" fill="#fcd34d" font-size="8" font-weight="800">NO</text>
+
+      <!-- Mid row arrows -->
+      <line x1="508" y1="511" x2="600" y2="511" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#rsa-b)"/>
+      <line x1="780" y1="511" x2="900" y2="511" stroke="#a855f7" stroke-width="1.5" marker-end="url(#rsa-p)"/>
+      <line x1="1080" y1="511" x2="1188" y2="511" stroke="#3b82f6" stroke-width="1.5" marker-end="url(#rsa-b)"/>
+
+      <!-- Bottom bus -->
+      <line x1="125" y1="585" x2="1278" y2="585" stroke="rgba(147,197,253,.35)" stroke-width="1.1"/>
+      <line x1="125" y1="572" x2="125" y2="585" stroke="#22c55e" stroke-width="1.1"/>
+      <line x1="404" y1="572" x2="404" y2="585" stroke="#22c55e" stroke-width="1.1"/>
+      <line x1="690" y1="572" x2="690" y2="585" stroke="#22c55e" stroke-width="1.1"/>
+      <line x1="990" y1="572" x2="990" y2="585" stroke="#a855f7" stroke-width="1.1"/>
+      <line x1="1278" y1="572" x2="1278" y2="585" stroke="#3b82f6" stroke-width="1.1"/>
+    </svg>
+
+    <!-- Top row -->
+    <div class="card c-b" style="position:absolute;left:30px;top:110px;width:178px;min-height:120px;text-align:center;">
+      <div style="font-size:18px;">*</div>
+      <div class="ct" style="font-size:9px;color:#93c5fd;">Bank Validator</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Faulty hashes are monitored continuously during BFT voting.</div>
+      <div style="margin-top:6px;"><span class="tg tb" style="font-size:7px;">Active</span></div>
+    </div>
+
+    <div style="position:absolute;left:320px;top:92px;width:176px;height:156px;display:flex;align-items:center;justify-content:center;">
+      <svg width="176" height="156" viewBox="0 0 176 156" style="position:absolute;inset:0;">
+        <defs><linearGradient id="rsDecision" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(239,68,68,.26)"/><stop offset="100%" stop-color="rgba(239,68,68,.04)"/></linearGradient></defs>
+        <polygon points="88,6 170,78 88,150 6,78" fill="url(#rsDecision)" stroke="rgba(239,68,68,.7)" stroke-width="1.5"/>
+      </svg>
+      <div style="position:relative;z-index:2;text-align:center;padding:0 20px;">
+        <div style="font-size:7.8px;font-weight:700;color:#fca5a5;line-height:1.45;">Wrong hash count continuously &gt; Threshold?</div>
+      </div>
+      <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:800;color:#fca5a5;">YES</div>
+    </div>
+
+    <div class="card c-r" style="position:absolute;left:600px;top:110px;width:180px;min-height:122px;text-align:center;">
+      <div style="font-size:18px;">*</div>
+      <div class="ct" style="font-size:9px;color:#fca5a5;">Halt Voting</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Node stops voting and sends Re-Sync request to consortium.</div>
+    </div>
+
+    <div class="card c-b" style="position:absolute;left:900px;top:110px;width:180px;min-height:122px;text-align:center;">
+      <div style="font-size:18px;">*</div>
+      <div class="ct" style="font-size:9px;color:#93c5fd;">Analytical Node</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Ranks banks by hash success rate and picks best source.</div>
+    </div>
+
+    <div style="position:absolute;left:1188px;top:92px;width:160px;height:156px;display:flex;align-items:center;justify-content:center;">
+      <svg width="160" height="156" viewBox="0 0 160 156" style="position:absolute;inset:0;">
+        <defs><linearGradient id="rsDecision2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="rgba(6,182,212,.24)"/><stop offset="100%" stop-color="rgba(6,182,212,.04)"/></linearGradient></defs>
+        <polygon points="80,6 154,78 80,150 6,78" fill="url(#rsDecision2)" stroke="rgba(6,182,212,.7)" stroke-width="1.5"/>
+      </svg>
+      <div style="position:relative;z-index:2;text-align:center;padding:0 16px;">
+        <div style="font-size:7.8px;font-weight:700;color:#67e8f9;line-height:1.45;">Snapshot present in Resync Node?</div>
+      </div>
+      <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:800;color:#86efac;">YES</div>
+      <div style="position:absolute;bottom:-7px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:800;color:#fcd34d;">NO</div>
+    </div>
+
+    <!-- Mid row -->
+    <div class="card c-b" style="position:absolute;left:300px;top:450px;width:208px;min-height:122px;text-align:center;">
+      <div style="font-size:18px;">*</div>
+      <div class="ct" style="font-size:9px;color:#93c5fd;">Best Resync Source</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Healthy node with highest verdict/hash success rate.</div>
+      <div style="margin-top:6px;"><span class="tg tb" style="font-size:7px;">FW.: LOW</span></div>
+    </div>
+
+    <div class="card c-p" style="position:absolute;left:600px;top:450px;width:180px;min-height:122px;text-align:center;">
+      <div style="font-size:18px;">*</div>
+      <div class="ct" style="font-size:9px;color:#d8b4fe;">Hash Verification</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Node and transaction hashes are validated before apply.</div>
+    </div>
+
+    <div class="card c-c" style="position:absolute;left:900px;top:450px;width:180px;min-height:122px;text-align:center;">
+      <div style="font-size:18px;">*</div>
+      <div class="ct" style="font-size:9px;color:#67e8f9;">Hyperledger Sync Request</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Missing blocks requested from snapshot height.</div>
+    </div>
+
+    <div class="card c-b" style="position:absolute;left:1188px;top:450px;width:180px;min-height:122px;text-align:center;">
+      <div style="font-size:18px;">*</div>
+      <div class="ct" style="font-size:9px;color:#93c5fd;">Rejoin BFT Consensus</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Re-sync complete. Node rejoins voting with consistent ledger.</div>
+      <div style="display:flex;justify-content:center;gap:5px;margin-top:7px;"><span class="tg tr" style="font-size:7px;">Rejected</span><span class="tg tg2" style="font-size:7px;">Complete</span></div>
+    </div>
+
+    <div class="card c-a" style="position:absolute;left:30px;top:450px;width:190px;min-height:122px;text-align:center;">
+      <div style="font-size:17px;">*</div>
+      <div class="ct" style="font-size:9px;color:#fcd34d;">Share Snapshot</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">If snapshot missing, previous snapshot is shared and flow loops.</div>
+      <div style="margin-top:7px;"><span class="tg ta" style="font-size:7px;">Threshold</span></div>
+    </div>
+
+    <div style="position:absolute;left:500px;top:620px;font-size:8px;color:#fcd34d;font-weight:800;">NO = share snapshot</div>
+    <div style="position:absolute;left:735px;top:620px;font-size:8px;color:#fca5a5;font-weight:800;">YES = continue resync flow</div>
+  </div>
+</div>
+</div>
+
+<!-- TXN FLOW PAGE -->
+<div id="page-txn-flow" class="bd-page" style="align-items:flex-start;justify-content:center;overflow:hidden;">
+<div id="tx-board" style="width:1320px;max-width:1320px;padding:16px 18px 16px;position:relative;transform-origin:top center;">
+  <div style="position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.013) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.013) 1px,transparent 1px);background-size:44px 44px;pointer-events:none;"></div>
+  <div style="position:relative;z-index:2;text-align:center;margin-bottom:10px;">
+    <div style="font-size:18px;font-weight:900;letter-spacing:1.8px;text-transform:uppercase;background:linear-gradient(90deg,#60a5fa,#22d3ee);background-clip:text;-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Transaction Flow + Escrow Service</div>
+    <div style="font-size:10px;color:#64748b;margin-top:3px;letter-spacing:.5px;">Low/Medium and High-risk flow with escrow handling across Non-Blockchain and Blockchain banks</div>
+  </div>
+
+  <div id="tx-flow" style="position:relative;height:1260px;z-index:2;">
+    <svg viewBox="0 0 1320 1260" preserveAspectRatio="none" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible;">
+      <defs>
+        <marker id="tx-ab" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#60a5fa" stroke-width="1.5"/></marker>
+        <marker id="tx-ac" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#22d3ee" stroke-width="1.5"/></marker>
+        <marker id="tx-ap" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#c084fc" stroke-width="1.5"/></marker>
+        <marker id="tx-ag" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#22c55e" stroke-width="1.5"/></marker>
+        <marker id="tx-aa" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M1 1L7 4L1 7" fill="none" stroke="#f59e0b" stroke-width="1.5"/></marker>
+      </defs>
+
+      <!-- Banks -> Smart Contract -->
+      <path d="M260,168 C260,210 420,210 470,210" stroke="#60a5fa" stroke-width="1.6" fill="none" marker-end="url(#tx-ab)"/>
+      <path d="M1060,168 C1060,210 900,210 850,210" stroke="#f59e0b" stroke-width="1.6" fill="none" marker-end="url(#tx-aa)"/>
+
+      <!-- Smart Contract split -->
+      <line x1="590" y1="312" x2="500" y2="390" stroke="#22d3ee" stroke-width="1.6" marker-end="url(#tx-ac)"/>
+      <line x1="730" y1="312" x2="820" y2="390" stroke="#c084fc" stroke-width="1.6" marker-end="url(#tx-ap)"/>
+
+      <!-- Left branch -->
+      <line x1="450" y1="480" x2="330" y2="520" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#tx-ac)"/>
+      <line x1="450" y1="480" x2="470" y2="520" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#tx-ac)"/>
+      <line x1="530" y1="560" x2="530" y2="620" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#tx-aa)"/>
+      <line x1="530" y1="694" x2="530" y2="718" stroke="#22d3ee" stroke-width="1.5" marker-end="url(#tx-ac)"/>
+      <path d="M270,560 C300,655 360,700 450,730" stroke="#22d3ee" stroke-width="1.5" fill="none" marker-end="url(#tx-ac)"/>
+
+      <!-- Right branch -->
+      <line x1="930" y1="498" x2="930" y2="570" stroke="#c084fc" stroke-width="1.5" marker-end="url(#tx-ap)"/>
+      <line x1="930" y1="660" x2="930" y2="714" stroke="#c084fc" stroke-width="1.5" marker-end="url(#tx-ap)"/>
+
+      <!-- Post-settlement ledger branch -->
+      <path d="M490,802 C560,830 610,832 660,850" stroke="#22d3ee" stroke-width="1.4" fill="none" marker-end="url(#tx-ac)"/>
+      <line x1="660" y1="924" x2="660" y2="958" stroke="#93c5fd" stroke-width="1.2" marker-end="url(#tx-ab)"/>
+      <line x1="330" y1="958" x2="990" y2="958" stroke="#93c5fd" stroke-width="1.2"/>
+      <line x1="330" y1="958" x2="330" y2="990" stroke="#22d3ee" stroke-width="1.2" marker-end="url(#tx-ac)"/>
+      <line x1="990" y1="958" x2="990" y2="990" stroke="#f59e0b" stroke-width="1.2" marker-end="url(#tx-aa)"/>
+
+      <!-- Behavior matrix connectors -->
+      <line x1="440" y1="694" x2="440" y2="1040" stroke="#f59e0b" stroke-width="1.2" marker-end="url(#tx-aa)"/>
+      <line x1="930" y1="692" x2="930" y2="1040" stroke="#c084fc" stroke-width="1.2" marker-end="url(#tx-ap)"/>
+    </svg>
+
+    <!-- Top row -->
+    <div class="card c-b" style="position:absolute;left:70px;top:76px;width:250px;min-height:95px;text-align:center;">
+      <div class="ct" style="font-size:11px;color:#93c5fd;">Non-Blockchain Bank</div>
+    </div>
+
+    <div class="card c-a" style="position:absolute;left:840px;top:76px;width:250px;min-height:95px;text-align:center;">
+      <div class="ct" style="font-size:11px;color:#fcd34d;">Blockchain Bank</div>
+    </div>
+
+    <div class="card c-c" style="position:absolute;left:390px;top:170px;width:540px;min-height:206px;text-align:center;">
+      <div style="font-size:16px;font-weight:800;color:#67e8f9;line-height:1.2;">Smart Contract<br>Enabled</div>
+      <div style="margin-top:10px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <div class="card c-b" style="padding:8px 10px;min-height:54px;text-align:left;">
+          <div style="font-size:8px;font-weight:800;color:#93c5fd;">1) Non-Blockchain + Opted</div>
+          <div style="font-size:7px;line-height:1.35;color:#dbeafe;">Escrow hold activates, receiver transfer stays restricted, fraud trigger reverses to sender.</div>
+        </div>
+        <div class="card c-a" style="padding:8px 10px;min-height:54px;text-align:left;">
+          <div style="font-size:8px;font-weight:800;color:#fcd34d;">2) Non-Blockchain + Not Opted</div>
+          <div style="font-size:7px;line-height:1.35;color:#fef3c7;">Manual hold and review apply; no autonomous escrow enforcement.</div>
+        </div>
+        <div class="card c-c" style="padding:8px 10px;min-height:54px;text-align:left;">
+          <div style="font-size:8px;font-weight:800;color:#67e8f9;">3) Blockchain + Opted</div>
+          <div style="font-size:7px;line-height:1.35;color:#cffafe;">On-chain escrow lock is created; release and reversal follow signed rules.</div>
+        </div>
+        <div class="card c-p" style="padding:8px 10px;min-height:54px;text-align:left;">
+          <div style="font-size:8px;font-weight:800;color:#d8b4fe;">4) Blockchain + Not Opted</div>
+          <div style="font-size:7px;line-height:1.35;color:#f3e8ff;">Default settlement path; fraud handling uses manual freeze/escalation policy.</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="position:absolute;left:430px;top:352px;font-size:18px;color:#d8b4fe;font-weight:800;">NO</div>
+    <div style="position:absolute;left:875px;top:352px;font-size:18px;color:#d8b4fe;font-weight:800;">YES</div>
+
+    <!-- Left side (Risk scoring) -->
+    <div class="card c-c" style="position:absolute;left:130px;top:390px;width:430px;min-height:96px;text-align:center;">
+      <div style="font-size:16px;font-weight:800;color:#e2e8f0;">Check Risk Score</div>
+    </div>
+
+    <div class="card c-c" style="position:absolute;left:130px;top:520px;width:160px;min-height:62px;padding:10px;text-align:center;">
+      <div style="font-size:14px;font-weight:700;color:#e2e8f0;">Low/Medium</div>
+      <div style="margin-top:4px;"><span class="tg tc" style="font-size:7px;">Escrow not required</span></div>
+    </div>
+
+    <div class="card c-a" style="position:absolute;left:360px;top:520px;width:160px;min-height:62px;padding:10px;text-align:center;">
+      <div style="font-size:14px;font-weight:700;color:#e2e8f0;">High Risk</div>
+      <div style="margin-top:4px;"><span class="tg ta" style="font-size:7px;">Escrow required</span></div>
+    </div>
+
+    <div class="card c-p" style="position:absolute;left:360px;top:620px;width:280px;min-height:74px;padding:10px;text-align:center;">
+      <div style="font-size:14px;font-weight:800;color:#d8b4fe;">Escrow Hold Service (High)</div>
+      <div class="cb" style="font-size:8px;line-height:1.3;">Funds held in escrow window until admin review confirms release.</div>
+    </div>
+
+    <div class="card c-c" style="position:absolute;left:330px;top:718px;width:320px;min-height:84px;padding:10px;text-align:center;">
+      <div style="font-size:16px;font-weight:800;color:#e2e8f0;line-height:1.25;">Settle the</div>
+      <div style="font-size:16px;font-weight:800;color:#e2e8f0;line-height:1.25;">Transaction</div>
+    </div>
+
+    <!-- Right side (Escrow path) -->
+    <div class="card c-p" style="position:absolute;left:790px;top:390px;width:430px;min-height:128px;text-align:center;">
+      <div style="font-size:16px;font-weight:700;color:#f8fafc;line-height:1.45;">Funds sent to Bank &amp; held<br>Restrict Receiver to transfer</div>
+      <div style="margin-top:6px;"><span class="tg tp" style="font-size:7px;">Escrow Lock Window</span></div>
+    </div>
+
+    <div class="card c-p" style="position:absolute;left:790px;top:570px;width:430px;min-height:122px;text-align:left;">
+      <div style="font-size:16px;font-weight:800;color:#f8fafc;line-height:1.25;">Sender request for</div>
+      <div style="font-size:16px;font-weight:800;color:#f8fafc;line-height:1.25;">e-transfer <span style="font-size:16px;font-weight:600;color:#f8fafc;">will be routed</span></div>
+      <div style="font-size:16px;font-weight:600;color:#f8fafc;line-height:1.25;">to sender</div>
+      <div style="margin-top:6px;"><span class="tg tp" style="font-size:7px;">Escrow reversal path</span></div>
+    </div>
+
+    <div class="card c-c" style="position:absolute;left:300px;top:824px;width:720px;min-height:86px;text-align:center;">
+      <div style="font-size:16px;font-weight:800;color:#67e8f9;line-height:1.25;">After settling txn, add it to ledger</div>
+      <div style="font-size:16px;font-weight:700;color:#e2e8f0;line-height:1.25;">Both blockchain and non-blockchain records update together</div>
+    </div>
+
+    <div class="card c-b" style="position:absolute;left:100px;top:990px;width:450px;min-height:118px;text-align:center;">
+      <div style="font-size:16px;font-weight:800;color:#93c5fd;line-height:1.25;">Blockchain Ledger Updated</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Block hash, consensus stamp, and final balance are written on-chain.</div>
+      <div style="margin-top:6px;"><span class="tg tb" style="font-size:7px;">On-chain record</span></div>
+    </div>
+
+    <div class="card c-p" style="position:absolute;left:770px;top:990px;width:450px;min-height:118px;text-align:center;">
+      <div style="font-size:16px;font-weight:800;color:#d8b4fe;line-height:1.25;">Non-Blockchain Ledger Updated</div>
+      <div class="cb" style="font-size:8px;line-height:1.35;">Bank ledger entry, audit record, and escrow status are written to core banking ledger.</div>
+      <div style="margin-top:6px;"><span class="tg tp" style="font-size:7px;">Core banking record</span></div>
+    </div>
+
+  </div>
+</div>
+</div>
+
+<!-- ZOOM BAR -->
+<div class="zb">
+  <button class="zbn" onclick="setZ(.55)">55%</button>
+  <button class="zbn" onclick="setZ(.7)">70%</button>
+  <button class="zbn" onclick="setZ(.85)">85%</button>
+  <button class="zbn" onclick="setZ(1)">100%</button>
+  <button class="zbn fit" onclick="fit()">Fit</button>
+</div>
+
+<script>
+const dg = document.getElementById('dg');
+const cv = document.getElementById('cv');
+const so = document.getElementById('so');
+const NS = 'http://www.w3.org/2000/svg';
+let curZ = 1;
+let activePage = 'arch';
+let preNodes = [];
+let preTicker = null;
+let preIndex = 0;
+
+function setZ(z){
+  curZ = z;
+  dg.style.transform = 'scale('+z+')';
+  dg.style.transformOrigin = 'top left';
+}
+function fit(){
+  dg.style.transform = 'scale(1)';
+  dg.style.transformOrigin = 'top left';
+  const dw = dg.offsetWidth, dh = dg.offsetHeight;
+  const z = Math.min(cv.clientWidth/dw, cv.clientHeight/dh) * 0.97;
+  setZ(z);
+  cv.scrollTop = 0; cv.scrollLeft = 0;
+  setTimeout(drawSVG, 60);
+}
+
+function fitResync(){
+  const board = document.getElementById('rs-board');
+  const page = document.getElementById('page-resync');
+  if (!board || !page) return;
+  board.style.transform = 'scale(1)';
+  const vw = page.clientWidth - 24;
+  const vh = page.clientHeight - 20;
+  const bw = board.offsetWidth;
+  const bh = board.offsetHeight;
+  const z = Math.min(vw / bw, vh / bh, 1);
+  board.style.transform = 'scale(' + z.toFixed(4) + ')';
+}
+
+function fitTxnFlow(){
+  const board = document.getElementById('tx-board');
+  const page = document.getElementById('page-txn-flow');
+  if (!board || !page) return;
+  board.style.transform = 'scale(1)';
+  const vw = page.clientWidth - 20;
+  const vh = page.clientHeight - 16;
+  const bw = board.offsetWidth;
+  const bh = board.offsetHeight;
+  const z = Math.min(vw / bw, vh / bh, 1);
+  board.style.transform = 'scale(' + z.toFixed(4) + ')';
+}
+
+function fitPreNetwork(){
+  const board = document.getElementById('pre-board');
+  const page = document.getElementById('page-pre-network');
+  if (!board || !page) return;
+  board.style.transform = 'scale(1)';
+  const vw = page.clientWidth - 18;
+  const vh = page.clientHeight - 14;
+  const bw = board.offsetWidth;
+  const bh = board.offsetHeight;
+  const z = Math.min(vw / bw, vh / bh, 1);
+  board.style.transform = 'scale(' + z.toFixed(4) + ')';
+}
+
+function focusPreNode(idx, stopAuto){
+  if (!preNodes.length) return;
+  preNodes.forEach(n => n.classList.remove('pre-active'));
+  const node = preNodes[(idx + preNodes.length) % preNodes.length];
+  node.classList.add('pre-active');
+  const title = document.getElementById('pre-focus-title');
+  const desc = document.getElementById('pre-focus-desc');
+  if (title && desc){
+    title.textContent = node.getAttribute('data-title') || 'Interactive Guide';
+    desc.textContent = node.getAttribute('data-desc') || 'Hover or click any component to focus it.';
+  }
+  preIndex = (idx + preNodes.length) % preNodes.length;
+  if (stopAuto) stopPreTicker();
+}
+
+function startPreTicker(){
+  if (preTicker || !preNodes.length) return;
+  preTicker = setInterval(() => {
+    if (activePage !== 'pre-network') return;
+    focusPreNode(preIndex + 1, false);
+  }, 2200);
+}
+
+function stopPreTicker(){
+  if (!preTicker) return;
+  clearInterval(preTicker);
+  preTicker = null;
+}
+
+function initPreNetworkInteractions(){
+  preNodes = Array.from(document.querySelectorAll('#page-pre-network .pre-node'));
+  if (!preNodes.length) return;
+  preNodes.forEach((node, idx) => {
+    node.addEventListener('mouseenter', () => focusPreNode(idx, false));
+    node.addEventListener('click', () => focusPreNode(idx, true));
+  });
+  focusPreNode(0, false);
+}
+
+/* -- SVG helpers -- */
+function mkDefs(){
+  const d = document.createElementNS(NS,'defs');
+  [['ab','#3b82f6'],['ac','#06b6d4'],['ap','#a855f7'],['ag','#22c55e'],['aa','#f59e0b'],['ar','#ef4444']].forEach(([id,col])=>{
+    const m=document.createElementNS(NS,'marker');
+    m.setAttribute('id',id); m.setAttribute('viewBox','0 0 10 10');
+    m.setAttribute('refX','8'); m.setAttribute('refY','5');
+    m.setAttribute('markerWidth','5'); m.setAttribute('markerHeight','5');
+    m.setAttribute('orient','auto');
+    const p=document.createElementNS(NS,'path');
+    p.setAttribute('d','M2 2L8 5L2 8'); p.setAttribute('fill','none');
+    p.setAttribute('stroke',col); p.setAttribute('stroke-width','1.5'); p.setAttribute('stroke-linecap','round');
+    m.appendChild(p); d.appendChild(m);
+  });
+  return d;
+}
+
+function box(id){
+  const el=document.getElementById(id); if(!el) return null;
+  const er=el.getBoundingClientRect(), dr=dg.getBoundingClientRect();
+  const s=curZ;
+  return {
+    l:(er.left-dr.left)/s, r:(er.right-dr.left)/s,
+    t:(er.top-dr.top)/s,   b:(er.bottom-dr.top)/s,
+    cx:(er.left+er.right)/2/s-dr.left/s,
+    cy:(er.top+er.bottom)/2/s-dr.top/s,
+    w:(er.width)/s, h:(er.height)/s
+  };
+}
+
+function ln(x1,y1,x2,y2,col,mid,dash){
+  const e=document.createElementNS(NS,'line');
+  e.setAttribute('x1',x1); e.setAttribute('y1',y1);
+  e.setAttribute('x2',x2); e.setAttribute('y2',y2);
+  e.setAttribute('stroke',col); e.setAttribute('stroke-width','1.5');
+  if(mid) e.setAttribute('marker-end','url(#'+mid+')');
+  if(dash){ e.setAttribute('stroke-dasharray',dash); e.setAttribute('opacity','.45'); }
+  return e;
+}
+
+function cv2(x1,y1,x2,y2,col,mid){
+  const p=document.createElementNS(NS,'path');
+  const my=(y1+y2)/2;
+  p.setAttribute('d','M'+x1+','+y1+' C'+x1+','+my+' '+x2+','+my+' '+x2+','+y2);
+  p.setAttribute('stroke',col); p.setAttribute('stroke-width','1.5'); p.setAttribute('fill','none');
+  if(mid) p.setAttribute('marker-end','url(#'+mid+')');
+  return p;
+}
+
+function aDash(x1,y1,x2,y2,col,dur){
+  const e=document.createElementNS(NS,'line');
+  e.setAttribute('x1',x1); e.setAttribute('y1',y1); e.setAttribute('x2',x2); e.setAttribute('y2',y2);
+  e.setAttribute('stroke',col); e.setAttribute('stroke-width','0.8'); e.setAttribute('stroke-dasharray','5 5'); e.setAttribute('opacity','.45');
+  const a=document.createElementNS(NS,'animate');
+  a.setAttribute('attributeName','stroke-dashoffset'); a.setAttribute('from','0'); a.setAttribute('to','-20');
+  a.setAttribute('dur',dur+'s'); a.setAttribute('repeatCount','indefinite');
+  e.appendChild(a); return e;
+}
+
+function mkPath(id,d){ const p=document.createElementNS(NS,'path'); p.setAttribute('id',id); p.setAttribute('d',d); p.setAttribute('fill','none'); p.setAttribute('stroke','none'); return p; }
+
+function ptcl(pid,col,dur,delay){
+  const c=document.createElementNS(NS,'circle'); c.setAttribute('r','3'); c.setAttribute('fill',col); c.setAttribute('opacity','.9');
+  const am=document.createElementNS(NS,'animateMotion'); am.setAttribute('dur',dur+'s'); am.setAttribute('repeatCount','indefinite');
+  if(delay) am.setAttribute('begin',delay+'s');
+  const mp=document.createElementNS(NS,'mpath'); mp.setAttributeNS('http://www.w3.org/1999/xlink','href','#'+pid);
+  am.appendChild(mp); c.appendChild(am); return c;
+}
+
+function drawSVG(){
+  while(so.firstChild) so.removeChild(so.firstChild);
+  so.appendChild(mkDefs());
+
+  const acc=box('c-acc'), pay=box('c-pay'), cbs=box('c-cbs'), llm=box('c-llm');
+  const fre=box('c-fre'), mp=box('c-mp'), sc=box('c-sc');
+  const nbc=box('c-nbc'), frz=box('c-frz');
+  const ba=box('bk-a'), bb=box('bk-b'), bc=box('bk-c');
+  if(!acc||!ba) return;
+
+  /* ROW 1 horizontal connections */
+  so.appendChild(aDash(acc.r,acc.cy,pay.l-1,pay.cy,'#3b82f6',.75));
+  so.appendChild(aDash(pay.r,pay.cy,cbs.l-1,cbs.cy,'#06b6d4',.75));
+
+  /* CBS down to Fraud Engine */
+  so.appendChild(ln(cbs.cx,cbs.b,cbs.cx,fre.t-2,'#3b82f6','ab'));
+  so.appendChild(aDash(cbs.cx,cbs.b,cbs.cx,fre.t-2,'#3b82f6',.9));
+
+  /* LLM -> Fraud Engine (elbow: down then left) */
+  const llmX=llm.cx, llmB=llm.b, freR=fre.r+2, freMid=fre.t+(fre.b-fre.t)*0.3;
+  so.appendChild(cv2(llmX,llmB,freR,freMid,'#a855f7','ap'));
+
+  /* Fraud Engine bottom -> Mem-Pool top */
+  so.appendChild(ln(fre.cx,fre.b,mp.cx,mp.t-2,'#06b6d4','ac'));
+  so.appendChild(aDash(fre.cx,fre.b,mp.cx,mp.t-2,'#06b6d4',1));
+
+  /* Mem-Pool -> Non-BC */
+  so.appendChild(cv2(mp.l+(mp.w*0.22),mp.b,nbc.cx,nbc.t-2,'#f59e0b','aa'));
+
+  /* Mem-Pool -> Smart Contract */
+  so.appendChild(ln(mp.cx,mp.b,sc.cx,sc.t-2,'#a855f7','ap'));
+  so.appendChild(aDash(mp.cx,mp.b,sc.cx,sc.t-2,'#a855f7',.9));
+
+  /* Mem-Pool -> Freeze */
+  so.appendChild(cv2(mp.l+(mp.w*0.78),mp.b,frz.cx,frz.t-2,'#06b6d4','ac'));
+
+  /* Smart Contract -> Banks */
+  so.appendChild(cv2(sc.cx,sc.b,ba.cx,ba.t-2,'#3b82f6','ab'));
+  so.appendChild(ln(sc.cx,sc.b,bb.cx,bb.t-2,'#22c55e','ag'));
+  so.appendChild(aDash(sc.cx,sc.b,bb.cx,bb.t-2,'#22c55e',1.1));
+  so.appendChild(cv2(sc.cx,sc.b,bc.cx,bc.t-2,'#f59e0b','aa'));
+
+  /* Cross-bank ledger sync (horizontal dashed at top of banks) */
+  const syncY = ba.t+40;
+  so.appendChild(ln(ba.r+2,syncY,bb.l-2,syncY,'#06b6d4',null,'5 4'));
+  so.appendChild(ln(bb.r+2,syncY,bc.l-2,syncY,'#06b6d4',null,'5 4'));
+
+  /* -- Animated particles -- */
+  const pmD=`M${acc.r},${acc.cy} L${pay.l},${pay.cy} L${pay.r},${pay.cy} L${cbs.l},${cbs.cy} L${cbs.cx},${cbs.cy} L${cbs.cx},${fre.t} L${fre.cx},${fre.t} L${fre.cx},${fre.b} L${mp.cx},${mp.t}`;
+  so.appendChild(mkPath('pm',pmD));
+  so.appendChild(ptcl('pm','#06b6d4',2.8,0));
+  so.appendChild(ptcl('pm','#a855f7',2.8,.93));
+  so.appendChild(ptcl('pm','#22c55e',2.8,1.86));
+
+  /* Mempool to Banks through SC */
+  const pb_a=`M${mp.cx},${mp.b} L${sc.cx},${sc.t} L${sc.cx},${sc.b} L${ba.cx},${ba.t}`;
+  const pb_b=`M${mp.cx},${mp.b} L${sc.cx},${sc.t} L${sc.cx},${sc.b} L${bb.cx},${bb.t}`;
+  const pb_c=`M${mp.cx},${mp.b} L${sc.cx},${sc.t} L${sc.cx},${sc.b} L${bc.cx},${bc.t}`;
+  so.appendChild(mkPath('pba',pb_a)); so.appendChild(mkPath('pbb',pb_b)); so.appendChild(mkPath('pbc',pb_c));
+  so.appendChild(ptcl('pba','#3b82f6',2.2,0));
+  so.appendChild(ptcl('pbb','#22c55e',2.2,.4));
+  so.appendChild(ptcl('pbc','#f59e0b',2.2,.8));
+
+  /* Ledger sync */
+  const ps=`M${ba.r},${syncY} L${bb.l},${syncY} L${bb.r},${syncY} L${bc.l},${syncY}`;
+  so.appendChild(mkPath('ps',ps));
+  so.appendChild(ptcl('ps','#06b6d4',1.9,0));
+  so.appendChild(ptcl('ps','#06b6d4',1.9,.95));
+
+  so.setAttribute('width',dg.offsetWidth);
+  so.setAttribute('height',dg.offsetHeight);
+}
+
+/* -- PAGE SWITCHING -- */
+function switchPage(page) {
+  const btns = document.querySelectorAll('#tab-bar .pg-btn');
+  activePage = page;
+  
+  // Hide all pages
+  btns.forEach(btn => btn.classList.remove('active'));
+  document.getElementById('cv').style.display = 'none';
+  document.querySelectorAll('.bd-page').forEach(p => p.classList.remove('active'));
+  
+  // Show selected page
+  const pageMap = { 'arch': null, 'pre-network': 'page-pre-network', 'bank-a': 'page-bank-a', 'bank-b': 'page-bank-b', 'bank-c': 'page-bank-c', 'resync': 'page-resync', 'txn-flow': 'page-txn-flow' };
+  const btnIdx  = { 'arch': 0, 'pre-network': 1, 'bank-a': 2, 'bank-b': 3, 'bank-c': 4, 'resync': 5, 'txn-flow': 6 };
+  if (page === 'arch') {
+    document.getElementById('cv').style.display = 'flex';
+  } else {
+    document.getElementById(pageMap[page]).classList.add('active');
+  }
+  btns[btnIdx[page]].classList.add('active');
+  if (page === 'pre-network') {
+    setTimeout(fitPreNetwork, 30);
+    startPreTicker();
+  } else {
+    stopPreTicker();
+  }
+  if (page === 'resync') setTimeout(fitResync, 30);
+  if (page === 'txn-flow') setTimeout(fitTxnFlow, 30);
+}
+
+window.addEventListener('load',()=>setTimeout(()=>{fit(); initPreNetworkInteractions();},100));
+window.addEventListener('resize',()=>{ if (activePage === 'arch') fit(); else if (activePage === 'pre-network') fitPreNetwork(); else if (activePage === 'resync') fitResync(); else if (activePage === 'txn-flow') fitTxnFlow(); });
+</script>
+</body>
+</html>
