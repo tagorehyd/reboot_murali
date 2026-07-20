@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Canton/Daml Integration Dependencies for FraudShield Backend -->
+<!-- Add these dependencies to Backend/pom.xml -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0">
+    <modelVersion>4.0.0</modelVersion>
+
+    <!-- Dependencies for Canton/Daml Ledger API Integration -->
+    <!-- Note: Add these to the main pom.xml <dependencies> section -->
+
+    <dependencies>
+        <!-- Daml Ledger API Java Client -->
+        <!-- Version should match your Canton deployment version (v3.1.0) -->
+        <dependency>
+            <groupId>com.daml</groupId>
+            <artifactId>daml-java-codegen-runtime</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+        <dependency>
+            <groupId>com.daml</groupId>
+            <artifactId>ledger-client-javaapi</artifactId>
+            <version>3.1.0</version>
+        </dependency>
+
+        <!-- gRPC for Ledger API communication -->
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-netty-shaded</artifactId>
+            <version>1.56.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-protobuf</artifactId>
+            <version>1.56.1</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.grpc</groupId>
+            <artifactId>grpc-stub</artifactId>
+            <version>1.56.1</version>
+        </dependency>
+
+        <!-- Protocol Buffers -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>3.24.0</version>
+        </dependency>
+
+        <!-- Reactive Streams for event handling -->
+        <dependency>
+            <groupId>io.projectreactor</groupId>
+            <artifactId>reactor-core</artifactId>
+            <version>2022.0.13</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.projectreactor.netty</groupId>
+            <artifactId>reactor-netty-core</artifactId>
+            <version>1.1.5</version>
+        </dependency>
+
+        <!-- Logging for Daml integration -->
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.4.11</version>
+        </dependency>
+
+        <!-- Java Time API extensions -->
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>3.24.0</version>
+        </dependency>
+
+        <!-- Existing FraudShield dependencies (keep these) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-mongodb</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+    <!-- Build plugins for Daml code generation -->
+    <build>
+        <plugins>
+            <!-- Daml Java Codegen Plugin: generates Java classes from DAML contracts -->
+            <!-- This will be configured after DAML project is created -->
+            <!-- 
+            <plugin>
+                <groupId>com.daml</groupId>
+                <artifactId>daml-maven-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>codegen</goal>
+                        </goals>
+                        <configuration>
+                            <defs>
+                                <def>
+                                    <target>java</target>
+                                    <outputDirectory>${project.build.directory}/generated-sources/daml</outputDirectory>
+                                    <packagePrefix>com.fraudshield.daml</packagePrefix>
+                                </def>
+                            </defs>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            -->
+        </plugins>
+    </build>
+
+</project>
