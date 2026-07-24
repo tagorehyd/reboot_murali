@@ -56,20 +56,51 @@ public class SeedRunner implements ApplicationRunner {
 
 
     private void backfillCantonMappingsForExistingUsers() {
-        userRepository.findAll().stream()
-                .filter(user -> cantonPartyMappingRepository.findByAppUserId(user.getId()).isEmpty())
-                .map(user -> CantonPartyMapping.builder()
+        userRepository.findAll().forEach(user -> {
+            String bankId = resolveBankId(user.getId(), user.getBankId());
+            String participantId = resolveParticipantId(user.getId(), user.getParticipantId());
+            String cantonPartyId = resolveCantonPartyId(user.getId(), user.getCantonPartyId());
+            String cantonRole = resolveCantonRole(user.getRole(), user.getCantonRole());
+
+            boolean userUpdated = false;
+            if (isBlank(user.getBankId())) {
+                user.setBankId(bankId);
+                userUpdated = true;
+            }
+            if (isBlank(user.getParticipantId())) {
+                user.setParticipantId(participantId);
+                userUpdated = true;
+            }
+            if (isBlank(user.getCantonPartyId())) {
+                user.setCantonPartyId(cantonPartyId);
+                userUpdated = true;
+            }
+            if (isBlank(user.getCantonRole())) {
+                user.setCantonRole(cantonRole);
+                userUpdated = true;
+            }
+            if (userUpdated) {
+                userRepository.save(user);
+            }
+
+            if (cantonPartyMappingRepository.findByAppUserId(user.getId()).isEmpty()) {
+                cantonPartyMappingRepository.save(CantonPartyMapping.builder()
                         .id(user.getId())
                         .appUserId(user.getId())
-                        .bankId(resolveBankId(user.getId(), user.getBankId()))
-                        .participantId(resolveParticipantId(user.getId(), user.getParticipantId()))
-                        .cantonPartyId(resolveCantonPartyId(user.getId(), user.getCantonPartyId()))
-                        .cantonRole(resolveCantonRole(user.getRole(), user.getCantonRole()))
+                        .bankId(bankId)
+                        .participantId(participantId)
+                        .cantonPartyId(cantonPartyId)
+                        .cantonRole(cantonRole)
                         .createdAt(Instant.now())
-                        .build())
-                .forEach(cantonPartyMappingRepository::save);
+                        .build());
+            }
+        });
     }
 
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
 
     private String resolveBankId(String userId, String currentValue) {
         if (currentValue != null && !currentValue.isBlank()) return currentValue;
