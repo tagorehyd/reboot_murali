@@ -1,0 +1,50 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: fraudshield-mongodb
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: fraudshield
+      MONGO_INITDB_ROOT_PASSWORD: fraudshield-local-password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  fraudshield-backend:
+    build:
+      context: ./Backend
+    image: fraudshield-backend:local
+    container_name: fraudshield-backend
+    restart: unless-stopped
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://fraudshield:fraudshield-local-password@mongodb:27017/fraudshield?authSource=admin
+      SPRING_DATA_MONGODB_DATABASE: fraudshield
+      APP_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080
+      CORTEX_API_KEY: ${CORTEX_API_KEY:-PASTE_YOUR_CORTEX_API_KEY_HERE}
+    ports:
+      - "8080:8080"
+  fraudshield-frontend:
+    build:
+      context: ./FrontEnd
+    image: fraudshield-frontend:local
+    container_name: fraudshield-frontend
+    restart: unless-stopped
+    depends_on:
+      fraudshield-backend:
+        condition: service_started
+    ports:
+      - "3000:80"
+      - "5173:5173"
+
+volumes:
+  mongo-data:
