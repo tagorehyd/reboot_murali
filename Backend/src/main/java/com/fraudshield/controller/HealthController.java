@@ -1,6 +1,6 @@
 package com.fraudshield.controller;
 
-import com.mongodb.client.MongoClient;
+import com.fraudshield.canton.CantonReadinessService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.bson.Document;
@@ -19,6 +19,7 @@ import java.util.Map;
 public class HealthController {
 
     private final MongoTemplate mongoTemplate;
+    private final CantonReadinessService cantonReadinessService;
 
     /**
      * GET /health — simple liveness probe.
@@ -35,7 +36,7 @@ public class HealthController {
 
     /**
      * GET /ready — readiness probe.
-     * Pings MongoDB to confirm connectivity.
+     * Pings MongoDB and, when enabled, Canton participant endpoints to confirm connectivity.
      */
     @GetMapping("/ready")
     public ResponseEntity<Map<String, Object>> ready() {
@@ -47,6 +48,12 @@ public class HealthController {
             mongoTemplate.getDb().runCommand(new Document("ping", 1));
             body.put("status", "READY");
             body.put("mongo", "UP");
+            Map<String, Object> canton = cantonReadinessService.checkReadiness();
+            body.put("canton", canton);
+            if ("DOWN".equals(canton.get("status"))) {
+                body.put("status", "NOT_READY");
+                return ResponseEntity.status(503).body(body);
+            }
             return ResponseEntity.ok(body);
         } catch (Exception e) {
             log.error("MongoDB ping failed", e);
