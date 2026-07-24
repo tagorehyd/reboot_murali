@@ -1,6 +1,7 @@
 package com.fraudshield.config;
 
 import com.fraudshield.websocket.FraudShieldWebSocketHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
 import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
@@ -12,6 +13,9 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     private final FraudShieldWebSocketHandler handler;
 
+    @Value("${app.cors.allowed-origin-patterns:http://localhost:*,http://127.0.0.1:*}")
+    private String allowedOriginPatterns;
+
     public WebSocketConfig(FraudShieldWebSocketHandler handler) {
         this.handler = handler;
     }
@@ -19,6 +23,10 @@ public class WebSocketConfig implements WebSocketConfigurer {
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
         registry.addHandler(handler, "/ws")
-            .setAllowedOriginPatterns("http://localhost:*", "http://127.0.0.1:*");
+            .setAllowedOriginPatterns(parseAllowedOriginPatterns());
+    }
+
+    private String[] parseAllowedOriginPatterns() {
+        return allowedOriginPatterns.split("\\s*,\\s*");
     }
 }
