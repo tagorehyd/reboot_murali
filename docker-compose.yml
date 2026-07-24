@@ -22,8 +22,6 @@ services:
     container_name: fraudshield-canton
     restart: unless-stopped
     command: ["daemon", "-c", "/canton/etc/canton.conf"]
-    environment:
-      CANTON_DATA_DIR: /canton/data
     ports:
       - "4011:4011" # synchronizer public API
       - "4012:4012" # synchronizer admin API
@@ -37,7 +35,6 @@ services:
       - "5032:5032" # GlobalSynchronizer admin API
     volumes:
       - ./canton.conf:/canton/etc/canton.conf:ro
-      - canton-data:/canton/data
     healthcheck:
       test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/5001' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5011' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5021' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5031'"]
       interval: 15s
@@ -92,4 +89,3 @@ services:
 
 volumes:
   mongo-data:
-  canton-data:
