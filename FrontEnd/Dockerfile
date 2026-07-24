@@ -1,10 +1,8 @@
 FROM node:20-alpine AS build
-ENV NODE_ENV=development \
-    NPM_CONFIG_PRODUCTION=false \
-    NPM_CONFIG_OMIT=
+ENV NODE_ENV=development
 WORKDIR /app
 COPY package*.json ./
-RUN npm ci --include=dev --production=false && npm ls vite @vitejs/plugin-react
+RUN npm install --include=dev --legacy-peer-deps --no-audit --no-fund
 COPY . .
 RUN npm run build
 
