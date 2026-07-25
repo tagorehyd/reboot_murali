@@ -39,7 +39,7 @@ public class CantonReadinessService {
             allUp = allUp && ledgerUp && adminUp;
         }
         result.put("participants", participantStates);
-        result.put("status", !cantonProperties.isEnabled() ? "DISABLED" : (allUp ? "UP" : "DOWN"));
+        result.put("status", allUp ? "UP" : "DOWN");
         return result;
     }
 

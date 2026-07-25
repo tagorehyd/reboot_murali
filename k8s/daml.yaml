@@ -1,0 +1,159 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: daml-bootstrap
+  namespace: fraudshield
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: daml-bootstrap
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: daml-tools
+          image: REGION-docker.pkg.dev/PROJECT_ID/fraudshield/fraudshield-daml-tools:TAG
+          command:
+            - bash
+            - -lc
+            - |
+              set -euo pipefail
+              cd /workspace/daml-contracts
+              daml build
+              mkdir -p /workspace/daml-dist
+              cp .daml/dist/*.dar /workspace/daml-dist/
+              chmod +x scripts/upload-dar.sh
+              /workspace/daml-contracts/scripts/upload-dar.sh
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: json-api-banka
+  namespace: fraudshield
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: json-api-banka
+  template:
+    metadata:
+      labels:
+        app: json-api-banka
+    spec:
+      containers:
+        - name: json-api
+          image: REGION-docker.pkg.dev/PROJECT_ID/fraudshield/fraudshield-daml-tools:TAG
+          command:
+            - bash
+            - -lc
+            - daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens
+          ports:
+            - containerPort: 7575
+          readinessProbe:
+            tcpSocket:
+              port: 7575
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: json-api-banka
+  namespace: fraudshield
+spec:
+  type: ClusterIP
+  selector:
+    app: json-api-banka
+  ports:
+    - name: http
+      port: 7575
+      targetPort: 7575
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: json-api-bankb
+  namespace: fraudshield
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: json-api-bankb
+  template:
+    metadata:
+      labels:
+        app: json-api-bankb
+    spec:
+      containers:
+        - name: json-api
+          image: REGION-docker.pkg.dev/PROJECT_ID/fraudshield/fraudshield-daml-tools:TAG
+          command:
+            - bash
+            - -lc
+            - daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens
+          ports:
+            - containerPort: 7585
+          readinessProbe:
+            tcpSocket:
+              port: 7585
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: json-api-bankb
+  namespace: fraudshield
+spec:
+  type: ClusterIP
+  selector:
+    app: json-api-bankb
+  ports:
+    - name: http
+      port: 7585
+      targetPort: 7585
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: json-api-bankc
+  namespace: fraudshield
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: json-api-bankc
+  template:
+    metadata:
+      labels:
+        app: json-api-bankc
+    spec:
+      containers:
+        - name: json-api
+          image: REGION-docker.pkg.dev/PROJECT_ID/fraudshield/fraudshield-daml-tools:TAG
+          command:
+            - bash
+            - -lc
+            - daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens
+          ports:
+            - containerPort: 7595
+          readinessProbe:
+            tcpSocket:
+              port: 7595
+            initialDelaySeconds: 20
+            periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: json-api-bankc
+  namespace: fraudshield
+spec:
+  type: ClusterIP
+  selector:
+    app: json-api-bankc
+  ports:
+    - name: http
+      port: 7595
+      targetPort: 7595

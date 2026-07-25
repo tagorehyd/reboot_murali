@@ -42,6 +42,65 @@ services:
       retries: 20
       start_period: 45s
 
+  daml-build:
+    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
+    container_name: fraudshield-daml-build
+    restart: "no"
+    working_dir: /workspace/daml-contracts
+    volumes:
+      - ./:/workspace
+    command: ["bash", "-lc", "daml build; mkdir -p /workspace/daml-dist; cp .daml/dist/*.dar /workspace/daml-dist/"]
+    depends_on:
+      canton:
+        condition: service_started
+
+  daml-upload:
+    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
+    container_name: fraudshield-daml-upload
+    restart: "no"
+    working_dir: /workspace
+    volumes:
+      - ./:/workspace
+    command: ["bash", "-lc", "chmod +x /workspace/daml-contracts/scripts/upload-dar.sh; /workspace/daml-contracts/scripts/upload-dar.sh"]
+    depends_on:
+      daml-build:
+        condition: service_completed_successfully
+      canton:
+        condition: service_started
+
+  json-api-banka:
+    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
+    container_name: fraudshield-json-api-banka
+    restart: unless-stopped
+    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens"]
+    depends_on:
+      daml-upload:
+        condition: service_completed_successfully
+    ports:
+      - "7575:7575"
+
+  json-api-bankb:
+    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
+    container_name: fraudshield-json-api-bankb
+    restart: unless-stopped
+    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens"]
+    depends_on:
+      daml-upload:
+        condition: service_completed_successfully
+    ports:
+      - "7585:7585"
+
+  json-api-bankc:
+    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
+    container_name: fraudshield-json-api-bankc
+    restart: unless-stopped
+    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens"]
+    depends_on:
+      daml-upload:
+        condition: service_completed_successfully
+    ports:
+      - "7595:7595"
+
   fraudshield-backend:
     build:
       context: ./Backend
@@ -53,12 +112,16 @@ services:
         condition: service_healthy
       canton:
         condition: service_started
+      json-api-banka:
+        condition: service_started
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://fraudshield:fraudshield-local-password@mongodb:27017/fraudshield?authSource=admin
       SPRING_DATA_MONGODB_DATABASE: fraudshield
       APP_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080
       CORTEX_API_KEY: ${CORTEX_API_KEY:-PASTE_YOUR_CORTEX_API_KEY_HERE}
       CANTON_ENABLED: ${CANTON_ENABLED:-true}
+      CANTON_ADMIN_TOGGLE_ENABLED: ${CANTON_ADMIN_TOGGLE_ENABLED:-false}
+      CANTON_REAL_SUBMISSION_ENABLED: ${CANTON_REAL_SUBMISSION_ENABLED:-true}
       CANTON_BANKA_HOST: canton
       CANTON_BANKB_HOST: canton
       CANTON_BANKC_HOST: canton
@@ -71,6 +134,17 @@ services:
       CANTON_BANKC_ADMIN_PORT: 5022
       CANTON_SYNCHRONIZER_LEDGER_PORT: 5031
       CANTON_SYNCHRONIZER_ADMIN_PORT: 5032
+      CANTON_JSON_API_DEFAULT_PARTICIPANT: ${CANTON_JSON_API_DEFAULT_PARTICIPANT:-banka}
+      CANTON_JSON_API_BANKA_BASE_URL: ${CANTON_JSON_API_BANKA_BASE_URL:-http://json-api-banka:7575}
+      CANTON_JSON_API_BANKA_TOKEN: ${CANTON_JSON_API_BANKA_TOKEN:-BankA_Party}
+      CANTON_JSON_API_BANKB_BASE_URL: ${CANTON_JSON_API_BANKB_BASE_URL:-http://json-api-bankb:7585}
+      CANTON_JSON_API_BANKB_TOKEN: ${CANTON_JSON_API_BANKB_TOKEN:-BankB_Party}
+      CANTON_JSON_API_BANKC_BASE_URL: ${CANTON_JSON_API_BANKC_BASE_URL:-http://json-api-bankc:7595}
+      CANTON_JSON_API_BANKC_TOKEN: ${CANTON_JSON_API_BANKC_TOKEN:-BankC_Party}
+      CANTON_DAML_TEMPLATE_HOLD_REQUEST: ${CANTON_DAML_TEMPLATE_HOLD_REQUEST:-FraudShield:HoldRequest}
+      CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL: ${CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL:-FraudShield:MultiSigApproval}
+      CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT: ${CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT:-FraudShield:EscrowAgreement}
+      CANTON_DAML_TEMPLATE_SETTLEMENT_AUTH: ${CANTON_DAML_TEMPLATE_SETTLEMENT_AUTH:-FraudShield:SettlementAuthorization}
     ports:
       - "8080:8080"
 

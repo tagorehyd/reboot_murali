@@ -1,0 +1,149 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: canton-config
+  namespace: fraudshield
+data:
+  canton.conf: |
+    # Canton Configuration for FraudShield
+    # Compatible with Canton Community images that still use the "domains" config key.
+    #
+    # Local/dev topology: one domain plus four in-memory participants: BankA,
+    # BankB, BankC, and GlobalSynchronizer. MongoDB remains the only FraudShield
+    # application projection/read-model database.
+
+    canton {
+      domains {
+        fraudshield-domain {
+          storage.type = memory
+          public-api.address = "0.0.0.0"
+          public-api.port = 4011
+          admin-api.address = "0.0.0.0"
+          admin-api.port = 4012
+        }
+      }
+
+      participants {
+        banka {
+          storage.type = memory
+          ledger-api.address = "0.0.0.0"
+          ledger-api.port = 5001
+          admin-api.address = "0.0.0.0"
+          admin-api.port = 5002
+        }
+
+        bankb {
+          storage.type = memory
+          ledger-api.address = "0.0.0.0"
+          ledger-api.port = 5011
+          admin-api.address = "0.0.0.0"
+          admin-api.port = 5012
+        }
+
+        bankc {
+          storage.type = memory
+          ledger-api.address = "0.0.0.0"
+          ledger-api.port = 5021
+          admin-api.address = "0.0.0.0"
+          admin-api.port = 5022
+        }
+
+        synchronizer {
+          storage.type = memory
+          ledger-api.address = "0.0.0.0"
+          ledger-api.port = 5031
+          admin-api.address = "0.0.0.0"
+          admin-api.port = 5032
+        }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: canton
+  namespace: fraudshield
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: canton
+  template:
+    metadata:
+      labels:
+        app: canton
+    spec:
+      containers:
+        - name: canton
+          image: digitalasset/canton-open-source:latest
+          command: ["daemon", "-c", "/canton/etc/canton.conf"]
+          ports:
+            - containerPort: 4011
+            - containerPort: 4012
+            - containerPort: 5001
+            - containerPort: 5002
+            - containerPort: 5011
+            - containerPort: 5012
+            - containerPort: 5021
+            - containerPort: 5022
+            - containerPort: 5031
+            - containerPort: 5032
+          volumeMounts:
+            - name: canton-config
+              mountPath: /canton/etc/canton.conf
+              subPath: canton.conf
+          readinessProbe:
+            tcpSocket:
+              port: 5001
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          livenessProbe:
+            tcpSocket:
+              port: 5001
+            initialDelaySeconds: 60
+            periodSeconds: 20
+      volumes:
+        - name: canton-config
+          configMap:
+            name: canton-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: canton
+  namespace: fraudshield
+spec:
+  type: ClusterIP
+  selector:
+    app: canton
+  ports:
+    - name: domain-public
+      port: 4011
+      targetPort: 4011
+    - name: domain-admin
+      port: 4012
+      targetPort: 4012
+    - name: banka-ledger
+      port: 5001
+      targetPort: 5001
+    - name: banka-admin
+      port: 5002
+      targetPort: 5002
+    - name: bankb-ledger
+      port: 5011
+      targetPort: 5011
+    - name: bankb-admin
+      port: 5012
+      targetPort: 5012
+    - name: bankc-ledger
+      port: 5021
+      targetPort: 5021
+    - name: bankc-admin
+      port: 5022
+      targetPort: 5022
+    - name: synchronizer-ledger
+      port: 5031
+      targetPort: 5031
+    - name: synchronizer-admin
+      port: 5032
+      targetPort: 5032

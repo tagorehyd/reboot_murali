@@ -1,5 +1,6 @@
 package com.fraudshield.service;
 
+import com.fraudshield.canton.CantonCommandService;
 import com.fraudshield.dto.InitiateRequest;
 import com.fraudshield.dto.InitiateResponse;
 import com.fraudshield.dto.MempoolStatusResponse;
@@ -10,6 +11,7 @@ import com.fraudshield.repository.MempoolRepository;
 import com.fraudshield.repository.TxnHistoryRepository;
 import com.fraudshield.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -20,17 +22,22 @@ import java.util.List;
 import java.util.HexFormat;
 import java.util.UUID;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class TransactionService {
 
-    private static final String STATUS_APPROVED = "APPROVED";
-    private static final String STATUS_REJECTED = "REJECTED";
-    private static final String STATUS_PENDING_ADMIN = "PENDING_ADMIN";
-    private static final String STATUS_PENDING_CONSENT = "PENDING_CONSENT";
-    private static final String ROUTING_AUTO_APPROVE = "AUTO_APPROVE";
-    private static final String ROUTING_ADMIN_REVIEW = "ADMIN_REVIEW";
-    private static final String ROUTING_CONSENT_REQUIRED = "CONSENT_REQUIRED";
+    private static final String STATUS_APPROVED           = "APPROVED";
+    private static final String STATUS_REJECTED           = "REJECTED";
+    private static final String STATUS_PENDING_ADMIN      = "PENDING_ADMIN";
+    private static final String STATUS_PENDING_CONSENT    = "PENDING_CONSENT";
+    private static final String STATUS_HOLD_ACTIVE        = "HOLD_ACTIVE";
+    private static final String STATUS_PENDING_USER_APPROVAL = "PENDING_USER_APPROVAL";
+    private static final String STATUS_PENDING_BANK_APPROVAL = "PENDING_BANK_APPROVAL";
+    private static final String STATUS_ESCROW_ACTIVE      = "ESCROW_ACTIVE";
+    private static final String ROUTING_AUTO_APPROVE      = "AUTO_APPROVE";
+    private static final String ROUTING_ADMIN_REVIEW      = "ADMIN_REVIEW";
+    private static final String ROUTING_CONSENT_REQUIRED  = "CONSENT_REQUIRED";
 
     private final UserRepository userRepository;
     private final MempoolRepository mempoolRepository;
@@ -39,6 +46,7 @@ public class TransactionService {
     private final SelfLimitService selfLimitService;
     private final FraudRulesEngine fraudRulesEngine;
     private final CortexAiService cortexAiService;
+    private final CantonCommandService cantonCommandService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public InitiateResponse initiateTransaction(InitiateRequest request) {
@@ -113,6 +121,8 @@ public class TransactionService {
             : riskResult.getRoutingDecision();
         String status = mapRoutingToStatus(routingDecision);
 
+        boolean escrowOptIn = Boolean.TRUE.equals(request.getEscrowOptIn());
+
         MempoolTransaction transaction = MempoolTransaction.builder()
                 .id(txnId)
                 .fromUserId(fromUser.getId())
@@ -124,9 +134,36 @@ public class TransactionService {
                 .nonce(nonce)
                 .createdAt(now)
                 .routingDecision(routingDecision)
+                .escrowOptIn(escrowOptIn)
                 .build();
 
         mempoolRepository.save(transaction);
+
+        // ── Canton contract creation ──────────────────────────────────────────
+        // High risk (score >= 70) → hold + bank approval contracts
+        // Medium risk (40-69) → user approval contract
+        // Escrow opt-in (any tier) → escrow contract in addition to risk controls
+        try {
+            int score = riskResult.getTotalScore();
+            if (score >= 70 || STATUS_PENDING_ADMIN.equals(status)) {
+                // High risk: create hold first, then bank approval contract
+                cantonCommandService.createHoldContract(txnId, fromUser.getId(), request.getAmount());
+                cantonCommandService.createBankApprovalContract(txnId, fromUser.getId());
+            } else if (score >= 40 || STATUS_PENDING_CONSENT.equals(status)) {
+                // Medium risk: create user approval contract
+                cantonCommandService.createUserApprovalContract(txnId, fromUser.getId());
+            }
+            if (escrowOptIn) {
+                // Escrow is additive – runs regardless of risk tier
+                cantonCommandService.createEscrowContract(txnId, fromUser.getId(), request.getAmount());
+            }
+        } catch (Exception e) {
+            // Canton command failure must not block the transaction from entering mempool
+            log.warn("[Canton] Command failed for txnId={} – continuing without Canton enforcement: {}", txnId, e.getMessage());
+        }
+
+        // Re-read the transaction to pick up any Canton-updated status
+        MempoolTransaction saved = mempoolRepository.findById(txnId).orElse(transaction);
 
         return InitiateResponse.builder()
                 .txnId(txnId)
@@ -134,12 +171,13 @@ public class TransactionService {
                 .fromUserId(fromUser.getId())
                 .toUserId(toUser.getId())
                 .amount(request.getAmount())
-                .status(status)
+                .status(saved.getStatus())
                 .routingDecision(routingDecision)
                 .riskScore(riskResult.getTotalScore())
                 .riskBreakdown(riskResult.getBreakdown())
                 .beneficiaryTrustTier(riskResult.getBeneficiaryTrustTier())
                 .beneficiaryTrustDiscount(riskResult.getBeneficiaryTrustDiscount())
+                .escrowOptIn(escrowOptIn)
                 .message("Transaction scored and accepted into mempool")
                 .createdAt(now)
                 .build();
@@ -155,9 +193,13 @@ public class TransactionService {
     }
 
     public MempoolStatusResponse getMempoolStatus() {
-        long approved = mempoolRepository.countByStatus(STATUS_APPROVED);
+        long approved = mempoolRepository.countByStatus(STATUS_APPROVED)
+                + mempoolRepository.countByStatus(STATUS_ESCROW_ACTIVE);
         long pending = mempoolRepository.countByStatus(STATUS_PENDING_ADMIN)
-                + mempoolRepository.countByStatus(STATUS_PENDING_CONSENT);
+                + mempoolRepository.countByStatus(STATUS_PENDING_CONSENT)
+                + mempoolRepository.countByStatus(STATUS_HOLD_ACTIVE)
+                + mempoolRepository.countByStatus(STATUS_PENDING_USER_APPROVAL)
+                + mempoolRepository.countByStatus(STATUS_PENDING_BANK_APPROVAL);
         long rejected = mempoolRepository.countByStatus(STATUS_REJECTED);
         long total = mempoolRepository.count();
 
@@ -177,7 +219,9 @@ public class TransactionService {
 
             return mempoolRepository.findByFromUserIdAndStatusInOrderByCreatedAtDesc(
                 userId,
-                List.of(STATUS_PENDING_ADMIN, STATUS_PENDING_CONSENT, STATUS_APPROVED)
+                List.of(STATUS_PENDING_ADMIN, STATUS_PENDING_CONSENT, STATUS_APPROVED,
+                        STATUS_HOLD_ACTIVE, STATUS_PENDING_USER_APPROVAL,
+                        STATUS_PENDING_BANK_APPROVAL, STATUS_ESCROW_ACTIVE)
             );
             }
 

@@ -20,19 +20,62 @@ spec:
             - containerPort: 8080
           env:
             - name: SPRING_DATA_MONGODB_URI
-              value: mongodb://$(MONGO_USERNAME):$(MONGO_PASSWORD)@mongodb-0.mongodb:27017/fraudshield?authSource=admin
-            - name: MONGO_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: mongo-secret
-                  key: MONGO_INITDB_ROOT_USERNAME
-            - name: MONGO_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mongo-secret
-                  key: MONGO_INITDB_ROOT_PASSWORD
+                  name: backend-secret
+                  key: SPRING_DATA_MONGODB_URI
             - name: APP_CORS_ALLOWED_ORIGIN_PATTERNS
               value: "*"
+            - name: CANTON_ENABLED
+              value: "true"
+            - name: CANTON_REAL_SUBMISSION_ENABLED
+              value: "true"
+            - name: CANTON_BANKA_HOST
+              value: canton
+            - name: CANTON_BANKB_HOST
+              value: canton
+            - name: CANTON_BANKC_HOST
+              value: canton
+            - name: CANTON_SYNCHRONIZER_HOST
+              value: canton
+            - name: CANTON_BANKA_LEDGER_PORT
+              value: "5001"
+            - name: CANTON_BANKA_ADMIN_PORT
+              value: "5002"
+            - name: CANTON_BANKB_LEDGER_PORT
+              value: "5011"
+            - name: CANTON_BANKB_ADMIN_PORT
+              value: "5012"
+            - name: CANTON_BANKC_LEDGER_PORT
+              value: "5021"
+            - name: CANTON_BANKC_ADMIN_PORT
+              value: "5022"
+            - name: CANTON_SYNCHRONIZER_LEDGER_PORT
+              value: "5031"
+            - name: CANTON_SYNCHRONIZER_ADMIN_PORT
+              value: "5032"
+            - name: CANTON_JSON_API_DEFAULT_PARTICIPANT
+              value: banka
+            - name: CANTON_JSON_API_BANKA_BASE_URL
+              value: http://json-api-banka:7575
+            - name: CANTON_JSON_API_BANKA_TOKEN
+              value: BankA_Party
+            - name: CANTON_JSON_API_BANKB_BASE_URL
+              value: http://json-api-bankb:7585
+            - name: CANTON_JSON_API_BANKB_TOKEN
+              value: BankB_Party
+            - name: CANTON_JSON_API_BANKC_BASE_URL
+              value: http://json-api-bankc:7595
+            - name: CANTON_JSON_API_BANKC_TOKEN
+              value: BankC_Party
+            - name: CANTON_DAML_TEMPLATE_HOLD_REQUEST
+              value: FraudShield:HoldRequest
+            - name: CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL
+              value: FraudShield:MultiSigApproval
+            - name: CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT
+              value: FraudShield:EscrowAgreement
+            - name: CANTON_DAML_TEMPLATE_SETTLEMENT_AUTH
+              value: FraudShield:SettlementAuthorization
             - name: CORTEX_API_KEY
               valueFrom:
                 secretKeyRef:

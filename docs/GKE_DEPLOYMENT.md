@@ -1,6 +1,6 @@
-# Deploy FraudShield to Google Kubernetes Engine
+# FraudShield POC on Google Kubernetes Engine
 
-This guide deploys the React frontend, Spring Boot backend, and MongoDB into a GKE cluster. It uses Artifact Registry for container images, a Kubernetes `StatefulSet` plus persistent volume claim for MongoDB, an internal `ClusterIP` Service for the backend, and an external `LoadBalancer` Service for the frontend.
+This guide deploys the React frontend, Spring Boot backend, MongoDB, a Canton daemon, and DAML JSON API/bootstrap workloads into a GKE cluster for a proof-of-concept demo. It uses Artifact Registry for container images, a Kubernetes `StatefulSet` plus persistent volume claim for MongoDB, internal `ClusterIP` Services for the backend and Canton services, a bootstrap `Job` for DAML build/upload, and an external `LoadBalancer` Service for the frontend.
 
 ## 1. Prerequisites
 
@@ -41,17 +41,19 @@ If your organization requires GKE Standard, use your approved node, network, and
 
 ## 3. Build and push images
 
-Use one tag for both images so the manifests stay aligned:
+Use one tag for all images so the manifests stay aligned. If the checkout is not a git repository, the fallback timestamp tag keeps the deploy flow working:
 
 ```bash
-export TAG="$(git rev-parse --short HEAD)"
+export TAG="${TAG:-$(git rev-parse --short HEAD 2>/dev/null || date +%Y%m%d%H%M%S)}"
 export IMAGE_BASE="$REGION-docker.pkg.dev/$PROJECT_ID/$REPOSITORY"
 
 docker build -t "$IMAGE_BASE/fraudshield-backend:$TAG" ./Backend
 docker build -t "$IMAGE_BASE/fraudshield-frontend:$TAG" ./FrontEnd
+docker build -t "$IMAGE_BASE/fraudshield-daml-tools:$TAG" -f ./daml-contracts/Dockerfile .
 
 docker push "$IMAGE_BASE/fraudshield-backend:$TAG"
 docker push "$IMAGE_BASE/fraudshield-frontend:$TAG"
+docker push "$IMAGE_BASE/fraudshield-daml-tools:$TAG"
 ```
 
 ## 4. Configure Kubernetes manifests
@@ -67,7 +69,7 @@ find /tmp/fraudshield-k8s -type f -name '*.yaml' -print0 | xargs -0 sed -i \
   -e "s/TAG/$TAG/g"
 ```
 
-Before applying, change the MongoDB password and Cortex API key. Do not commit real secrets:
+Before applying, change the MongoDB password, backend Mongo URI, and Cortex API key. For this POC, keep the values simple but non-empty:
 
 ```bash
 kubectl apply -f /tmp/fraudshield-k8s/namespace.yaml
@@ -77,15 +79,32 @@ kubectl -n fraudshield create secret generic mongo-secret \
   --dry-run=client -o yaml | kubectl apply -f -
 
 kubectl -n fraudshield create secret generic backend-secret \
+  --from-literal=SPRING_DATA_MONGODB_URI='mongodb://fraudshield:replace-with-a-strong-password@mongodb-0.mongodb.fraudshield.svc.cluster.local:27017/fraudshield?authSource=admin' \
   --from-literal=CORTEX_API_KEY='replace-if-you-use-cortex' \
   --dry-run=client -o yaml | kubectl apply -f -
 ```
 
 The repository includes `k8s/secrets.example.yaml` only as a reference. Do not apply it with placeholder values.
 
-## 5. Deploy MongoDB, backend, and frontend
+## 5. Deploy Canton and bootstrap DAML first
 
 Apply the workload manifests:
+
+```bash
+kubectl apply -f /tmp/fraudshield-k8s/canton.yaml
+kubectl apply -f /tmp/fraudshield-k8s/daml.yaml
+```
+
+Wait for Canton and the DAML bootstrap job to finish:
+
+```bash
+kubectl -n fraudshield rollout status deployment/canton
+kubectl -n fraudshield wait --for=condition=complete job/daml-bootstrap --timeout=15m
+```
+
+## 6. Deploy remaining workloads
+
+Deploy the remaining workloads:
 
 ```bash
 kubectl apply -f /tmp/fraudshield-k8s/mongodb.yaml
@@ -93,16 +112,21 @@ kubectl apply -f /tmp/fraudshield-k8s/backend.yaml
 kubectl apply -f /tmp/fraudshield-k8s/frontend.yaml
 ```
 
-Wait for all pods to become ready:
+## 7. Wait for application pods to become ready
+
+Wait for the app pods to become ready:
 
 ```bash
 kubectl -n fraudshield rollout status statefulset/mongodb
+kubectl -n fraudshield rollout status deployment/json-api-banka
+kubectl -n fraudshield rollout status deployment/json-api-bankb
+kubectl -n fraudshield rollout status deployment/json-api-bankc
 kubectl -n fraudshield rollout status deployment/fraudshield-backend
 kubectl -n fraudshield rollout status deployment/fraudshield-frontend
 kubectl -n fraudshield get pods,svc,pvc
 ```
 
-## 6. Open the application
+## 8. Open the application
 
 Get the external IP of the frontend load balancer:
 
@@ -112,7 +136,7 @@ kubectl -n fraudshield get svc fraudshield-frontend
 
 Open `http://EXTERNAL-IP` in a browser. The frontend Nginx container serves the built React app and proxies `/api`, `/health`, `/ready`, and `/ws` to the backend service inside the cluster.
 
-## 7. Verify backend and MongoDB connectivity
+## 9. Verify backend and MongoDB connectivity
 
 ```bash
 curl "http://EXTERNAL-IP/health"
@@ -127,11 +151,12 @@ kubectl -n fraudshield describe pod mongodb-0
 kubectl -n fraudshield describe pvc mongo-data-mongodb-0
 ```
 
-## 8. Production hardening checklist
+## 10. POC notes and known limits
 
-- Replace placeholder secrets with Secret Manager, External Secrets Operator, or another approved secret delivery flow.
-- Put HTTPS in front of `fraudshield-frontend` by using a Google Cloud Load Balancer, managed certificate, or your ingress controller.
-- Consider MongoDB Atlas or a production-grade MongoDB operator for backups, replicas, upgrades, and disaster recovery. The included single-pod MongoDB manifest is suitable for demos and small non-production environments.
-- Restrict `APP_CORS_ALLOWED_ORIGIN_PATTERNS` from `*` to your real HTTPS domain if you expose the backend directly.
-- Add CPU and memory requests/limits after observing real usage.
-- Configure Cloud Monitoring alerts for pod restarts, load balancer health, disk usage, and MongoDB readiness failures.
+- The included Canton config uses in-memory participant and domain storage, so a Canton pod restart loses ledger state.
+- The raw manifests still contain `PROJECT_ID`, `REGION`, and `TAG` placeholders; use the rendered copy from the guide before apply.
+- `APP_CORS_ALLOWED_ORIGIN_PATTERNS` is intentionally open for the demo.
+- The MongoDB and backend secrets are created directly in-cluster for the demo flow.
+- For a POC, this is acceptable; for production, replace the demo pieces with durable storage and managed secrets.
+
+
