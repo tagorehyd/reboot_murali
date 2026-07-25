@@ -1,165 +1,145 @@
-services:
-  mongodb:
-    image: mongo:7
-    container_name: fraudshield-mongodb
-    restart: unless-stopped
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: fraudshield
-      MONGO_INITDB_ROOT_PASSWORD: fraudshield-local-password
-    ports:
-      - "27017:27017"
-    volumes:
-      - mongo-data:/data/db
-    healthcheck:
-      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
-      interval: 10s
-      timeout: 5s
-      retries: 10
-      start_period: 20s
-
-  canton:
-    image: ${CANTON_IMAGE:-digitalasset/canton-open-source:latest}
-    container_name: fraudshield-canton
-    restart: unless-stopped
-    command: ["daemon", "-c", "/canton/etc/canton.conf"]
-    ports:
-      - "4011:4011" # synchronizer public API
-      - "4012:4012" # synchronizer admin API
-      - "5001:5001" # BankA ledger API
-      - "5002:5002" # BankA admin API
-      - "5011:5011" # BankB ledger API
-      - "5012:5012" # BankB admin API
-      - "5021:5021" # BankC ledger API
-      - "5022:5022" # BankC admin API
-      - "5031:5031" # GlobalSynchronizer ledger API
-      - "5032:5032" # GlobalSynchronizer admin API
-    volumes:
-      - ./canton.conf:/canton/etc/canton.conf:ro
-    healthcheck:
-      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/5001' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5011' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5021' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5031'"]
-      interval: 15s
-      timeout: 8s
-      retries: 20
-      start_period: 45s
-
-  daml-build:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
-    container_name: fraudshield-daml-build
-    restart: "no"
-    working_dir: /workspace/daml-contracts
-    volumes:
-      - ./:/workspace
-    command: ["bash", "-lc", "daml build; mkdir -p /workspace/daml-dist; cp .daml/dist/*.dar /workspace/daml-dist/"]
-    depends_on:
-      canton:
-        condition: service_started
-
-  daml-upload:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
-    container_name: fraudshield-daml-upload
-    restart: "no"
-    working_dir: /workspace
-    volumes:
-      - ./:/workspace
-    command: ["bash", "-lc", "chmod +x /workspace/daml-contracts/scripts/upload-dar.sh; /workspace/daml-contracts/scripts/upload-dar.sh"]
-    depends_on:
-      daml-build:
-        condition: service_completed_successfully
-      canton:
-        condition: service_started
-
-  json-api-banka:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
-    container_name: fraudshield-json-api-banka
-    restart: unless-stopped
-    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens"]
-    depends_on:
-      daml-upload:
-        condition: service_completed_successfully
-    ports:
-      - "7575:7575"
-
-  json-api-bankb:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
-    container_name: fraudshield-json-api-bankb
-    restart: unless-stopped
-    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens"]
-    depends_on:
-      daml-upload:
-        condition: service_completed_successfully
-    ports:
-      - "7585:7585"
-
-  json-api-bankc:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
-    container_name: fraudshield-json-api-bankc
-    restart: unless-stopped
-    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens"]
-    depends_on:
-      daml-upload:
-        condition: service_completed_successfully
-    ports:
-      - "7595:7595"
-
-  fraudshield-backend:
-    build:
-      context: ./Backend
-    image: fraudshield-backend:local
-    container_name: fraudshield-backend
-    restart: unless-stopped
-    depends_on:
-      mongodb:
-        condition: service_healthy
-      canton:
-        condition: service_started
-      json-api-banka:
-        condition: service_started
-    environment:
-      SPRING_DATA_MONGODB_URI: mongodb://fraudshield:fraudshield-local-password@mongodb:27017/fraudshield?authSource=admin
-      SPRING_DATA_MONGODB_DATABASE: fraudshield
-      APP_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080
-      CORTEX_API_KEY: ${CORTEX_API_KEY:-PASTE_YOUR_CORTEX_API_KEY_HERE}
-      CANTON_ENABLED: ${CANTON_ENABLED:-true}
-      CANTON_ADMIN_TOGGLE_ENABLED: ${CANTON_ADMIN_TOGGLE_ENABLED:-false}
-      CANTON_REAL_SUBMISSION_ENABLED: ${CANTON_REAL_SUBMISSION_ENABLED:-true}
-      CANTON_BANKA_HOST: canton
-      CANTON_BANKB_HOST: canton
-      CANTON_BANKC_HOST: canton
-      CANTON_SYNCHRONIZER_HOST: canton
-      CANTON_BANKA_LEDGER_PORT: 5001
-      CANTON_BANKA_ADMIN_PORT: 5002
-      CANTON_BANKB_LEDGER_PORT: 5011
-      CANTON_BANKB_ADMIN_PORT: 5012
-      CANTON_BANKC_LEDGER_PORT: 5021
-      CANTON_BANKC_ADMIN_PORT: 5022
-      CANTON_SYNCHRONIZER_LEDGER_PORT: 5031
-      CANTON_SYNCHRONIZER_ADMIN_PORT: 5032
-      CANTON_JSON_API_DEFAULT_PARTICIPANT: ${CANTON_JSON_API_DEFAULT_PARTICIPANT:-banka}
-      CANTON_JSON_API_BANKA_BASE_URL: ${CANTON_JSON_API_BANKA_BASE_URL:-http://json-api-banka:7575}
-      CANTON_JSON_API_BANKA_TOKEN: ${CANTON_JSON_API_BANKA_TOKEN:-BankA_Party}
-      CANTON_JSON_API_BANKB_BASE_URL: ${CANTON_JSON_API_BANKB_BASE_URL:-http://json-api-bankb:7585}
-      CANTON_JSON_API_BANKB_TOKEN: ${CANTON_JSON_API_BANKB_TOKEN:-BankB_Party}
-      CANTON_JSON_API_BANKC_BASE_URL: ${CANTON_JSON_API_BANKC_BASE_URL:-http://json-api-bankc:7595}
-      CANTON_JSON_API_BANKC_TOKEN: ${CANTON_JSON_API_BANKC_TOKEN:-BankC_Party}
-      CANTON_DAML_TEMPLATE_HOLD_REQUEST: ${CANTON_DAML_TEMPLATE_HOLD_REQUEST:-FraudShield:HoldRequest}
-      CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL: ${CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL:-FraudShield:MultiSigApproval}
-      CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT: ${CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT:-FraudShield:EscrowAgreement}
-      CANTON_DAML_TEMPLATE_SETTLEMENT_AUTH: ${CANTON_DAML_TEMPLATE_SETTLEMENT_AUTH:-FraudShield:SettlementAuthorization}
-    ports:
-      - "8080:8080"
-
-  fraudshield-frontend:
-    build:
-      context: ./FrontEnd
-    image: fraudshield-frontend:local
-    container_name: fraudshield-frontend
-    restart: unless-stopped
-    depends_on:
-      fraudshield-backend:
-        condition: service_started
-    ports:
-      - "3000:80"
-      - "5173:5173"
-
-volumes:
-  mongo-data:
+diff --git a/docker-compose.yml b/docker-compose.yml
+index 1ef2a788d852bd5f91419abac083c9d30ed37d78..10b037dd087e9b856b046f17a682da8a455c93ab 100644
+--- a/docker-compose.yml
++++ b/docker-compose.yml
+@@ -21,99 +21,103 @@ services:
+     image: ${CANTON_IMAGE:-digitalasset/canton-open-source:latest}
+     container_name: fraudshield-canton
+     restart: unless-stopped
+     command: ["daemon", "-c", "/canton/etc/canton.conf"]
+     ports:
+       - "4011:4011" # synchronizer public API
+       - "4012:4012" # synchronizer admin API
+       - "5001:5001" # BankA ledger API
+       - "5002:5002" # BankA admin API
+       - "5011:5011" # BankB ledger API
+       - "5012:5012" # BankB admin API
+       - "5021:5021" # BankC ledger API
+       - "5022:5022" # BankC admin API
+       - "5031:5031" # GlobalSynchronizer ledger API
+       - "5032:5032" # GlobalSynchronizer admin API
+     volumes:
+       - ./canton.conf:/canton/etc/canton.conf:ro
+     healthcheck:
+       test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/5001' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5011' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5021' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5031'"]
+       interval: 15s
+       timeout: 8s
+       retries: 20
+       start_period: 45s
+ 
+   daml-build:
+-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
++    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
++    user: "0:0"
+     container_name: fraudshield-daml-build
+     restart: "no"
+-    working_dir: /workspace/daml-contracts
++    working_dir: /tmp/daml-contracts
+     volumes:
+-      - ./:/workspace
+-    command: ["bash", "-lc", "daml build; mkdir -p /workspace/daml-dist; cp .daml/dist/*.dar /workspace/daml-dist/"]
++      - ./:/workspace:ro
++      - daml-dist:/workspace/daml-dist
++    command: ["bash", "-lc", "rm -rf /tmp/daml-contracts; cp -R /workspace/daml-contracts /tmp/daml-contracts; cd /tmp/daml-contracts; daml build; mkdir -p /workspace/daml-dist; cp .daml/dist/*.dar /workspace/daml-dist/"]
+     depends_on:
+       canton:
+         condition: service_started
+ 
+   daml-upload:
+-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
++    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
++    user: "0:0"
+     container_name: fraudshield-daml-upload
+     restart: "no"
+     working_dir: /workspace
+     volumes:
+-      - ./:/workspace
+-    command: ["bash", "-lc", "chmod +x /workspace/daml-contracts/scripts/upload-dar.sh; /workspace/daml-contracts/scripts/upload-dar.sh"]
++      - ./:/workspace:ro
++      - daml-dist:/workspace/daml-dist
++    command: ["bash", "-lc", "bash /workspace/daml-contracts/scripts/upload-dar.sh"]
+     depends_on:
+       daml-build:
+         condition: service_completed_successfully
+       canton:
+         condition: service_started
+ 
+   json-api-banka:
+-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
++    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+     container_name: fraudshield-json-api-banka
+     restart: unless-stopped
+     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens"]
+     depends_on:
+       daml-upload:
+         condition: service_completed_successfully
+     ports:
+       - "7575:7575"
+ 
+   json-api-bankb:
+-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
++    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+     container_name: fraudshield-json-api-bankb
+     restart: unless-stopped
+     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens"]
+     depends_on:
+       daml-upload:
+         condition: service_completed_successfully
+     ports:
+       - "7585:7585"
+ 
+   json-api-bankc:
+-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.1.0}
++    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+     container_name: fraudshield-json-api-bankc
+     restart: unless-stopped
+     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens"]
+     depends_on:
+       daml-upload:
+         condition: service_completed_successfully
+     ports:
+       - "7595:7595"
+ 
+   fraudshield-backend:
+     build:
+       context: ./Backend
+     image: fraudshield-backend:local
+     container_name: fraudshield-backend
+     restart: unless-stopped
+     depends_on:
+       mongodb:
+         condition: service_healthy
+       canton:
+         condition: service_started
+       json-api-banka:
+         condition: service_started
+     environment:
+       SPRING_DATA_MONGODB_URI: mongodb://fraudshield:fraudshield-local-password@mongodb:27017/fraudshield?authSource=admin
+       SPRING_DATA_MONGODB_DATABASE: fraudshield
+@@ -141,25 +145,26 @@ services:
+       CANTON_JSON_API_BANKB_TOKEN: ${CANTON_JSON_API_BANKB_TOKEN:-BankB_Party}
+       CANTON_JSON_API_BANKC_BASE_URL: ${CANTON_JSON_API_BANKC_BASE_URL:-http://json-api-bankc:7595}
+       CANTON_JSON_API_BANKC_TOKEN: ${CANTON_JSON_API_BANKC_TOKEN:-BankC_Party}
+       CANTON_DAML_TEMPLATE_HOLD_REQUEST: ${CANTON_DAML_TEMPLATE_HOLD_REQUEST:-FraudShield:HoldRequest}
+       CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL: ${CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL:-FraudShield:MultiSigApproval}
+       CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT: ${CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT:-FraudShield:EscrowAgreement}
+       CANTON_DAML_TEMPLATE_SETTLEMENT_AUTH: ${CANTON_DAML_TEMPLATE_SETTLEMENT_AUTH:-FraudShield:SettlementAuthorization}
+     ports:
+       - "8080:8080"
+ 
+   fraudshield-frontend:
+     build:
+       context: ./FrontEnd
+     image: fraudshield-frontend:local
+     container_name: fraudshield-frontend
+     restart: unless-stopped
+     depends_on:
+       fraudshield-backend:
+         condition: service_started
+     ports:
+       - "3000:80"
+       - "5173:5173"
+ 
+ volumes:
+   mongo-data:
++  daml-dist:
