@@ -1,4 +1,4 @@
-sdk-version: 3.1.0
+sdk-version: 3.4.0-rc2
 name: fraudshield-canton-contracts
 version: 1.0.0
 source: src
