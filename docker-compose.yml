@@ -57,15 +57,17 @@ services:
         condition: service_healthy
 
   daml-upload:
-    image: digitalasset/daml-sdk:3.4.0-rc2
+    image: ${CANTON_IMAGE:-digitalasset/canton-open-source:latest}
     user: "0:0"
     container_name: fraudshield-daml-upload
     restart: "no"
-    working_dir: /workspace
+    working_dir: /canton
     volumes:
-      - ./:/workspace:ro
-      - daml-dist:/daml-dist
-    command: ["bash", "-lc", "bash /workspace/daml-contracts/scripts/upload-dar.sh"]
+      - ./canton-upload.conf:/canton/upload/canton-upload.conf:ro
+      - ./daml-contracts/scripts/upload-dar.canton:/canton/upload/upload-dar.canton:ro
+      - ./daml-contracts/scripts/upload-dar.sh:/canton/upload/upload-dar.sh:ro
+      - daml-dist:/daml-dist:ro
+    command: ["run", "/canton/upload/upload-dar.canton", "-c", "/canton/upload/canton-upload.conf"]
     depends_on:
       daml-build:
         condition: service_completed_successfully
