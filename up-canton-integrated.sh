@@ -10,6 +10,6 @@ docker compose up --build -d
 echo "Stack started. Service status:"
 docker compose ps
 
-echo "Backend health endpoint: http://localhost:8080/api/health"
+echo "Backend health endpoint: http://localhost:8080/health"
 echo "Frontend: http://localhost:3000"
 echo "JSON API (BankA): http://localhost:7575/v1/query"
