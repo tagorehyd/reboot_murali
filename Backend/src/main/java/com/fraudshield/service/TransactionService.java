@@ -46,6 +46,7 @@ public class TransactionService {
     private final SelfLimitService selfLimitService;
     private final FraudRulesEngine fraudRulesEngine;
     private final CortexAiService cortexAiService;
+    private final IsolationForestService isolationForestService;
     private final CantonCommandService cantonCommandService;
     private final SecureRandom secureRandom = new SecureRandom();
 
@@ -81,7 +82,7 @@ public class TransactionService {
         String nonce = generateUniqueNonce();
         Instant now = Instant.now();
 
-        // Pre-step: run the Cortex AI anomaly review before scoring so its verdict
+        // Pre-step 1: run the Cortex AI anomaly review before scoring so its verdict
         // is folded into the unified risk score. Degrades gracefully when disabled.
         CortexAiService.TxnAiScore aiScore = cortexAiService.scoreNewTransaction(
                 fromUser.getId(),
@@ -89,14 +90,24 @@ public class TransactionService {
                 request.getAmount()
         );
 
-        // Score the transaction using fraud rules engine (rules + AI + beneficiary)
+        // Pre-step 2: run the Isolation Forest ML anomaly scoring.
+        IsolationForestService.TxnIfScore ifScore = isolationForestService.scoreTransaction(
+                fromUser.getId(),
+                toUser.getId(),
+                request.getAmount()
+        );
+
+        // Score the transaction using fraud rules engine (rules + AI + Isolation Forest + beneficiary trust)
         FraudRulesEngine.RiskResult riskResult = fraudRulesEngine.scoreTransaction(
                 fromUser.getId(),
                 toUser.getId(),
                 request.getAmount(),
                 aiScore.points,
                 aiScore.reasonText(),
-                aiScore.evaluated
+                aiScore.evaluated,
+                ifScore.points,
+                ifScore.reasonText(),
+                ifScore.evaluated
         );
 
         // If the admin-configured global beneficiary limit is exceeded, the
