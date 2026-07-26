@@ -43,7 +43,7 @@ services:
       start_period: 45s
 
   daml-build:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+    image: digitalasset/daml-sdk:3.4.0-rc2
     user: "0:0"
     container_name: fraudshield-daml-build
     restart: "no"
@@ -57,7 +57,7 @@ services:
         condition: service_started
 
   daml-upload:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+    image: digitalasset/daml-sdk:3.4.0-rc2
     user: "0:0"
     container_name: fraudshield-daml-upload
     restart: "no"
@@ -73,7 +73,7 @@ services:
         condition: service_started
 
   json-api-banka:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+    image: digitalasset/daml-sdk:3.4.0-rc2
     container_name: fraudshield-json-api-banka
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens"]
@@ -84,7 +84,7 @@ services:
       - "7575:7575"
 
   json-api-bankb:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+    image: digitalasset/daml-sdk:3.4.0-rc2
     container_name: fraudshield-json-api-bankb
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens"]
@@ -95,7 +95,7 @@ services:
       - "7585:7585"
 
   json-api-bankc:
-    image: ${DAML_SDK_IMAGE:-digitalasset/daml-sdk:3.4.0-rc2}
+    image: digitalasset/daml-sdk:3.4.0-rc2
     container_name: fraudshield-json-api-bankc
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens"]
