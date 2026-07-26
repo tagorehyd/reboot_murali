@@ -50,8 +50,8 @@ services:
     working_dir: /tmp/daml-contracts
     volumes:
       - ./:/workspace:ro
-      - daml-dist:/workspace/daml-dist
-    command: ["bash", "-lc", "rm -rf /tmp/daml-contracts; cp -R /workspace/daml-contracts /tmp/daml-contracts; cd /tmp/daml-contracts; daml build; mkdir -p /workspace/daml-dist; cp .daml/dist/*.dar /workspace/daml-dist/"]
+      - daml-dist:/daml-dist
+    command: ["bash", "-lc", "rm -rf /tmp/daml-contracts; cp -R /workspace/daml-contracts /tmp/daml-contracts; cd /tmp/daml-contracts; daml build; mkdir -p /daml-dist; cp .daml/dist/*.dar /daml-dist/"]
     depends_on:
       canton:
         condition: service_started
@@ -64,7 +64,7 @@ services:
     working_dir: /workspace
     volumes:
       - ./:/workspace:ro
-      - daml-dist:/workspace/daml-dist
+      - daml-dist:/daml-dist
     command: ["bash", "-lc", "bash /workspace/daml-contracts/scripts/upload-dar.sh"]
     depends_on:
       daml-build:
