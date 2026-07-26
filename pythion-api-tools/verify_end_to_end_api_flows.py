@@ -33,7 +33,7 @@ from urllib.parse import urljoin
 
 import requests
 
-BASE_URL = os.getenv("FRAUDSHIELD_BASE_URL", "http://localhost:8080").rstrip("/")
+BASE_URL = os.getenv("FRAUDSHIELD_BASE_URL", "http://192.168.29.29:8080").rstrip("/")
 TIMEOUT = float(os.getenv("FRAUDSHIELD_TIMEOUT_SECONDS", "10"))
 RUN_MUTATING_FLOWS = os.getenv("RUN_MUTATING_FLOWS", "true").lower() == "true"
 STRICT_CANTON_REFS = os.getenv("STRICT_CANTON_REFS", "false").lower() == "true"
