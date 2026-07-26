@@ -2,7 +2,6 @@ sdk-version: 3.4.0-rc2
 name: fraudshield-canton-contracts
 version: 1.0.0
 source: src
-init-script: FraudShieldBootstrap:setup
 parties:
   - BankA_Party
   - BankB_Party
@@ -11,6 +10,5 @@ parties:
 dependencies:
   - daml-prim
   - daml-stdlib
-  - daml-script
 build-options:
   - --target=2.1
