@@ -56,10 +56,10 @@ services:
       canton:
         condition: service_healthy
 
-  daml-upload:
+  canton-dar-upload:
     image: ${CANTON_IMAGE:-digitalasset/canton-open-source:latest}
     user: "0:0"
-    container_name: fraudshield-daml-upload
+    container_name: fraudshield-canton-dar-upload
     restart: "no"
     working_dir: /canton
     volumes:
@@ -80,7 +80,7 @@ services:
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens"]
     depends_on:
-      daml-upload:
+      canton-dar-upload:
         condition: service_completed_successfully
     ports:
       - "7575:7575"
@@ -91,7 +91,7 @@ services:
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens"]
     depends_on:
-      daml-upload:
+      canton-dar-upload:
         condition: service_completed_successfully
     ports:
       - "7585:7585"
@@ -102,7 +102,7 @@ services:
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens"]
     depends_on:
-      daml-upload:
+      canton-dar-upload:
         condition: service_completed_successfully
     ports:
       - "7595:7595"
