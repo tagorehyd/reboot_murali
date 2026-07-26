@@ -18,7 +18,7 @@ services:
       start_period: 20s
 
   canton:
-    image: ${CANTON_IMAGE:-digitalasset/canton-open-source:3.4.0-rc2}
+    image: ${CANTON_IMAGE:-digitalasset/canton-open-source:2.7.6}
     container_name: fraudshield-canton
     restart: unless-stopped
     command: ["daemon", "-c", "/canton/etc/canton.conf"]
@@ -43,7 +43,7 @@ services:
       start_period: 45s
 
   daml-build:
-    image: digitalasset/daml-sdk:3.4.0-rc2
+    image: digitalasset/daml-sdk:2.7.6
     user: "0:0"
     container_name: fraudshield-daml-build
     restart: "no"
@@ -57,7 +57,7 @@ services:
         condition: service_healthy
 
   canton-dar-upload:
-    image: ${CANTON_IMAGE:-digitalasset/canton-open-source:3.4.0-rc2}
+    image: ${CANTON_IMAGE:-digitalasset/canton-open-source:2.7.6}
     user: "0:0"
     container_name: fraudshield-canton-dar-upload
     restart: "no"
@@ -75,7 +75,7 @@ services:
         condition: service_healthy
 
   json-api-banka:
-    image: digitalasset/daml-sdk:3.4.0-rc2
+    image: digitalasset/daml-sdk:2.7.6
     container_name: fraudshield-json-api-banka
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens"]
@@ -86,7 +86,7 @@ services:
       - "7575:7575"
 
   json-api-bankb:
-    image: digitalasset/daml-sdk:3.4.0-rc2
+    image: digitalasset/daml-sdk:2.7.6
     container_name: fraudshield-json-api-bankb
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens"]
@@ -97,7 +97,7 @@ services:
       - "7585:7585"
 
   json-api-bankc:
-    image: digitalasset/daml-sdk:3.4.0-rc2
+    image: digitalasset/daml-sdk:2.7.6
     container_name: fraudshield-json-api-bankc
     restart: unless-stopped
     command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens"]
