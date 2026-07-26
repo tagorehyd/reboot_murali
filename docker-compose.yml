@@ -51,7 +51,7 @@ services:
     volumes:
       - ./:/workspace:ro
       - daml-dist:/daml-dist
-    command: ["bash", "-lc", "rm -rf /tmp/daml-contracts; cp -R /workspace/daml-contracts /tmp/daml-contracts; cd /tmp/daml-contracts; daml build; mkdir -p /daml-dist; cp .daml/dist/*.dar /daml-dist/"]
+    command: ["bash", "-lc", "set -euo pipefail; rm -rf /tmp/daml-contracts; cp -R /workspace/daml-contracts /tmp/daml-contracts; cd /tmp/daml-contracts; daml build; mkdir -p /daml-dist; cp .daml/dist/*.dar /daml-dist/"]
     depends_on:
       canton:
         condition: service_started
