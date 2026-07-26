@@ -1,4 +1,5 @@
 import React from 'react';
+import NvidiaNimChatbot from './NvidiaNimChatbot';
 
 export default function Layout({ children, currentView, onNavigate }) {
   const navItems = [
@@ -57,6 +58,10 @@ export default function Layout({ children, currentView, onNavigate }) {
           {children}
         </div>
       </main>
+
+      {/* NVIDIA NIM AI Assistant Chatbot */}
+      <NvidiaNimChatbot />
     </div>
   );
 }
+

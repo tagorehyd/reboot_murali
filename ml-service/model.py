@@ -35,14 +35,14 @@ class IsolationForestFraudModel:
         - velocity_10m (int)
         - is_round_amount (int 0/1)
         """
-        amount = float(txn_data.get("amount", 0.0))
-        balance = float(txn_data.get("senderBalance", 1000.0))
+        amount = max(0.0, float(txn_data.get("amount", 0.0)))
+        balance = max(0.0, float(txn_data.get("senderBalance", 1000.0)))
         is_new_payee = 1 if txn_data.get("isNewPayee", True) else 0
         hour = int(txn_data.get("hourOfDay", 12))
-        velocity = int(txn_data.get("velocity10m", 0))
+        velocity = max(0, int(txn_data.get("velocity10m", 0)))
 
         log_amount = math.log1p(amount)
-        drain_ratio = amount / (balance + 1.0) if balance >= 0 else 1.0
+        drain_ratio = max(0.0, amount / (balance + 1.0))
         
         # Cyclical hour encoding
         hour_sin = math.sin(2 * math.pi * hour / 24.0)
@@ -153,7 +153,7 @@ class IsolationForestFraudModel:
 
         if is_anomaly:
             if amount > 25000:
-                reasons.append(f"Isolation Forest flagged unusual transaction magnitude (£{amount:,.2f})")
+                reasons.append(f"Isolation Forest flagged unusual transaction magnitude (GBP {amount:,.2f})")
             if is_new_payee:
                 reasons.append("Unusual multi-dimensional pattern with unverified payee")
             if velocity >= 3:

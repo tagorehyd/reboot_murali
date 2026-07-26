@@ -64,6 +64,13 @@
 - Quick start
 - Files created
 
+### 🤖 I Need Machine Learning Details
+→ **[`mlservice.md`](file:///c:/Users/newab/OneDrive/Desktop/antigravityhackathon/reboot_murali/mlservice.md)** (10 min read)
+- Isolation Forest ML Microservice Architecture
+- 8-Dimensional Feature Engineering Vector
+- Anomaly scoring engine & 0-30 point mapping
+- REST API endpoints & Spring Boot integration
+
 ---
 
 ## 📁 Files & Purposes
