@@ -1,4 +1,4 @@
-FROM digitalasset/daml-sdk:3.4.0-rc2
+FROM digitalasset/daml-sdk:2.7.6
 
 WORKDIR /workspace
 COPY daml-contracts /workspace/daml-contracts

@@ -75,7 +75,7 @@ spec:
     spec:
       containers:
         - name: canton
-          image: digitalasset/canton-open-source:3.4.0-rc2
+          image: digitalasset/canton-open-source:2.7.6
           command: ["daemon", "-c", "/canton/etc/canton.conf"]
           ports:
             - containerPort: 4011
