@@ -1,6 +1,1 @@
-module FraudShieldBootstrap where
 
-import Daml.Script
-
-setup : Script ()
-setup = pure ()
