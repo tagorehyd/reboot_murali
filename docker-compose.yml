@@ -65,7 +65,7 @@ services:
     volumes:
       - ./:/workspace:ro
       - daml-dist:/daml-dist
-    command: ["bash", "-lc", "DAR_PATH=/daml-dist/fraudshield-canton-contracts-1.0.0.dar bash /workspace/daml-contracts/scripts/upload-dar.sh"]
+    command: ["bash", "-lc", "bash /workspace/daml-contracts/scripts/upload-dar.sh"]
     depends_on:
       daml-build:
         condition: service_completed_successfully

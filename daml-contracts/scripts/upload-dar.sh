@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DAR_PATH="${DAR_PATH:-/workspace/daml-dist/fraudshield-canton-contracts-1.0.0.dar}"
+DAR_PATH="${DAR_PATH:-/daml-dist/fraudshield-canton-contracts-1.0.0.dar}"
 
 if [ ! -f "$DAR_PATH" ]; then
   echo "DAR not found at $DAR_PATH"
