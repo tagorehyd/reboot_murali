@@ -54,7 +54,7 @@ services:
     command: ["bash", "-lc", "set -euo pipefail; rm -rf /tmp/daml-contracts; cp -R /workspace/daml-contracts /tmp/daml-contracts; cd /tmp/daml-contracts; daml build; mkdir -p /daml-dist; cp .daml/dist/*.dar /daml-dist/"]
     depends_on:
       canton:
-        condition: service_started
+        condition: service_healthy
 
   daml-upload:
     image: digitalasset/daml-sdk:3.4.0-rc2
@@ -70,7 +70,7 @@ services:
       daml-build:
         condition: service_completed_successfully
       canton:
-        condition: service_started
+        condition: service_healthy
 
   json-api-banka:
     image: digitalasset/daml-sdk:3.4.0-rc2
