@@ -1,17 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DAR_PATH="${DAR_PATH:-/workspace/daml-dist/fraudshield-canton-contracts-1.0.0.dar}"
+DAR_PATH="${DAR_PATH:-/daml-dist/fraudshield-canton-contracts-1.0.0.dar}"
+CANTON_UPLOAD_CONFIG="${CANTON_UPLOAD_CONFIG:-/canton/upload/canton-upload.conf}"
+CANTON_UPLOAD_SCRIPT="${CANTON_UPLOAD_SCRIPT:-/canton/upload/upload-dar.canton}"
 
 if [ ! -f "$DAR_PATH" ]; then
   echo "DAR not found at $DAR_PATH"
   exit 1
 fi
 
-echo "Uploading DAR to participants..."
-daml ledger upload-dar --host canton --port 5001 "$DAR_PATH"
-daml ledger upload-dar --host canton --port 5011 "$DAR_PATH"
-daml ledger upload-dar --host canton --port 5021 "$DAR_PATH"
-daml ledger upload-dar --host canton --port 5031 "$DAR_PATH"
-
-echo "DAR upload completed"
+exec canton run "$CANTON_UPLOAD_SCRIPT" -c "$CANTON_UPLOAD_CONFIG"

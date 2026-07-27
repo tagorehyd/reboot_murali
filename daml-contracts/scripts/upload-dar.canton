@@ -1,0 +1,8 @@
+val darPath = sys.env.getOrElse("DAR_PATH", "/daml-dist/fraudshield-canton-contracts-1.0.0.dar")
+
+Seq(banka, bankb, bankc, synchronizer).foreach { participant =>
+  println(s"Uploading ${darPath} to ${participant.name} via Canton Admin API")
+  participant.dars.upload(darPath)
+}
+
+println("DAR upload completed")
