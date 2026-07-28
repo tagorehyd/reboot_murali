@@ -1,0 +1,44 @@
+# Node.js
+node_modules/
+dist/
+build/
+.npm/
+
+# Java / Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+.mvn/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.env
+.venv/
+env/
+
+# IDEs and OS
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+.metadata/
+
+# Logs and testing
+logs/
+*.log
+playwright-report/
+test-results/
+coverage/
+
+# Misc
+.env.local
+.env.development
+.env.test
+.env.production
