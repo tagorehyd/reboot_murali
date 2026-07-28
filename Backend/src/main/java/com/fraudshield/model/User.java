@@ -34,6 +34,10 @@ public class User {
     private Instant selfLimitsUpdatedAt;
     private Instant createdAt;
     private String role;         // USER or ADMIN
+    private String cantonPartyId;
+    private String bankId;
+    private String participantId;
+    private String cantonRole;
     /** Per-user fraud rule on/off flags.  Key = rule name (e.g. "LARGE_AMOUNT").
      *  Null or absent keys are treated as enabled. */
     private Map<String, Boolean> customRuleSettings;

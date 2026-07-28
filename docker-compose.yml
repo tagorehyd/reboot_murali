@@ -17,6 +17,31 @@ services:
       retries: 10
       start_period: 20s
 
+  canton:
+    image: ${CANTON_IMAGE:-digitalasset/canton-open-source:latest}
+    container_name: fraudshield-canton
+    restart: unless-stopped
+    command: ["daemon", "-c", "/canton/etc/canton.conf"]
+    ports:
+      - "4011:4011" # synchronizer public API
+      - "4012:4012" # synchronizer admin API
+      - "5001:5001" # BankA ledger API
+      - "5002:5002" # BankA admin API
+      - "5011:5011" # BankB ledger API
+      - "5012:5012" # BankB admin API
+      - "5021:5021" # BankC ledger API
+      - "5022:5022" # BankC admin API
+      - "5031:5031" # GlobalSynchronizer ledger API
+      - "5032:5032" # GlobalSynchronizer admin API
+    volumes:
+      - ./canton.conf:/canton/etc/canton.conf:ro
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 2 bash -c '</dev/tcp/127.0.0.1/5001' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5011' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5021' && timeout 2 bash -c '</dev/tcp/127.0.0.1/5031'"]
+      interval: 15s
+      timeout: 8s
+      retries: 20
+      start_period: 45s
+
   fraudshield-backend:
     build:
       context: ./Backend
@@ -26,13 +51,29 @@ services:
     depends_on:
       mongodb:
         condition: service_healthy
+      canton:
+        condition: service_started
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://fraudshield:fraudshield-local-password@mongodb:27017/fraudshield?authSource=admin
       SPRING_DATA_MONGODB_DATABASE: fraudshield
       APP_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080
       CORTEX_API_KEY: ${CORTEX_API_KEY:-PASTE_YOUR_CORTEX_API_KEY_HERE}
+      CANTON_ENABLED: ${CANTON_ENABLED:-true}
+      CANTON_BANKA_HOST: canton
+      CANTON_BANKB_HOST: canton
+      CANTON_BANKC_HOST: canton
+      CANTON_SYNCHRONIZER_HOST: canton
+      CANTON_BANKA_LEDGER_PORT: 5001
+      CANTON_BANKA_ADMIN_PORT: 5002
+      CANTON_BANKB_LEDGER_PORT: 5011
+      CANTON_BANKB_ADMIN_PORT: 5012
+      CANTON_BANKC_LEDGER_PORT: 5021
+      CANTON_BANKC_ADMIN_PORT: 5022
+      CANTON_SYNCHRONIZER_LEDGER_PORT: 5031
+      CANTON_SYNCHRONIZER_ADMIN_PORT: 5032
     ports:
       - "8080:8080"
+
   fraudshield-frontend:
     build:
       context: ./FrontEnd
