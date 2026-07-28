@@ -1,0 +1,1046 @@
+==========================================================================================
+             FRAUDSHIELD PLATFORM — COMPLETE MONGO DATA EXPORT REPORT
+==========================================================================================
+Generated At: 2026-07-28 13:47:01
+==========================================================================================
+
+
+──────────────────────────────────────────────────────────────────────────────────────────
+📂 COLLECTION: ALERTS  (Total Items: 7)
+──────────────────────────────────────────────────────────────────────────────────────────
+--- Item #001 ---
+{
+  "id": "alert-c07e4c8d",
+  "type": "TAMPER_DETECTED",
+  "severity": "CRITICAL",
+  "chain": "all",
+  "blockNumber": 0,
+  "message": "Tamper attempt detected on txn TXN-f0dfc5ba-f0ca-4f36-b7e3-ac1d687b0ff9: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £180.00",
+  "detectedAt": "2026-07-28T08:17:01.373Z",
+  "resolved": false,
+  "resolvedAt": null
+}
+
+--- Item #002 ---
+{
+  "id": "alert-67408abe",
+  "type": "TAMPER_DETECTED",
+  "severity": "CRITICAL",
+  "chain": "all",
+  "blockNumber": 0,
+  "message": "Tamper attempt detected on txn TXN-d97d8f45-2155-4b1a-a335-b1fc4d203da2: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £180.00",
+  "detectedAt": "2026-07-28T08:16:39.804Z",
+  "resolved": false,
+  "resolvedAt": null
+}
+
+--- Item #003 ---
+{
+  "id": "alert-3d34624b",
+  "type": "TAMPER_DETECTED",
+  "severity": "CRITICAL",
+  "chain": "all",
+  "blockNumber": 0,
+  "message": "Tamper attempt detected on txn TXN-158df0d2-fc7c-4d5e-92a7-04c2f27a8e47: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £180.00",
+  "detectedAt": "2026-07-28T08:16:03.973Z",
+  "resolved": false,
+  "resolvedAt": null
+}
+
+--- Item #004 ---
+{
+  "id": "alert-d94db3c4",
+  "type": "TAMPER_DETECTED",
+  "severity": "CRITICAL",
+  "chain": "all",
+  "blockNumber": 0,
+  "message": "Tamper attempt detected on txn TXN-f1292bf7-b5e1-4bdf-a520-75873ccb5182: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00",
+  "detectedAt": "2026-07-28T08:06:46.899Z",
+  "resolved": false,
+  "resolvedAt": null
+}
+
+--- Item #005 ---
+{
+  "id": "alert-cc64df45",
+  "type": "TAMPER_DETECTED",
+  "severity": "CRITICAL",
+  "chain": "all",
+  "blockNumber": 0,
+  "message": "Tamper attempt detected on txn TXN-903540ce-9dc0-4504-822e-6ec68529a3fb: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00",
+  "detectedAt": "2026-07-28T08:04:37.167Z",
+  "resolved": false,
+  "resolvedAt": null
+}
+
+--- Item #006 ---
+{
+  "id": "alert-f9b419fb",
+  "type": "TAMPER_DETECTED",
+  "severity": "CRITICAL",
+  "chain": "all",
+  "blockNumber": 0,
+  "message": "Tamper attempt detected on txn TXN-351e562b-f768-413c-94b5-0ee26028f56b: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00",
+  "detectedAt": "2026-07-28T07:13:16.054Z",
+  "resolved": false,
+  "resolvedAt": null
+}
+
+--- Item #007 ---
+{
+  "id": "alert-7e0f823a",
+  "type": "TAMPER_DETECTED",
+  "severity": "CRITICAL",
+  "chain": "all",
+  "blockNumber": 0,
+  "message": "Tamper attempt detected on txn TXN-95c27686-5748-411e-b495-f38e92772e80: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00",
+  "detectedAt": "2026-07-28T07:12:32.353Z",
+  "resolved": false,
+  "resolvedAt": null
+}
+
+
+──────────────────────────────────────────────────────────────────────────────────────────
+📂 COLLECTION: SUSPICIOUS_TXNS  (Total Items: 13)
+──────────────────────────────────────────────────────────────────────────────────────────
+--- Item #001 ---
+{
+  "id": "susp-tamper-ce2a0061",
+  "txnIds": [
+    "TXN-f0dfc5ba-f0ca-4f36-b7e3-ac1d687b0ff9"
+  ],
+  "reason": "TAMPER_ATTEMPT_DETECTED",
+  "sourceTrigger": "LEDGER_INTEGRITY_CHECK",
+  "riskSummary": null,
+  "createdAt": "2026-07-28T08:17:01.377Z",
+  "reviewStatus": "ESCALATED",
+  "reviewedBy": null,
+  "notes": "Discrepancy between operational MongoDB record and signed-off DAML ledger state: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £180.00"
+}
+
+--- Item #002 ---
+{
+  "id": "susp-0ce8395e",
+  "txnIds": [
+    "TXN-af77f27f-8ddb-4cde-ba02-48d3a0b0d632"
+  ],
+  "reason": "HIGH_RISK_REJECTION_REVERSED",
+  "sourceTrigger": "BANK_ADMIN_REJECT",
+  "riskSummary": [
+    {
+      "txnId": "TXN-af77f27f-8ddb-4cde-ba02-48d3a0b0d632",
+      "riskScore": 58
+    }
+  ],
+  "createdAt": "2026-07-28T08:16:59.729Z",
+  "reviewStatus": "PENDING_REVIEW",
+  "reviewedBy": null,
+  "notes": "Transaction rejected by admin/bank - funds returned to user balance"
+}
+
+--- Item #003 ---
+{
+  "id": "susp-tamper-0e0b2e55",
+  "txnIds": [
+    "TXN-d97d8f45-2155-4b1a-a335-b1fc4d203da2"
+  ],
+  "reason": "TAMPER_ATTEMPT_DETECTED",
+  "sourceTrigger": "LEDGER_INTEGRITY_CHECK",
+  "riskSummary": null,
+  "createdAt": "2026-07-28T08:16:39.810Z",
+  "reviewStatus": "ESCALATED",
+  "reviewedBy": null,
+  "notes": "Discrepancy between operational MongoDB record and signed-off DAML ledger state: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £180.00"
+}
+
+--- Item #004 ---
+{
+  "id": "susp-baf2e650",
+  "txnIds": [
+    "TXN-d04ecc62-97c5-47d4-a82d-c92c3a9e290b"
+  ],
+  "reason": "HIGH_RISK_REJECTION_REVERSED",
+  "sourceTrigger": "BANK_ADMIN_REJECT",
+  "riskSummary": [
+    {
+      "txnId": "TXN-d04ecc62-97c5-47d4-a82d-c92c3a9e290b",
+      "riskScore": 57
+    }
+  ],
+  "createdAt": "2026-07-28T08:16:38.049Z",
+  "reviewStatus": "PENDING_REVIEW",
+  "reviewedBy": null,
+  "notes": "Transaction rejected by admin/bank - funds returned to user balance"
+}
+
+--- Item #005 ---
+{
+  "id": "susp-tamper-b77606e5",
+  "txnIds": [
+    "TXN-158df0d2-fc7c-4d5e-92a7-04c2f27a8e47"
+  ],
+  "reason": "TAMPER_ATTEMPT_DETECTED",
+  "sourceTrigger": "LEDGER_INTEGRITY_CHECK",
+  "riskSummary": null,
+  "createdAt": "2026-07-28T08:16:03.983Z",
+  "reviewStatus": "ESCALATED",
+  "reviewedBy": null,
+  "notes": "Discrepancy between operational MongoDB record and signed-off DAML ledger state: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £180.00"
+}
+
+--- Item #006 ---
+{
+  "id": "susp-a0a1edd2",
+  "txnIds": [
+    "TXN-e008467c-d33c-436f-8260-2fce89c70ec3"
+  ],
+  "reason": "HIGH_RISK_REJECTION_REVERSED",
+  "sourceTrigger": "BANK_ADMIN_REJECT",
+  "riskSummary": [
+    {
+      "txnId": "TXN-e008467c-d33c-436f-8260-2fce89c70ec3",
+      "riskScore": 46
+    }
+  ],
+  "createdAt": "2026-07-28T08:16:02.250Z",
+  "reviewStatus": "PENDING_REVIEW",
+  "reviewedBy": null,
+  "notes": "Transaction rejected by admin/bank - funds returned to user balance"
+}
+
+--- Item #007 ---
+{
+  "id": "susp-tamper-81164c70",
+  "txnIds": [
+    "TXN-f1292bf7-b5e1-4bdf-a520-75873ccb5182"
+  ],
+  "reason": "TAMPER_ATTEMPT_DETECTED",
+  "sourceTrigger": "LEDGER_INTEGRITY_CHECK",
+  "riskSummary": null,
+  "createdAt": "2026-07-28T08:06:46.901Z",
+  "reviewStatus": "ESCALATED",
+  "reviewedBy": null,
+  "notes": "Discrepancy between operational MongoDB record and signed-off DAML ledger state: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00"
+}
+
+--- Item #008 ---
+{
+  "id": "susp-8ae4ee0a",
+  "txnIds": [
+    "TXN-886d7db4-f565-4bff-9887-4056397aef46"
+  ],
+  "reason": "HIGH_RISK_REJECTION_REVERSED",
+  "sourceTrigger": "BANK_ADMIN_REJECT",
+  "riskSummary": [
+    {
+      "txnId": "TXN-886d7db4-f565-4bff-9887-4056397aef46",
+      "riskScore": 32
+    }
+  ],
+  "createdAt": "2026-07-28T08:06:45.764Z",
+  "reviewStatus": "PENDING_REVIEW",
+  "reviewedBy": null,
+  "notes": "Transaction rejected by admin/bank - funds returned to user balance"
+}
+
+--- Item #009 ---
+{
+  "id": "susp-tamper-14874cd8",
+  "txnIds": [
+    "TXN-903540ce-9dc0-4504-822e-6ec68529a3fb"
+  ],
+  "reason": "TAMPER_ATTEMPT_DETECTED",
+  "sourceTrigger": "LEDGER_INTEGRITY_CHECK",
+  "riskSummary": null,
+  "createdAt": "2026-07-28T08:04:37.168Z",
+  "reviewStatus": "ESCALATED",
+  "reviewedBy": null,
+  "notes": "Discrepancy between operational MongoDB record and signed-off DAML ledger state: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00"
+}
+
+--- Item #010 ---
+{
+  "id": "susp-4ec70870",
+  "txnIds": [
+    "TXN-1f820b5e-f930-4de5-95f2-dd72310986e7"
+  ],
+  "reason": "HIGH_RISK_REJECTION_REVERSED",
+  "sourceTrigger": "BANK_ADMIN_REJECT",
+  "riskSummary": [
+    {
+      "txnId": "TXN-1f820b5e-f930-4de5-95f2-dd72310986e7",
+      "riskScore": 29
+    }
+  ],
+  "createdAt": "2026-07-28T08:04:36.079Z",
+  "reviewStatus": "PENDING_REVIEW",
+  "reviewedBy": null,
+  "notes": "Transaction rejected by admin/bank - funds returned to user balance"
+}
+
+--- Item #011 ---
+{
+  "id": "susp-tamper-d0b627dd",
+  "txnIds": [
+    "TXN-351e562b-f768-413c-94b5-0ee26028f56b"
+  ],
+  "reason": "TAMPER_ATTEMPT_DETECTED",
+  "sourceTrigger": "LEDGER_INTEGRITY_CHECK",
+  "riskSummary": null,
+  "createdAt": "2026-07-28T07:13:16.055Z",
+  "reviewStatus": "ESCALATED",
+  "reviewedBy": null,
+  "notes": "Discrepancy between operational MongoDB record and signed-off DAML ledger state: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00"
+}
+
+--- Item #012 ---
+{
+  "id": "susp-d21ea336",
+  "txnIds": [
+    "TXN-388daf33-8edf-408a-9353-fd46e8c97c9f"
+  ],
+  "reason": "HIGH_RISK_REJECTION_REVERSED",
+  "sourceTrigger": "BANK_ADMIN_REJECT",
+  "riskSummary": [
+    {
+      "txnId": "TXN-388daf33-8edf-408a-9353-fd46e8c97c9f",
+      "riskScore": 30
+    }
+  ],
+  "createdAt": "2026-07-28T07:13:14.924Z",
+  "reviewStatus": "PENDING_REVIEW",
+  "reviewedBy": null,
+  "notes": "Transaction rejected by admin/bank - funds returned to user balance"
+}
+
+--- Item #013 ---
+{
+  "id": "susp-tamper-3e8f76f0",
+  "txnIds": [
+    "TXN-95c27686-5748-411e-b495-f38e92772e80"
+  ],
+  "reason": "TAMPER_ATTEMPT_DETECTED",
+  "sourceTrigger": "LEDGER_INTEGRITY_CHECK",
+  "riskSummary": null,
+  "createdAt": "2026-07-28T07:12:32.399Z",
+  "reviewStatus": "ESCALATED",
+  "reviewedBy": null,
+  "notes": "Discrepancy between operational MongoDB record and signed-off DAML ledger state: Amount mismatch: operational record is £99999.00 but approved DAML ledger state is £150.00"
+}
+
+
+──────────────────────────────────────────────────────────────────────────────────────────
+📂 COLLECTION: PENDING_QUEUE  (Total Items: 17)
+──────────────────────────────────────────────────────────────────────────────────────────
+--- Item #001 ---
+{
+  "id": "TXN-e94006ec-1f08-45dd-bd4a-85d9b947087f",
+  "fromUserId": "U001",
+  "toUserId": "U005",
+  "amount": 1800.0,
+  "status": "PENDING_ADMIN",
+  "riskScore": 21,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 6,
+      "reason": "Isolation Forest anomaly score: 0.43"
+    }
+  ],
+  "nonce": "14d4473ef6c0ebb094ef723821e51864",
+  "createdAt": "2026-07-28T07:12:29.526Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": false,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": null,
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #002 ---
+{
+  "id": "TXN-15f0b5ea-926a-4c0b-a11c-5d8f215cb207",
+  "fromUserId": "U001",
+  "toUserId": "U002",
+  "amount": 200.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 15,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 15,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 0,
+      "reason": "Isolation Forest anomaly score: 0.36"
+    }
+  ],
+  "nonce": "16e3b863b4eca540637acf048380a3da",
+  "createdAt": "2026-07-28T07:12:31.258Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-15f0b5ea",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #003 ---
+{
+  "id": "TXN-53aaf422-dcb6-43a5-a9a6-fa8450a94c93",
+  "fromUserId": "U001",
+  "toUserId": "U005",
+  "amount": 1800.0,
+  "status": "PENDING_ADMIN",
+  "riskScore": 51,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 11,
+      "reason": "Unusual multi-dimensional pattern with unverified payee; High velocity cluster (7 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "7e55085169f5386898065470d1762474",
+  "createdAt": "2026-07-28T07:13:13.114Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": "2026-07-28T08:13:13.627Z",
+  "routingDecision": "ADMIN_REVIEW",
+  "escrowOptIn": false,
+  "holdContractRef": "#hold-53aaf422",
+  "approvalContractRef": "#approval-bank_approval-53aaf422",
+  "escrowContractRef": null,
+  "cantonCommandId": "cmd-6b1ab7b543d3",
+  "correlationId": "corr-TXN-53aaf422-dcb6-43a5-a9a6-fa8450a94c93"
+}
+
+--- Item #004 ---
+{
+  "id": "TXN-3c2275c8-9924-412b-994c-a2968827c3c9",
+  "fromUserId": "U001",
+  "toUserId": "U002",
+  "amount": 200.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 30,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 5,
+      "reason": "Isolation Forest anomaly score: 0.42"
+    }
+  ],
+  "nonce": "0408e17e1d64b031a4ae1ba96f8cb71a",
+  "createdAt": "2026-07-28T07:13:14.954Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-3c2275c8",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #005 ---
+{
+  "id": "TXN-1f1606b3-54a9-4870-a950-ee4aa7226671",
+  "fromUserId": "U001",
+  "toUserId": "U005",
+  "amount": 1800.0,
+  "status": "PENDING_ADMIN",
+  "riskScore": 21,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 6,
+      "reason": "Isolation Forest anomaly score: 0.43"
+    }
+  ],
+  "nonce": "858dcf6ebb3ea5b10b0039b37d6376f2",
+  "createdAt": "2026-07-28T08:04:34.325Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": false,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": null,
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #006 ---
+{
+  "id": "TXN-f633d8f4-3f44-4ca5-a69b-eb99c1ee73f1",
+  "fromUserId": "U001",
+  "toUserId": "U002",
+  "amount": 200.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 15,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 15,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 0,
+      "reason": "Isolation Forest anomaly score: 0.31"
+    }
+  ],
+  "nonce": "01c9a91fe22f405467ad461c37d2ce1a",
+  "createdAt": "2026-07-28T08:04:36.111Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-f633d8f4",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #007 ---
+{
+  "id": "TXN-c6a8b6e9-1b09-4e7c-b26d-0103f2edf4af",
+  "fromUserId": "U001",
+  "toUserId": "U005",
+  "amount": 1800.0,
+  "status": "PENDING_ADMIN",
+  "riskScore": 51,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 11,
+      "reason": "Unusual multi-dimensional pattern with unverified payee; High velocity cluster (7 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "1992ad2ba24dc49be6bee4fd7a4f81ea",
+  "createdAt": "2026-07-28T08:06:43.972Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": "2026-07-28T09:06:44.488Z",
+  "routingDecision": "ADMIN_REVIEW",
+  "escrowOptIn": false,
+  "holdContractRef": "#hold-c6a8b6e9",
+  "approvalContractRef": "#approval-bank_approval-c6a8b6e9",
+  "escrowContractRef": null,
+  "cantonCommandId": "cmd-5e194ddb2306",
+  "correlationId": "corr-TXN-c6a8b6e9-1b09-4e7c-b26d-0103f2edf4af"
+}
+
+--- Item #008 ---
+{
+  "id": "TXN-744779f0-e881-4de2-9318-78a874216a9d",
+  "fromUserId": "U001",
+  "toUserId": "U002",
+  "amount": 200.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 25,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 0,
+      "reason": "Isolation Forest anomaly score: 0.38"
+    }
+  ],
+  "nonce": "aa93d98b0492caf99a496538470623ed",
+  "createdAt": "2026-07-28T08:06:45.838Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-744779f0",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #009 ---
+{
+  "id": "TXN-1ed9ef67-d036-48a7-ab46-f61c37f7e105",
+  "fromUserId": "U001",
+  "toUserId": "U004",
+  "amount": 1800.0,
+  "status": "PENDING_ADMIN",
+  "riskScore": 52,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 12,
+      "reason": "Unusual multi-dimensional pattern with unverified payee; High velocity cluster (12 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "0a56e2a3c053a18aa265d52c2c5db7d4",
+  "createdAt": "2026-07-28T08:15:59.539Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": "2026-07-28T09:16:00.064Z",
+  "routingDecision": "ADMIN_REVIEW",
+  "escrowOptIn": false,
+  "holdContractRef": "#hold-1ed9ef67",
+  "approvalContractRef": "#approval-bank_approval-1ed9ef67",
+  "escrowContractRef": null,
+  "cantonCommandId": "cmd-0b03ad829915",
+  "correlationId": "corr-TXN-1ed9ef67-d036-48a7-ab46-f61c37f7e105"
+}
+
+--- Item #010 ---
+{
+  "id": "TXN-8647e048-cf3b-4ce2-942b-8d73a7f4204e",
+  "fromUserId": "U001",
+  "toUserId": "U003",
+  "amount": 300.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 30,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 5,
+      "reason": "Isolation Forest anomaly score: 0.42"
+    }
+  ],
+  "nonce": "ea34c5ab65a5348cb9d0e17c51d7dc55",
+  "createdAt": "2026-07-28T08:16:02.287Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-8647e048",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #011 ---
+{
+  "id": "TXN-30b4ff07-d0d4-47c1-96cb-a822b0b17b27",
+  "fromUserId": "U001",
+  "toUserId": "U003",
+  "amount": 600.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 32,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 7,
+      "reason": "High velocity cluster (14 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "1d49bb9a81946a30d06170c484dd6d99",
+  "createdAt": "2026-07-28T08:16:02.867Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-30b4ff07",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #012 ---
+{
+  "id": "TXN-23b18a29-b9df-4cec-a664-76e7d6ecef8a",
+  "fromUserId": "U001",
+  "toUserId": "U004",
+  "amount": 1800.0,
+  "status": "PENDING_ADMIN",
+  "riskScore": 52,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 12,
+      "reason": "Unusual multi-dimensional pattern with unverified payee; High velocity cluster (23 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "d47b5edae521dbc3ceddf1e0fe7f45bc",
+  "createdAt": "2026-07-28T08:16:35.554Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": "2026-07-28T09:16:36.082Z",
+  "routingDecision": "ADMIN_REVIEW",
+  "escrowOptIn": false,
+  "holdContractRef": "#hold-23b18a29",
+  "approvalContractRef": "#approval-bank_approval-23b18a29",
+  "escrowContractRef": null,
+  "cantonCommandId": "cmd-556c2a691ddd",
+  "correlationId": "corr-TXN-23b18a29-b9df-4cec-a664-76e7d6ecef8a"
+}
+
+--- Item #013 ---
+{
+  "id": "TXN-a946ae20-91c9-413e-84ed-0a7e530db5a2",
+  "fromUserId": "U001",
+  "toUserId": "U003",
+  "amount": 300.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 30,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 5,
+      "reason": "Isolation Forest anomaly score: 0.42"
+    }
+  ],
+  "nonce": "dd3ecaa493d5d099b4fbfb7041e53195",
+  "createdAt": "2026-07-28T08:16:38.076Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-a946ae20",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #014 ---
+{
+  "id": "TXN-9b548575-8bac-4e3f-b802-c974a5cf41a8",
+  "fromUserId": "U001",
+  "toUserId": "U003",
+  "amount": 600.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 32,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 7,
+      "reason": "High velocity cluster (25 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "65558cd66e57a8db8ad457cd8e24ecda",
+  "createdAt": "2026-07-28T08:16:38.611Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-9b548575",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #015 ---
+{
+  "id": "TXN-2db10406-09ce-4b5c-9090-33f5b45a8745",
+  "fromUserId": "U001",
+  "toUserId": "U004",
+  "amount": 1800.0,
+  "status": "PENDING_ADMIN",
+  "riskScore": 52,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 12,
+      "reason": "Unusual multi-dimensional pattern with unverified payee; High velocity cluster (29 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "bd9092d0b7a2c19d07d47f792292a639",
+  "createdAt": "2026-07-28T08:16:57.309Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": "2026-07-28T09:16:57.821Z",
+  "routingDecision": "ADMIN_REVIEW",
+  "escrowOptIn": false,
+  "holdContractRef": "#hold-2db10406",
+  "approvalContractRef": "#approval-bank_approval-2db10406",
+  "escrowContractRef": null,
+  "cantonCommandId": "cmd-651c239d0f5c",
+  "correlationId": "corr-TXN-2db10406-09ce-4b5c-9090-33f5b45a8745"
+}
+
+--- Item #016 ---
+{
+  "id": "TXN-52c295fe-f6e2-4a89-bbc6-4a0184514df0",
+  "fromUserId": "U001",
+  "toUserId": "U003",
+  "amount": 300.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 30,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 5,
+      "reason": "Isolation Forest anomaly score: 0.42"
+    }
+  ],
+  "nonce": "90850faafe5e1ae11bbc7d95501e08f5",
+  "createdAt": "2026-07-28T08:16:59.762Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-52c295fe",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+--- Item #017 ---
+{
+  "id": "TXN-5fe9a122-7d5e-4e45-b7b2-cd12d5e05ab9",
+  "fromUserId": "U001",
+  "toUserId": "U003",
+  "amount": 600.0,
+  "status": "ESCROW_ACTIVE",
+  "riskScore": 32,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 7,
+      "reason": "High velocity cluster (31 txns in 10m window) detected by ML"
+    }
+  ],
+  "nonce": "c2701399392ac4e1e1a0e29acd5e1154",
+  "createdAt": "2026-07-28T08:17:00.278Z",
+  "consentedAt": null,
+  "adminApprovedAt": null,
+  "expiresAt": null,
+  "routingDecision": "AUTO_APPROVE",
+  "escrowOptIn": true,
+  "holdContractRef": null,
+  "approvalContractRef": null,
+  "escrowContractRef": "#escrow-5fe9a122",
+  "cantonCommandId": null,
+  "correlationId": null
+}
+
+
+──────────────────────────────────────────────────────────────────────────────────────────
+📂 COLLECTION: MEMPOOL_STATUS  (Total Items: 6)
+──────────────────────────────────────────────────────────────────────────────────────────
+{
+  "pendingCount": 7,
+  "approvedCount": 15,
+  "rejectedCount": 6,
+  "totalCount": 68,
+  "nextBlockInSeconds": 30,
+  "timestamp": "2026-07-28T08:17:01.459117355Z"
+}
+
+
+──────────────────────────────────────────────────────────────────────────────────────────
+📂 COLLECTION: PARTY_MAPPINGS  (Total Items: 8)
+──────────────────────────────────────────────────────────────────────────────────────────
+--- Item #001 ---
+{
+  "id": "U001",
+  "appUserId": "U001",
+  "bankId": "BankA",
+  "participantId": "banka",
+  "cantonPartyId": "U001_Party",
+  "cantonRole": "customer",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+--- Item #002 ---
+{
+  "id": "U002",
+  "appUserId": "U002",
+  "bankId": "BankA",
+  "participantId": "banka",
+  "cantonPartyId": "U002_Party",
+  "cantonRole": "customer",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+--- Item #003 ---
+{
+  "id": "U003",
+  "appUserId": "U003",
+  "bankId": "BankB",
+  "participantId": "bankb",
+  "cantonPartyId": "U003_Party",
+  "cantonRole": "customer",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+--- Item #004 ---
+{
+  "id": "U004",
+  "appUserId": "U004",
+  "bankId": "BankB",
+  "participantId": "bankb",
+  "cantonPartyId": "U004_Party",
+  "cantonRole": "customer",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+--- Item #005 ---
+{
+  "id": "U005",
+  "appUserId": "U005",
+  "bankId": "BankC",
+  "participantId": "bankc",
+  "cantonPartyId": "U005_Party",
+  "cantonRole": "customer",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+--- Item #006 ---
+{
+  "id": "U006",
+  "appUserId": "U006",
+  "bankId": "BankC",
+  "participantId": "bankc",
+  "cantonPartyId": "U006_Party",
+  "cantonRole": "customer",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+--- Item #007 ---
+{
+  "id": "U007",
+  "appUserId": "U007",
+  "bankId": "BankC",
+  "participantId": "bankc",
+  "cantonPartyId": "U007_Party",
+  "cantonRole": "customer",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+--- Item #008 ---
+{
+  "id": "ADMIN",
+  "appUserId": "ADMIN",
+  "bankId": "Platform",
+  "participantId": "synchronizer",
+  "cantonPartyId": "GlobalSynchronizer_Party",
+  "cantonRole": "platform_admin",
+  "createdAt": "2026-07-28T07:11:07.218Z"
+}
+
+
+==========================================================================================
+                        END OF MONGO DATA EXPORT REPORT
+==========================================================================================

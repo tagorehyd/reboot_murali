@@ -34,6 +34,12 @@ public class TransactionController {
         return ResponseEntity.ok(transactionService.getUserPendingTransactions(userId));
     }
 
+    @PostMapping("/txn/{id}/user-consent")
+    public ResponseEntity<MempoolTransaction> userConsent(@PathVariable String id, @RequestBody java.util.Map<String, Boolean> body) {
+        boolean approved = Boolean.TRUE.equals(body.get("approved"));
+        return ResponseEntity.ok(transactionService.processUserConsent(id, approved));
+    }
+
     @GetMapping("/txn/user/{userId}/history")
     public ResponseEntity<List<TxnHistory>> userHistory(@PathVariable String userId) {
         return ResponseEntity.ok(transactionService.getUserTransactionHistory(userId));
