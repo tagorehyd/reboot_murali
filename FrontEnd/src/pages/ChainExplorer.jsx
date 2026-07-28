@@ -81,6 +81,14 @@ export default function ChainExplorer() {
   const [selectedBlock, setSelectedBlock] = useState(null);
   const [selectedChain, setSelectedChain] = useState(null);
 
+  // POC Tamper Simulation & Ledger Integrity State
+  const [tamperTxnId, setTamperTxnId] = useState('');
+  const [tamperAmount, setTamperAmount] = useState('99999.00');
+  const [tamperStatusNotice, setTamperStatusNotice] = useState(null);
+  const [verificationResult, setVerificationResult] = useState(null);
+  const [ledgerStateHistory, setLedgerStateHistory] = useState([]);
+  const [isVerifying, setIsVerifying] = useState(false);
+
   const loadExplorerData = async () => {
     setError('');
     try {
@@ -119,12 +127,54 @@ export default function ChainExplorer() {
     setSelectedChain(null);
   };
 
+  // POC Tamper Simulation Handler
+  const handleSimulateTamper = async () => {
+    if (!tamperTxnId) return;
+    setTamperStatusNotice(null);
+    setVerificationResult(null);
+    try {
+      const res = await axios.post('/api/chain/tamper', {
+        txnId: tamperTxnId,
+        tamperedAmount: parseFloat(tamperAmount) || 99999.00,
+      });
+      setTamperStatusNotice({
+        type: 'warning',
+        message: `⚠️ Simulated Tamper Success: Transaction ${tamperTxnId} operational amount altered to £${tamperAmount} in MongoDB. Click "Run Ledger Integrity Check" to verify DAML state comparison.`,
+      });
+    } catch (err) {
+      setTamperStatusNotice({
+        type: 'error',
+        message: err.response?.data?.error || 'Failed to simulate tampering. Check Txn ID.',
+      });
+    }
+  };
+
+  // Run Ledger Integrity Check & Verification
+  const handleVerifyLedger = async () => {
+    if (!tamperTxnId) return;
+    setIsVerifying(true);
+    setVerificationResult(null);
+    try {
+      const [verifyRes, historyRes] = await Promise.all([
+        axios.post(`/api/chain/verify/${tamperTxnId}`),
+        axios.get(`/api/chain/ledger-states/${tamperTxnId}`),
+      ]);
+      setVerificationResult(verifyRes.data);
+      setLedgerStateHistory(historyRes.data || []);
+      loadExplorerData();
+    } catch (err) {
+      setError('Failed to verify ledger integrity.');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
   return (
-    <div className="mx-auto w-full max-w-7xl bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-xl ring-1 ring-slate-200">
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+    <div className="mx-auto w-full max-w-7xl bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-xl ring-1 ring-slate-200 space-y-6">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">🔎 Chain Explorer</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-500 mt-0.5">Consensus-validated audit trail across Alpha, Beta, Gamma.</p>
+          <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">🔎 Chain Explorer & Ledger Verification</h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Consensus-validated audit trail across Canton ledger, Alpha, Beta, and Gamma.</p>
         </div>
         <button
           onClick={loadExplorerData}
@@ -135,10 +185,124 @@ export default function ChainExplorer() {
       </div>
 
       {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-4">
           <p className="text-red-700 font-semibold">{error}</p>
         </div>
       )}
+
+      {/* POC Tamper Simulation & Verification Interactive Panel */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl text-slate-100 space-y-4">
+        <div className="flex items-center gap-3">
+          <span className="text-2xl">🛡️</span>
+          <div>
+            <h2 className="text-lg font-bold text-slate-100">POC Ledger Integrity Verification & Tamper Detection</h2>
+            <p className="text-xs text-slate-400">Simulate database tampering and verify how signed-off DAML ledger states detect and repair unauthorized changes.</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">Transaction ID to Verify / Tamper</label>
+            <input
+              type="text"
+              placeholder="e.g. TXN-123456"
+              value={tamperTxnId}
+              onChange={(e) => setTamperTxnId(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 font-mono placeholder:text-slate-500 focus:outline-none focus:border-cyan-500"
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">POC Tamper Amount (£)</label>
+            <input
+              type="number"
+              placeholder="99999.00"
+              value={tamperAmount}
+              onChange={(e) => setTamperAmount(e.target.value)}
+              className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-sm text-slate-100 font-mono placeholder:text-slate-500 focus:outline-none focus:border-amber-500"
+            />
+          </div>
+          <div className="flex items-end gap-2">
+            <button
+              onClick={handleSimulateTamper}
+              disabled={!tamperTxnId}
+              className="flex-1 bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 border border-amber-500/40 font-semibold py-2 px-3 rounded-xl transition-all text-xs disabled:opacity-50"
+            >
+              ⚠️ 1. Inject Tampered Data
+            </button>
+            <button
+              onClick={handleVerifyLedger}
+              disabled={!tamperTxnId || isVerifying}
+              className="flex-1 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold py-2 px-3 rounded-xl shadow-lg transition-all text-xs disabled:opacity-50"
+            >
+              {isVerifying ? 'Verifying...' : '🔍 2. Verify Ledger'}
+            </button>
+          </div>
+        </div>
+
+        {tamperStatusNotice && (
+          <div className={`p-3 rounded-xl text-xs font-medium border ${
+            tamperStatusNotice.type === 'warning'
+              ? 'bg-amber-950/60 border-amber-500/40 text-amber-300'
+              : 'bg-red-950/60 border-red-500/40 text-red-300'
+          }`}>
+            {tamperStatusNotice.message}
+          </div>
+        )}
+
+        {/* Verification Result Display */}
+        {verificationResult && (
+          <div className={`p-4 rounded-xl border text-sm space-y-2 ${
+            verificationResult.tamperDetected
+              ? 'bg-red-950/80 border-red-500/60 text-red-200 shadow-red-900/40 shadow-xl'
+              : 'bg-emerald-950/60 border-emerald-500/40 text-emerald-200'
+          }`}>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{verificationResult.tamperDetected ? '🚨' : '✅'}</span>
+                <span className="font-bold text-base">
+                  {verificationResult.tamperDetected ? 'TAMPER ATTEMPT DETECTED & REPAIRED' : 'LEDGER INTEGRITY VERIFIED'}
+                </span>
+              </div>
+              <span className={`text-xs font-mono px-2 py-1 rounded font-bold ${
+                verificationResult.tamperDetected ? 'bg-red-500/20 text-red-300 border border-red-500/40' : 'bg-emerald-500/20 text-emerald-300'
+              }`}>
+                {verificationResult.status}
+              </span>
+            </div>
+
+            <p className="text-xs leading-relaxed">{verificationResult.message}</p>
+
+            {verificationResult.discrepancies?.length > 0 && (
+              <div className="bg-red-900/40 border border-red-800/60 rounded-lg p-3 space-y-1">
+                <p className="text-xs font-semibold text-red-300 uppercase tracking-wider">Detected Mismatches:</p>
+                {verificationResult.discrepancies.map((disc, idx) => (
+                  <p key={idx} className="text-xs font-mono text-red-200">• {disc}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Chronological Ledger State History Timeline */}
+        {ledgerStateHistory.length > 0 && (
+          <div className="pt-3 border-t border-slate-800 space-y-2">
+            <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">Chronological DAML Ledger State Timeline</h4>
+            <div className="flex flex-wrap gap-2">
+              {ledgerStateHistory.map((st, idx) => (
+                <div key={idx} className="bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs flex items-center gap-2">
+                  <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+                  <span className="font-mono font-semibold text-cyan-300">{st.state}</span>
+                  {st.damlContractRef && (
+                    <span className="text-[10px] bg-slate-900 px-1.5 py-0.5 rounded text-slate-400 font-mono">
+                      {st.damlContractRef.substring(0, 14)}...
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {mempoolStatus && (
         <div className="mb-4 grid grid-cols-1 gap-2 sm:grid-cols-2 xl:grid-cols-5">

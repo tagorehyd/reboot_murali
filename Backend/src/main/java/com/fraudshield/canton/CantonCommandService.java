@@ -49,6 +49,65 @@ public class CantonCommandService {
     private final CantonContractRefRepository contractRefRepository;
     private final CantonPartyMappingRepository partyMappingRepository;
     private final MempoolRepository          mempoolRepository;
+    private final com.fraudshield.repository.UserRepository userRepository;
+    private final com.fraudshield.repository.SuspiciousTransactionRepository suspiciousTransactionRepository;
+    private final com.fraudshield.service.LedgerStateService ledgerStateService;
+
+    /**
+     * Create a low-risk settlement contract and record SETTLEMENT_COMPLETED in ledger_state.
+     */
+    public String createLowRiskSettlement(String txnId, String fromUserId, String toUserId, double amount) {
+        String commandId     = newCommandId();
+        String correlationId = "corr-lowrisk-" + txnId;
+        String settlementRef = simulateOrSubmitSettlement(txnId, fromUserId, commandId, correlationId);
+        String settlementEventId = "evt-lowrisk-settle-" + txnId;
+
+        String bankId = resolveBankId(fromUserId);
+        String party  = resolvePartyId(fromUserId);
+
+        projectionUpdater.upsertContractRef(txnId, commandId, correlationId, null, null, null, settlementRef, settlementEventId);
+        projectionUpdater.upsertSettlementProjection(txnId, bankId, settlementRef, STATUS_SETTLED, settlementEventId);
+        projectionUpdater.appendTransactionLog(txnId, "LOW_RISK_SETTLED", settlementRef, party,
+                Map.of("settlementEventId", settlementEventId, "amount", amount));
+        projectionUpdater.appendBankLedgerCopy(txnId, bankId,
+                Map.of("event", "SETTLED", "settlementRef", settlementRef, "amount", amount));
+        projectionUpdater.recordCommandAudit(commandId, correlationId,
+                resolveParticipantId(fromUserId), party, "LOW_RISK_SETTLEMENT", "COMPLETED",
+                Map.of("txnId", txnId, "amount", amount));
+
+        ledgerStateService.recordState(
+                txnId,
+                "TXN_CREATED",
+                amount,
+                fromUserId,
+                toUserId,
+                bankId,
+                "bankb",
+                null,
+                null,
+                party,
+                "Low-risk transaction initiated",
+                Map.of("riskTier", "LOW")
+        );
+
+        ledgerStateService.recordState(
+                txnId,
+                "SETTLEMENT_COMPLETED",
+                amount,
+                fromUserId,
+                toUserId,
+                bankId,
+                "bankb",
+                settlementRef,
+                settlementEventId,
+                party,
+                "Low-risk settlement authorization confirmed on ledger",
+                Map.of("settlementRef", settlementRef)
+        );
+
+        log.info("[Canton] Low risk settlement contract created txnId={} settlementRef={}", txnId, settlementRef);
+        return settlementRef;
+    }
 
     // ── Hold contract ─────────────────────────────────────────────────────────
 
@@ -80,6 +139,21 @@ public class CantonCommandService {
 
         updateTransactionStatus(txnId, STATUS_HOLD_ACTIVE, holdExpiry);
         updateTransactionContractRef(txnId, holdRef, null, null, commandId, correlationId);
+
+        ledgerStateService.recordState(
+                txnId,
+                "ADMIN_HOLD_CREATED",
+                amount,
+                fromUserId,
+                null,
+                bankId,
+                "bankb",
+                holdRef,
+                null,
+                party,
+                "Admin hold contract created on ledger",
+                Map.of("holdRef", holdRef)
+        );
 
         log.info("[Canton] Hold created txnId={} holdRef={} expiresAt={}", txnId, holdRef, holdExpiry);
         return holdRef;
@@ -194,6 +268,21 @@ public class CantonCommandService {
             }
         });
 
+        ledgerStateService.recordState(
+                txnId,
+                "ESCROW_HOLD_CREATED",
+                amount,
+                fromUserId,
+                null,
+                bankId,
+                "bankb",
+                escrowRef,
+                null,
+                party,
+                "Customer opted into escrow hold contract",
+                Map.of("escrowRef", escrowRef)
+        );
+
         log.info("[Canton] Escrow contract created txnId={} escrowRef={}", txnId, escrowRef);
         return escrowRef;
     }
@@ -251,6 +340,70 @@ public class CantonCommandService {
                 resolveParticipantId(approvingUserId), party, "EXERCISE_APPROVAL", "COMPLETED",
                 Map.of("txnId", txnId));
 
+        ledgerStateService.recordState(
+                txnId,
+                "ADMIN_APPROVAL_GRANTED",
+                null,
+                approvingUserId,
+                null,
+                bankId,
+                "bankb",
+                null,
+                null,
+                party,
+                "Admin approved transaction on ledger",
+                null
+        );
+
+        ledgerStateService.recordState(
+                txnId,
+                "HOLDS_RELEASED",
+                null,
+                approvingUserId,
+                null,
+                bankId,
+                "bankb",
+                null,
+                null,
+                party,
+                "Holds released upon admin approval",
+                null
+        );
+
+        CantonContractRef contractRefs = contractRefRepository.findByTxnId(txnId).orElse(null);
+        if (escrowRef != null || (contractRefs != null && contractRefs.getEscrowContractRef() != null)) {
+            String activeEscrowRef = escrowRef != null ? escrowRef : contractRefs.getEscrowContractRef();
+            ledgerStateService.recordState(
+                    txnId,
+                    "ESCROW_RELEASED",
+                    null,
+                    approvingUserId,
+                    null,
+                    bankId,
+                    "bankb",
+                    activeEscrowRef,
+                    null,
+                    party,
+                    "Escrow hold released upon admin approval",
+                    Map.of("escrowRef", activeEscrowRef)
+            );
+        }
+
+        ledgerStateService.recordState(
+                txnId,
+                "SETTLEMENT_COMPLETED",
+                null,
+                approvingUserId,
+                null,
+                bankId,
+                "bankb",
+                settlementRef,
+                settlementEventId,
+                party,
+                "Settlement authorization contract completed on ledger",
+                Map.of("settlementRef", settlementRef)
+        );
+
         mempoolRepository.findById(txnId).ifPresent(txn -> {
             txn.setStatus(STATUS_SETTLED);
             mempoolRepository.save(txn);
@@ -289,6 +442,65 @@ public class CantonCommandService {
         projectionUpdater.recordCommandAudit(commandId, correlationId,
                 resolveParticipantId(rejectingUserId), party, "EXERCISE_REJECTION", "COMPLETED",
                 Map.of("txnId", txnId));
+
+        ledgerStateService.recordState(
+                txnId,
+                "REJECTION_RECORDED",
+                null,
+                rejectingUserId,
+                null,
+                bankId,
+                "bankb",
+                null,
+                null,
+                party,
+                "Transaction rejected by admin or user",
+                null
+        );
+
+        ledgerStateService.recordState(
+                txnId,
+                "FRAUD_ALERT_CREATED",
+                null,
+                rejectingUserId,
+                null,
+                bankId,
+                "bankb",
+                null,
+                null,
+                party,
+                "Fraud alert created due to transaction rejection",
+                null
+        );
+
+        // Reverse funds & create suspicious transaction on rejection
+        mempoolRepository.findById(txnId).ifPresent(txn -> {
+            txn.setStatus(STATUS_REJECTED);
+            mempoolRepository.save(txn);
+
+            // Refund sender
+            userRepository.findById(txn.getFromUserId()).ifPresent(user -> {
+                user.setBalance(user.getBalance() + txn.getAmount());
+                userRepository.save(user);
+                log.info("[Rejection] Refunded £{} to user {}", txn.getAmount(), user.getId());
+            });
+
+            // Create suspicious transaction record
+            com.fraudshield.model.SuspiciousTransaction suspicious = com.fraudshield.model.SuspiciousTransaction.builder()
+                    .id("susp-" + java.util.UUID.randomUUID().toString().substring(0, 8))
+                    .txnIds(java.util.List.of(txnId))
+                    .reason("HIGH_RISK_REJECTION_REVERSED")
+                    .sourceTrigger("BANK_ADMIN_REJECT")
+                    .riskSummary(java.util.List.of(com.fraudshield.model.SuspiciousTransaction.RiskSummaryItem.builder()
+                            .txnId(txnId)
+                            .riskScore(txn.getRiskScore())
+                            .build()))
+                    .createdAt(java.time.Instant.now())
+                    .reviewStatus("PENDING_REVIEW")
+                    .notes("Transaction rejected by admin/bank - funds returned to user balance")
+                    .build();
+            suspiciousTransactionRepository.save(suspicious);
+        });
 
         log.info("[Canton] Rejection exercised txnId={} by party={}", txnId, party);
     }

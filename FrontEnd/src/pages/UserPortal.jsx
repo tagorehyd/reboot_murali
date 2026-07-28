@@ -60,6 +60,38 @@ export default function UserPortal({ userId }) {
   const [userRules, setUserRules] = useState({});
   const [rulesLoading, setRulesLoading] = useState(false);
   const [ruleToast, setRuleToast] = useState(null); // { type: 'enable'|'disable', label }
+  const [consentPrompt, setConsentPrompt] = useState(null); // { txnId, amount, toUserId, riskScore, countdown }
+
+  const handleConsentResponse = async (txnId, approved) => {
+    setConsentPrompt(null);
+    try {
+      await axios.post(`/api/txn/${txnId}/user-consent`, { approved });
+      if (approved) {
+        setSuccessMessage('✅ Consent verified! Payment settled directly on Canton ledger.');
+      } else {
+        setSuccessMessage('🔒 Consent declined or timed out. Transaction escalated to Bank Admin review.');
+      }
+      loadBalance();
+      loadActivity();
+    } catch (err) {
+      console.error('Consent response error:', err);
+    }
+  };
+
+  useEffect(() => {
+    if (!consentPrompt || consentPrompt.countdown <= 0) return;
+    const timer = setInterval(() => {
+      setConsentPrompt((prev) => {
+        if (!prev) return null;
+        if (prev.countdown <= 1) {
+          handleConsentResponse(prev.txnId, false);
+          return null;
+        }
+        return { ...prev, countdown: prev.countdown - 1 };
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [consentPrompt?.countdown]);
 
   useEffect(() => {
     loadUsers();
@@ -416,20 +448,25 @@ export default function UserPortal({ userId }) {
       setTransactionResponse(response.data);
       setAmount('');
       setRecipientId('');
-      if (response.data.status === 'APPROVED' && response.data.routingDecision === 'AUTO_APPROVE') {
+      if (['PENDING_USER_CONSENT', 'PENDING_CONSENT', 'PENDING_USER_APPROVAL'].includes(response.data.status)) {
+        setConsentPrompt({
+          txnId: response.data.txnId,
+          amount: response.data.amount || payload.amount,
+          toUserId: response.data.toUserId || payload.toUserId,
+          riskScore: response.data.riskScore || 50,
+          countdown: 15,
+        });
+        setSuccessMessage('🔐 Medium-risk transaction flagged. 15-second confirmation prompt initiated.');
+      } else if (response.data.status === 'APPROVED' && response.data.routingDecision === 'AUTO_APPROVE') {
         setSuccessMessage('✅ Transaction auto-approved and accepted into mempool!');
       } else if (response.data.status === 'HOLD_ACTIVE') {
         setSuccessMessage('🔒 High-risk transaction placed under Canton hold (60 min). Awaiting bank approval.');
       } else if (response.data.status === 'PENDING_BANK_APPROVAL') {
         setSuccessMessage('🏦 Transaction held. Awaiting bank approval via Canton contract.');
-      } else if (response.data.status === 'PENDING_USER_APPROVAL') {
-        setSuccessMessage('🔐 Medium-risk transaction. Please provide your approval (15 min window).');
       } else if (response.data.status === 'ESCROW_ACTIVE') {
         setSuccessMessage('🔏 Transaction approved with Canton escrow service active.');
       } else if (response.data.status === 'PENDING_ADMIN') {
         setSuccessMessage('⏳ Transaction accepted. Our fraud team is reviewing your request.');
-      } else if (response.data.status === 'PENDING_CONSENT') {
-        setSuccessMessage('🔐 Transaction flagged. Please review the risk details and provide your consent.');
       }
       loadBalance();
       loadActivity();
@@ -1642,6 +1679,59 @@ export default function UserPortal({ userId }) {
           </div>
         </div>
       </div>
+
+      {/* 15-Second Medium Risk User Consent Prompt Modal */}
+      {consentPrompt && (
+        <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-slate-900 border border-amber-500/50 rounded-2xl p-6 max-w-md w-full shadow-2xl space-y-4 text-slate-100 animate-in fade-in zoom-in duration-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-amber-400 text-2xl">⚠️</span>
+                <h3 className="text-lg font-bold text-slate-100">Medium Risk Transfer Prompt</h3>
+              </div>
+              <div className="w-10 h-10 rounded-full bg-amber-500/20 text-amber-400 font-mono font-bold flex items-center justify-center border border-amber-500/40 animate-pulse">
+                {consentPrompt.countdown}s
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-300">
+              This payment was flagged for medium risk (<span className="font-semibold text-amber-400">Risk Score: {consentPrompt.riskScore}/100</span>). Please review payment details within <strong className="text-amber-400">{consentPrompt.countdown} seconds</strong>.
+            </p>
+
+            <div className="bg-slate-800/90 rounded-xl p-4 space-y-2 border border-slate-700 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-400">Txn ID:</span>
+                <span className="font-mono text-slate-200">{consentPrompt.txnId}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-400">Recipient:</span>
+                <span className="font-semibold text-slate-100">{consentPrompt.toUserId}</span>
+              </div>
+              <div className="flex justify-between text-sm pt-1">
+                <span className="text-slate-400">Amount:</span>
+                <span className="font-bold text-emerald-400">£{Number(consentPrompt.amount).toFixed(2)}</span>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-2">
+              <button
+                type="button"
+                onClick={() => handleConsentResponse(consentPrompt.txnId, true)}
+                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+              >
+                <span>✅</span> Confirm & Settle Now
+              </button>
+              <button
+                type="button"
+                onClick={() => handleConsentResponse(consentPrompt.txnId, false)}
+                className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-semibold py-2.5 px-3 rounded-xl transition-all text-xs cursor-pointer"
+              >
+                Require Admin Review
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
