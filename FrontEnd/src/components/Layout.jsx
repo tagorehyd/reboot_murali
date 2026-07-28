@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Menu, X, Moon, Sun } from 'lucide-react';
+import NvidiaNimChatbot from './NvidiaNimChatbot';
 
 export default function Layout({ children, currentView, onNavigate }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -149,6 +150,9 @@ export default function Layout({ children, currentView, onNavigate }) {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
+
+      {/* NVIDIA NIM Floating AI Advisor Chatbot Widget */}
+      <NvidiaNimChatbot />
     </div>
   );
 }

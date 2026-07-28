@@ -18,8 +18,8 @@ const BANK_COLORS = {
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-slate-900 border border-slate-700 p-3 rounded-lg shadow-xl font-mono text-xs z-50">
-        <p className="text-slate-400 mb-2 font-bold">{label}</p>
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-3 rounded-xl shadow-xl font-mono text-xs z-50 text-slate-800 dark:text-slate-200">
+        <p className="text-slate-500 dark:text-slate-400 mb-2 font-bold">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }} className="font-bold">
             {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
@@ -52,7 +52,6 @@ export default function SystemDashboard() {
   const [timeSeriesData, setTimeSeriesData] = useState([]);
   const [liveAlerts, setLiveAlerts] = useState([]);
   const [suspiciousList, setSuspiciousList] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const fetchDashboardData = async () => {
     try {
@@ -85,7 +84,6 @@ export default function SystemDashboard() {
 
       const totalTxnCount = allCommittedTxns.length + queue.length;
 
-      // Calculate total volume transferred in GBP
       let totalVolume = 0;
       allCommittedTxns.forEach(t => {
         totalVolume += Number(t.amount || 0);
@@ -94,7 +92,6 @@ export default function SystemDashboard() {
         totalVolume += Number(t.amount || 0);
       });
 
-      // Calculate Hold/Escrow and High Risk count
       let escrowCount = 0;
       let highRiskCount = 0;
       queue.forEach(txn => {
@@ -110,7 +107,7 @@ export default function SystemDashboard() {
         escrowHolds: escrowCount,
         highRiskCount: highRiskCount + suspicious.length,
         totalUsers: users.length || 7,
-        activeNodes: 7, // 7 Bank Participant Nodes on Canton
+        activeNodes: 7,
       });
 
       // Aggregate Institution Volume
@@ -199,8 +196,6 @@ export default function SystemDashboard() {
 
     } catch (err) {
       console.error('Error fetching live dashboard insights:', err);
-    } finally {
-      setIsLoading(false);
     }
   };
 
@@ -211,68 +206,68 @@ export default function SystemDashboard() {
   }, []);
 
   return (
-    <div className="min-h-full bg-slate-950 text-slate-200 p-4 md:p-8 flex flex-col font-sans space-y-6">
+    <div className="min-h-full bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-200 p-4 md:p-8 flex flex-col font-sans space-y-6">
       {/* Header Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-5">
         <div>
-          <h1 className="text-3xl font-black tracking-tight text-white flex items-center gap-3">
-            <span className="text-cyan-400">⚡</span> Real-Time Canton Network Insights & Dashboard
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-3">
+            <span className="text-cyan-500 dark:text-cyan-400">⚡</span> Real-Time Canton Network Insights & Dashboard
           </h1>
-          <p className="text-slate-400 mt-1 text-xs sm:text-sm">
+          <p className="text-slate-500 dark:text-slate-400 mt-1 text-xs sm:text-sm">
             Live telemetrics, interbank settlement throughput, Isolation Forest ML risk tiers, and Canton ledger audit stats.
           </p>
         </div>
-        <div className="flex items-center gap-3 bg-slate-900 border border-slate-800 rounded-xl px-4 py-2.5 shadow-lg">
+        <div className="flex items-center gap-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 shadow-md dark:shadow-lg">
           <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
-          <span className="text-xs font-bold text-emerald-400 uppercase tracking-widest">Canton Ledger Active</span>
+          <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-widest">Canton Ledger Active</span>
         </div>
       </div>
 
       {/* Primary KPI Summary Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Total Ledger Transactions */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-lg">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-md dark:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 relative z-10">Total Ledger Txns</p>
-          <p className="text-3xl sm:text-4xl font-black text-cyan-400 relative z-10">{stats.totalTxns}</p>
-          <div className="mt-2 text-[10px] text-cyan-500/80 font-mono">Real-time committed blocks + mempool</div>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest mb-1 relative z-10">Total Ledger Txns</p>
+          <p className="text-3xl sm:text-4xl font-black text-cyan-600 dark:text-cyan-400 relative z-10">{stats.totalTxns}</p>
+          <div className="mt-2 text-[10px] text-cyan-600/80 dark:text-cyan-500/80 font-mono">Real-time committed blocks + mempool</div>
         </div>
 
         {/* Total Settled Volume */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-lg">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-md dark:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 relative z-10">Settled Volume (GBP)</p>
-          <p className="text-3xl sm:text-4xl font-black text-emerald-400 relative z-10">£{stats.totalVolumeGBP.toLocaleString()}</p>
-          <div className="mt-2 text-[10px] text-emerald-500/80 font-mono">Gross Interbank Volume Transferred</div>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest mb-1 relative z-10">Settled Volume (GBP)</p>
+          <p className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 relative z-10">£{stats.totalVolumeGBP.toLocaleString()}</p>
+          <div className="mt-2 text-[10px] text-emerald-600/80 dark:text-emerald-500/80 font-mono">Gross Interbank Volume Transferred</div>
         </div>
 
         {/* Canton Blockchain Blocks */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-lg">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-md dark:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 relative z-10">Committed Blocks</p>
-          <p className="text-3xl sm:text-4xl font-black text-purple-400 relative z-10">{stats.blockCount}</p>
-          <div className="mt-2 text-[10px] text-purple-500/80 font-mono">Synchronizer Hash Blocks Signed</div>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest mb-1 relative z-10">Committed Blocks</p>
+          <p className="text-3xl sm:text-4xl font-black text-purple-600 dark:text-purple-400 relative z-10">{stats.blockCount}</p>
+          <div className="mt-2 text-[10px] text-purple-600/80 dark:text-purple-500/80 font-mono">Synchronizer Hash Blocks Signed</div>
         </div>
 
         {/* Security Audit & Anomaly Flags */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-lg">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 relative overflow-hidden group shadow-md dark:shadow-lg">
           <div className="absolute inset-0 bg-gradient-to-br from-rose-500/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity"></div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1 relative z-10">Audit & Security Flags</p>
-          <p className="text-3xl sm:text-4xl font-black text-rose-400 relative z-10">{stats.highRiskCount}</p>
-          <div className="mt-2 text-[10px] text-rose-500/80 font-mono">Tamper attempts & 8D ML spikes</div>
+          <p className="text-xs font-bold text-slate-400 dark:text-slate-400 uppercase tracking-widest mb-1 relative z-10">Audit & Security Flags</p>
+          <p className="text-3xl sm:text-4xl font-black text-rose-600 dark:text-rose-400 relative z-10">{stats.highRiskCount}</p>
+          <div className="mt-2 text-[10px] text-rose-600/80 dark:text-rose-500/80 font-mono">Tamper attempts & 8D ML spikes</div>
         </div>
       </div>
 
       {/* Main Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Time Series Area Chart */}
-        <div className="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-cyan-400"></span>
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-500 dark:bg-cyan-400"></span>
               Live Transaction Throughput & AI Flag Rate
             </h3>
-            <span className="text-[10px] font-mono text-cyan-400 bg-cyan-950 px-2.5 py-1 rounded-lg border border-cyan-800">
+            <span className="text-[10px] font-mono text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950 px-2.5 py-1 rounded-lg border border-cyan-200 dark:border-cyan-800">
               Live Feed Active
             </span>
           </div>
@@ -289,9 +284,9 @@ export default function SystemDashboard() {
                     <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="time" stroke="#475569" fontSize={10} tickMargin={10} />
-                <YAxis stroke="#475569" fontSize={10} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800" vertical={false} />
+                <XAxis dataKey="time" stroke="#64748b" fontSize={10} tickMargin={10} />
+                <YAxis stroke="#64748b" fontSize={10} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="total" name="Total Transactions" stroke="#0ea5e9" strokeWidth={2.5} fillOpacity={1} fill="url(#colorTotal)" />
                 <Area type="monotone" dataKey="flagged" name="AI Vector Flagged" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#colorFlagged)" />
@@ -301,9 +296,9 @@ export default function SystemDashboard() {
         </div>
 
         {/* Risk Distribution Pie Chart */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col shadow-xl">
-          <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-purple-400"></span>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col shadow-lg">
+          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest mb-4 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-purple-500 dark:bg-purple-400"></span>
             Transaction Value & Risk Distribution
           </h3>
           <div className="flex-1 w-full min-h-[220px]">
@@ -328,7 +323,7 @@ export default function SystemDashboard() {
                   verticalAlign="bottom" 
                   height={36} 
                   iconType="circle"
-                  wrapperStyle={{ fontSize: '11px', color: '#94a3b8' }}
+                  wrapperStyle={{ fontSize: '11px', color: '#64748b' }}
                 />
               </PieChart>
             </ResponsiveContainer>
@@ -339,18 +334,18 @@ export default function SystemDashboard() {
       {/* Bottom Insights Row */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Real Institution Activity Volume Bar Chart */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl">
-          <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest mb-5 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-lg">
+          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 dark:bg-emerald-400"></span>
             Interbank Volume Transferred by Bank (GBP £)
           </h3>
           <div className="h-[250px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={institutionData} layout="vertical" margin={{ top: 0, right: 20, left: 15, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
-                <XAxis type="number" stroke="#475569" fontSize={10} hide />
-                <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={10} axisLine={false} tickLine={false} width={100} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: '#1e293b' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800" horizontal={false} />
+                <XAxis type="number" stroke="#64748b" fontSize={10} hide />
+                <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={10} axisLine={false} tickLine={false} width={100} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }} />
                 <Bar dataKey="volume" name="Volume (£ GBP)" radius={[0, 6, 6, 0]}>
                   {institutionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -362,13 +357,13 @@ export default function SystemDashboard() {
         </div>
 
         {/* Live Security Threat & Audit Feed */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col shadow-xl">
+        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 flex flex-col shadow-lg">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-widest flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
               Live Security Threat & Audit Feed
             </h3>
-            <span className="bg-rose-950 text-rose-300 px-2.5 py-0.5 rounded text-[10px] font-bold border border-rose-800">
+            <span className="bg-rose-100 dark:bg-rose-950 text-rose-800 dark:text-rose-300 px-2.5 py-0.5 rounded text-[10px] font-bold border border-rose-300 dark:border-rose-800">
               AUDIT ACTIVE
             </span>
           </div>
@@ -381,26 +376,26 @@ export default function SystemDashboard() {
             ) : (
               <>
                 {suspiciousList.map((item, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-slate-950/70 border border-red-900/50 space-y-1">
+                  <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-red-200 dark:border-red-900/50 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-red-400 bg-red-950/80 px-2 py-0.5 rounded border border-red-800 font-mono">
+                      <span className="text-[10px] font-bold text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-950/80 px-2 py-0.5 rounded border border-red-300 dark:border-red-800 font-mono">
                         🚨 {item.reason}
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">{item.reviewStatus}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">{item.reviewStatus}</span>
                     </div>
-                    <p className="text-xs font-semibold text-slate-200 mt-1">{item.notes}</p>
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">{item.notes}</p>
                   </div>
                 ))}
 
                 {liveAlerts.map((alert, idx) => (
-                  <div key={idx} className="p-3 rounded-xl bg-slate-950/70 border border-amber-900/50 space-y-1">
+                  <div key={idx} className="p-3 rounded-xl bg-slate-50 dark:bg-slate-950/70 border border-amber-200 dark:border-amber-900/50 space-y-1">
                     <div className="flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-amber-400 bg-amber-950/80 px-2 py-0.5 rounded border border-amber-800 font-mono">
+                      <span className="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-100 dark:bg-amber-950/80 px-2 py-0.5 rounded border border-amber-300 dark:border-amber-800 font-mono">
                         ⚠️ {alert.type} ({alert.severity})
                       </span>
-                      <span className="text-[10px] text-slate-400 font-mono">Block #{alert.blockNumber}</span>
+                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">Block #{alert.blockNumber}</span>
                     </div>
-                    <p className="text-xs font-semibold text-slate-200 mt-1">{alert.message}</p>
+                    <p className="text-xs font-semibold text-slate-800 dark:text-slate-200 mt-1">{alert.message}</p>
                   </div>
                 ))}
               </>
