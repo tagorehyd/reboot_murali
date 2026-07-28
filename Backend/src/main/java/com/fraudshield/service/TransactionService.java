@@ -64,8 +64,17 @@ public class TransactionService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Only USER accounts can initiate transactions");
         }
 
-        if (fromUser.getBalance() < request.getAmount()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient balance");
+        List<MempoolTransaction> pendingTxns = mempoolRepository.findByFromUserIdAndStatusInOrderByCreatedAtDesc(
+            fromUser.getId(),
+            List.of("PENDING_ADMIN", "PENDING_CONSENT", "APPROVED",
+                    "HOLD_ACTIVE", "PENDING_USER_APPROVAL",
+                    "PENDING_BANK_APPROVAL", "ESCROW_ACTIVE")
+        );
+        double holdAmount = pendingTxns.stream().mapToDouble(MempoolTransaction::getAmount).sum();
+        double usableBalance = fromUser.getBalance() - holdAmount;
+
+        if (usableBalance < request.getAmount()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Insufficient usable balance. You have £" + String.format("%.2f", usableBalance) + " available.");
         }
 
         if (!Boolean.TRUE.equals(request.getBypassSelfLimits())) {

@@ -478,12 +478,8 @@ public class CantonCommandService {
             txn.setStatus(STATUS_REJECTED);
             mempoolRepository.save(txn);
 
-            // Refund sender
-            userRepository.findById(txn.getFromUserId()).ifPresent(user -> {
-                user.setBalance(user.getBalance() + txn.getAmount());
-                userRepository.save(user);
-                log.info("[Rejection] Refunded £{} to user {}", txn.getAmount(), user.getId());
-            });
+            // Transactions are not deducted until settlement, so no balance refund is needed here.
+            log.info("[Rejection] Cancelled txn {} for user {} (no balance adjustment needed)", txnId, txn.getFromUserId());
 
             // Create suspicious transaction record
             com.fraudshield.model.SuspiciousTransaction suspicious = com.fraudshield.model.SuspiciousTransaction.builder()

@@ -5,6 +5,8 @@ import UserPortal from './pages/UserPortal'
 import AdminConsole from './pages/AdminConsole'
 import ChainExplorer from './pages/ChainExplorer'
 import SuspiciousTransactions from './pages/SuspiciousTransactions'
+import AIAnomalyReview from './pages/AIAnomalyReview'
+import SystemDashboard from './pages/SystemDashboard'
 
 const DEMO_USERS = [
   { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-emerald-400 to-emerald-500' },
@@ -30,20 +32,35 @@ export default function App() {
       .catch(err => setError(err.message))
   }, [])
 
-  useEffect(() => {
-    axios.get('/api/users/all')
-      .then((res) => {
-        const balanceMap = {}
-        ;(res.data || []).forEach((u) => {
-          if (u?.id) {
-            balanceMap[u.id] = Number(u.balance || 0)
+  const fetchBalances = async () => {
+    try {
+      const res = await axios.get('/api/users/all');
+      const balanceMap = {};
+      const users = res.data || [];
+      
+      await Promise.all(users.map(async (u) => {
+        if (u?.id) {
+          try {
+            const balRes = await axios.get(`/api/admin/balance/${u.id}`);
+            balanceMap[u.id] = Number(balRes.data.balance || 0);
+          } catch (e) {
+            // Fallback to local DB balance if ledger query fails
+            balanceMap[u.id] = Number(u.balance || 0);
           }
-        })
-        setUserBalances(balanceMap)
-      })
-      .catch((err) => {
-        console.error('Failed to load user balances:', err)
-      })
+        }
+      }));
+      
+      setUserBalances(balanceMap);
+    } catch (err) {
+      console.error('Failed to load user balances:', err);
+    }
+  }
+
+  useEffect(() => {
+    fetchBalances()
+    // Poll balances every 3 seconds to keep them fresh after admin approvals
+    const interval = setInterval(fetchBalances, 3000)
+    return () => clearInterval(interval)
   }, [])
 
   const renderContent = () => {
@@ -55,6 +72,22 @@ export default function App() {
       return <AdminConsole />
     }
 
+    if (view === 'dashboard') {
+      return <SystemDashboard />
+    }
+
+    if (view === 'admin-history') {
+      return (
+        <div className="flex-1 flex items-center justify-center h-full min-h-[400px]">
+          <div className="text-center p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
+            <span className="text-4xl mb-4 block">📁</span>
+            <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100">Admin History</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-2">This view is currently under construction.</p>
+          </div>
+        </div>
+      )
+    }
+
     if (view === 'explorer') {
       return <ChainExplorer />
     }
@@ -63,7 +96,11 @@ export default function App() {
       return <SuspiciousTransactions />
     }
 
-    if (view === 'user-select') {
+    if (view === 'analytics') {
+      return <AIAnomalyReview />
+    }
+
+    if (view === 'user-select' || view === 'user-portal') {
       return (
         <div className="w-full">
           <div className="flex flex-col md:flex-row items-center justify-between mb-10">
@@ -72,19 +109,19 @@ export default function App() {
               <p className="text-slate-600 dark:text-slate-400">Choose a banking account to access FraudShield</p>
             </div>
             <div className="mt-6 md:mt-0 flex items-center bg-slate-100 dark:bg-slate-800 p-1 rounded-xl shadow-inner">
-              <button 
+              <button
                 onClick={() => setAccountViewMode('grid')}
                 className={`p-2.5 rounded-lg transition-all ${accountViewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-cyan-600 dark:text-cyan-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 title="Grid View"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1" /><rect width="7" height="7" x="14" y="3" rx="1" /><rect width="7" height="7" x="14" y="14" rx="1" /><rect width="7" height="7" x="3" y="14" rx="1" /></svg>
               </button>
-              <button 
+              <button
                 onClick={() => setAccountViewMode('table')}
                 className={`p-2.5 rounded-lg transition-all ${accountViewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-sm text-cyan-600 dark:text-cyan-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
                 title="Table View"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6" /><line x1="8" x2="21" y1="12" y2="12" /><line x1="8" x2="21" y1="18" y2="18" /><line x1="3" x2="3.01" y1="6" y2="6" /><line x1="3" x2="3.01" y1="12" y2="12" /><line x1="3" x2="3.01" y1="18" y2="18" /></svg>
               </button>
             </div>
           </div>
@@ -103,7 +140,7 @@ export default function App() {
                   {/* Card Container with Gradient Border */}
                   <div className={`p-[2px] rounded-2xl bg-gradient-to-br ${user.color} h-full transition-all shadow-lg dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] group-hover:shadow-2xl group-hover:scale-105`}>
                     <div className="bg-white dark:bg-slate-900 rounded-[14px] p-5 h-full flex flex-col">
-                      
+
                       {/* User Avatar & Name */}
                       <div className="flex items-center gap-4 mb-4">
                         <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${user.color} flex items-center justify-center text-white font-black text-xl shadow-sm transform group-hover:rotate-6 transition-transform`}>
@@ -172,7 +209,7 @@ export default function App() {
                           £{Number(userBalances[user.id] ?? 0).toLocaleString()}
                         </td>
                         <td className="px-6 py-4 text-center">
-                          <button 
+                          <button
                             onClick={() => {
                               setSelectedUser(user.id)
                               setView('user-portal')
@@ -206,7 +243,7 @@ export default function App() {
               <span className="text-cyan-500">⛓️</span> Blockchain Integration
             </h3>
             <p className="text-sm text-slate-700 dark:text-slate-300 mb-3">
-              FraudShield leverages a decentralized ledger to ensure every transaction is permanently recorded and immune to tampering. 
+              FraudShield leverages a decentralized ledger to ensure every transaction is permanently recorded and immune to tampering.
             </p>
             <ul className="space-y-2 text-sm text-slate-700 dark:text-slate-300">
               <li className="flex items-start gap-2">
