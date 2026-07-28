@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import axios from 'axios';
+import CantonContractGraphModal from '../components/CantonContractGraphModal';
 
 const DEMO_USERS = [
   { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-emerald-400 to-emerald-500' },
@@ -182,6 +183,7 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
   const [cantonDetailsMap, setCantonDetailsMap] = useState({});
   const [collapsedStages, setCollapsedStages] = useState({});
   const [activeTab, setActiveTab] = useState('BOTH'); // 'FLOW' | 'RADAR' | 'BOTH'
+  const [isCantonModalOpen, setIsCantonModalOpen] = useState(false);
 
   // Direction & Amount/Risk Tier Filters
   const [dirFilter, setDirFilter] = useState('ALL'); // 'ALL' | 'OUT' | 'IN'
@@ -328,57 +330,63 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
   const workflowStages = [
     {
       step: 1,
-      title: 'Transaction Initiated',
-      badge: 'FraudShield:HoldRequest',
-      desc: `Payment of £${selectedTxn?.amount || 0} created on ledger`,
+      title: 'DAML Payment Initiation',
+      badge: 'FraudShield.Interbank:HoldRequest',
+      choice: 'CreateHoldRequest',
+      desc: `Payment of £${selectedTxn?.amount || 0} created on Canton ledger`,
       party: selectedTxn?.fromUserId || 'Sender Customer',
       status: 'COMPLETED ✓',
       color: 'bg-emerald-500',
     },
     {
       step: 2,
-      title: 'Customer Consent Granted',
-      badge: 'Consent Choice Signed',
-      desc: 'Explicit user authorization attached on Canton node',
+      title: 'DAML Customer Consent Signature',
+      badge: 'FraudShield.Interbank:ConsentAgreement',
+      choice: 'ExerciseUserConsent',
+      desc: 'Explicit user authorization choice attached on Canton node',
       party: `${selectedTxn?.fromUserId || 'Sender'}_Party`,
       status: 'COMPLETED ✓',
       color: 'bg-emerald-500',
     },
     {
       step: 3,
-      title: 'AI Anomaly & Rules Check',
-      badge: 'IsolationForest & Rules Engine',
-      desc: 'Fraud score evaluated & multi-sig clearance routed',
+      title: 'DAML AI Anomaly & Rules Check',
+      badge: 'IsolationForest8D & RuleEvaluator',
+      choice: 'EvaluateRiskScore',
+      desc: 'Isolation Forest 8D vector scored & multi-sig clearance routed',
       party: 'FraudShield Security Engine',
       status: 'COMPLETED ✓',
       color: 'bg-emerald-500',
     },
     {
       step: 4,
-      title: 'Originating Bank Multi-Sig Approval',
-      badge: 'FraudShield:MultiSigApproval',
-      desc: 'Admin compliance approval granted by originating bank',
+      title: 'Originating Bank DAML Multi-Sig Approval',
+      badge: 'FraudShield.Interbank:MultiSigApproval',
+      choice: 'GrantMultiSigClearance',
+      desc: 'Admin compliance clearance choice exercised by originating bank',
       party: 'BankA_Admin',
       status: selectedTxn?.status === 'COMMITTED' || selectedTxn?.status === 'APPROVED' ? 'COMPLETED ✓' : 'IN_PROGRESS ⏳',
       color: selectedTxn?.status === 'COMMITTED' || selectedTxn?.status === 'APPROVED' ? 'bg-emerald-500' : 'bg-amber-500',
     },
     {
       step: 5,
-      title: 'Recipient Bank Escrow Agreement',
-      badge: 'FraudShield:EscrowAgreement',
-      desc: 'Recipient clearing escrow established for atomic settlement',
+      title: 'Recipient Bank DAML Escrow Agreement',
+      badge: 'FraudShield.Interbank:EscrowAgreement',
+      choice: 'EstablishEscrowHold',
+      desc: 'Recipient clearing escrow contract established for atomic settlement',
       party: 'BankB_Clearing',
       status: selectedTxn?.status === 'COMMITTED' ? 'COMPLETED ✓' : 'PENDING ⏳',
       color: selectedTxn?.status === 'COMMITTED' ? 'bg-emerald-500' : 'bg-slate-400',
     },
     {
       step: 6,
-      title: 'Canton Network Interbank Settlement',
-      badge: 'FraudShield:SettlementAuthorization',
-      desc: 'Atomic ledger finality committed to blockchain block',
-      party: 'Canton GlobalSynchronizer',
-      status: selectedTxn?.status === 'COMMITTED' ? 'COMMITTED ✓' : 'PENDING ⏳',
-      color: selectedTxn?.status === 'COMMITTED' ? 'bg-indigo-500' : 'bg-slate-400',
+      title: 'Canton DAML Interbank Settlement',
+      badge: 'FraudShield.Interbank:SettlementAuthorization',
+      choice: 'CommitAtomicSettlement',
+      desc: 'Atomic ledger finality committed across synchronizer domain',
+      party: 'GlobalSynchronizer',
+      status: selectedTxn?.status === 'COMMITTED' ? 'COMPLETED ✓' : 'PENDING ⏳',
+      color: selectedTxn?.status === 'COMMITTED' ? 'bg-emerald-500' : 'bg-slate-400',
     },
   ];
 
@@ -574,15 +582,23 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
                   {/* 2. DAML CONTRACT LIFECYCLE STAGES */}
                   {(activeTab === 'BOTH' || activeTab === 'FLOW') && (
                     <div className="space-y-3 pt-2">
-                      {/* Subheader with Collapse All / Expand All Toggle */}
-                      <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-2">
+                      {/* Subheader with Collapse All / Expand All Toggle & Canton DAG Inspector */}
+                      <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800/80 pb-2 flex-wrap gap-2">
                         <span className="text-[11px]">🔄 Interbank Contract Flow (6 Stages)</span>
-                        <button
-                          onClick={() => toggleAllStages(!allCollapsed)}
-                          className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 transition-all cursor-pointer"
-                        >
-                          {allCollapsed ? '🔽 Expand All Stages' : '🔼 Collapse All Stages'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => setIsCantonModalOpen(true)}
+                            className="text-[10px] font-bold text-white bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-400 hover:to-blue-500 px-3 py-1 rounded-lg shadow transition-all cursor-pointer flex items-center gap-1"
+                          >
+                            <span>⛓️ Canton DAG Inspector & Proof</span>
+                          </button>
+                          <button
+                            onClick={() => toggleAllStages(!allCollapsed)}
+                            className="text-[10px] font-bold text-cyan-400 hover:text-cyan-300 bg-slate-800 px-2.5 py-1 rounded-lg border border-slate-700 transition-all cursor-pointer"
+                          >
+                            {allCollapsed ? '🔽 Expand All' : '🔼 Collapse All'}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="relative pl-7 space-y-2.5 before:absolute before:left-3 before:top-2.5 before:bottom-2.5 before:w-1 before:bg-gradient-to-b before:from-emerald-500 before:via-cyan-500 before:to-indigo-500">
@@ -623,9 +639,10 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
                                 <div className="pt-1.5 border-t border-slate-700/60 space-y-1.5 text-xs">
                                   <p className="text-slate-300 text-[11px]">{st.desc}</p>
 
-                                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono">
-                                    <span>Acting Party: <strong className="text-cyan-300">{st.party}</strong></span>
-                                    <span>Signature: <strong className="text-emerald-400">Cryptographically Signed ✓</strong></span>
+                                  <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono flex-wrap gap-1">
+                                    <span>Choice: <strong className="text-sky-300 font-bold">{st.choice}</strong></span>
+                                    <span>Party: <strong className="text-cyan-300">{st.party}</strong></span>
+                                    <span>Signature: <strong className="text-emerald-400">Signed ✓</strong></span>
                                   </div>
                                 </div>
                               )}
@@ -645,6 +662,14 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
           </div>
         </div>
       )}
+
+      {/* Modal for Canton DAML Contract DAG Inspector & Cryptographic Settlement Proof Exporter */}
+      <CantonContractGraphModal
+        isOpen={isCantonModalOpen}
+        onClose={() => setIsCantonModalOpen(false)}
+        txn={selectedTxn}
+        cantonDetails={cantonDetailsMap[selectedTxn?.txnId || selectedTxn?.id]}
+      />
     </div>
   );
 }

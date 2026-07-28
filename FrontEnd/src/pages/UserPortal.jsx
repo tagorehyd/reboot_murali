@@ -1624,7 +1624,7 @@ export default function UserPortal({ userId }) {
                             onClick={() => setSelectedWorkflowTxn(item)}
                             className="w-full text-[11px] font-bold px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
                           >
-                            <span>Git DAML Workflow 🌿</span>
+                            <span>DAML Consent Trail ⛓️</span>
                           </button>
                         </div>
                       </div>
@@ -1954,9 +1954,9 @@ export default function UserPortal({ userId }) {
         </div>
       )}
 
-      {/* Git DAML Workflow & Consent DAG Inspector Modal */}
+      {/* Canton DAML Consent Trail & Contract Inspector Modal */}
       {selectedWorkflowTxn && (
-        <GitDamlWorkflowModal
+        <DamlConsentTrailModal
           txn={selectedWorkflowTxn}
           onClose={() => setSelectedWorkflowTxn(null)}
         />
@@ -1965,11 +1965,11 @@ export default function UserPortal({ userId }) {
   );
 }
 
-// Sub-component that renders an interactive Git-Style Workflow DAG Graph for DAML Contracts & Consents
-function GitDamlWorkflowModal({ txn, onClose }) {
+// Sub-component that renders an interactive Canton DAML Contract & Consent Trail Inspector
+function DamlConsentTrailModal({ txn, onClose }) {
   const [cantonData, setCantonData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedCommitIdx, setSelectedCommitIdx] = useState(0);
+  const [selectedStateIdx, setSelectedStateIdx] = useState(0);
 
   useEffect(() => {
     let isMounted = true;
@@ -1987,48 +1987,47 @@ function GitDamlWorkflowModal({ txn, onClose }) {
     return () => { isMounted = false; };
   }, [txn]);
 
-  // Construct Git Workflow Commits
-  const gitCommits = (cantonData?.ledgerStates && cantonData.ledgerStates.length > 0)
+  // Construct Canton DAML Contract Consent Trail
+  const damlConsentTrail = (cantonData?.ledgerStates && cantonData.ledgerStates.length > 0)
     ? cantonData.ledgerStates.map((st, idx) => {
-        const shortHash = (txn.txnId || txn.id || 'hash').replace(/[^a-f0-9]/gi, '').substring(0, 7) || '0a1f8c2';
         return {
-          sha: `commit ${shortHash.substring(0, 4)}${idx}f${idx}`,
-          branch: idx === 0 ? 'main' : idx === cantonData.ledgerStates.length - 1 ? 'main (merged)' : `feature/consent-step-${idx}`,
-          title: st.state || `DAML Event ${idx + 1}`,
-          desc: st.remarks || st.details || 'DAML Contract Choice Executed',
+          contractId: `#${idx + 1}:${idx}`,
+          template: st.damlContractRef || `FraudShield.Interbank:${st.state || 'Contract'}`,
+          title: st.state || `DAML Choice ${idx + 1}`,
+          desc: st.remarks || st.details || 'DAML Smart Contract Choice Executed',
           author: st.actorRole || 'Party_User',
           bank: st.originatingBank || cantonData.originatingBank || 'BankA',
-          contractRef: st.damlContractRef || `FraudShield:${st.state || 'Contract'}`,
+          contractRef: st.damlContractRef || `FraudShield.Interbank:${st.state || 'Contract'}`,
           timestamp: st.timestamp ? new Date(st.timestamp).toLocaleString() : 'Recent',
-          status: 'VERIFIED_COMMIT ✓',
+          status: 'MULTI-PARTY SIGNED ✓',
         };
       })
     : [
-        { sha: 'commit 0a1f8c2', branch: 'main', title: 'TXN_CREATED', desc: 'Hold request created on ledger', author: txn.fromUserId || 'Sender', bank: 'BankA', contractRef: 'FraudShield:HoldRequest', status: 'VERIFIED_COMMIT ✓' },
-        { sha: 'commit 1b3d9e4', branch: 'feature/user-consent', title: 'USER_CONSENT_RECEIVED', desc: 'Explicit customer consent signature attached', author: (txn.fromUserId || 'Sender') + '_Party', bank: 'BankA', contractRef: 'FraudShield:HoldRequestChoice', status: 'VERIFIED_COMMIT ✓' },
-        { sha: 'commit 2c5a1f6', branch: 'feature/admin-approval', title: 'ADMIN_APPROVAL_GRANTED', desc: 'Originating bank multi-sig clearance granted', author: 'BankA_Admin', bank: 'BankA', contractRef: 'FraudShield:MultiSigApproval', status: 'VERIFIED_COMMIT ✓' },
-        { sha: 'commit 3d7b2c8', branch: 'feature/escrow-hold', title: 'ESCROW_HOLD_CREATED', desc: 'Recipient bank escrow agreement established', author: 'BankB_Clearing', bank: 'BankB', contractRef: 'FraudShield:EscrowAgreement', status: 'VERIFIED_COMMIT ✓' },
-        { sha: 'commit 4e9f3a0', branch: 'main (HEAD)', title: 'SETTLEMENT_COMPLETED', desc: 'Atomic interbank settlement committed', author: 'GlobalSynchronizer', bank: 'CantonNetwork', contractRef: 'FraudShield:SettlementAuthorization', status: 'COMMITTED_HEAD ✓' },
+        { contractId: '#1:0', template: 'FraudShield.Interbank:HoldRequest', title: 'TXN_CREATED', desc: 'Hold request created on Canton ledger', author: txn.fromUserId || 'Sender', bank: 'BankA', contractRef: 'FraudShield.Interbank:HoldRequest', status: 'MULTI-PARTY SIGNED ✓' },
+        { contractId: '#2:1', template: 'FraudShield.Interbank:ConsentAgreement', title: 'USER_CONSENT_RECEIVED', desc: 'Explicit customer consent signature attached to contract', author: (txn.fromUserId || 'Sender') + '_Party', bank: 'BankA', contractRef: 'FraudShield.Interbank:HoldRequestChoice', status: 'MULTI-PARTY SIGNED ✓' },
+        { contractId: '#3:2', template: 'FraudShield.Interbank:MultiSigApproval', title: 'ADMIN_APPROVAL_GRANTED', desc: 'Originating bank multi-sig clearance granted', author: 'BankA_Admin', bank: 'BankA', contractRef: 'FraudShield.Interbank:MultiSigApproval', status: 'MULTI-PARTY SIGNED ✓' },
+        { contractId: '#4:3', template: 'FraudShield.Interbank:EscrowAgreement', title: 'ESCROW_HOLD_CREATED', desc: 'Recipient bank escrow agreement established on Canton node', author: 'BankB_Clearing', bank: 'BankB', contractRef: 'FraudShield.Interbank:EscrowAgreement', status: 'MULTI-PARTY SIGNED ✓' },
+        { contractId: '#5:4', template: 'FraudShield.Interbank:SettlementAuthorization', title: 'SETTLEMENT_COMPLETED', desc: 'Atomic interbank settlement committed across synchronizer domain', author: 'GlobalSynchronizer', bank: 'CantonNetwork', contractRef: 'FraudShield.Interbank:SettlementAuthorization', status: 'CANTON COMMITTED ✓' },
       ];
 
-  const selectedCommit = gitCommits[selectedCommitIdx] || gitCommits[0];
+  const selectedState = damlConsentTrail[selectedStateIdx] || damlConsentTrail[0];
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-md flex items-center justify-center p-4 animate-in fade-in duration-200 font-sans">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
         {/* Modal Header */}
-        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-5 text-white flex items-center justify-between border-b border-slate-800">
+        <div className="bg-gradient-to-r from-slate-900 via-sky-950 to-slate-900 p-5 text-white flex items-center justify-between border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">🌿</span>
+            <span className="text-2xl">⛓️</span>
             <div>
               <h2 className="text-lg font-black flex items-center gap-2">
-                <span>DAML Contract & Consent Git Workflow</span>
+                <span>Canton DAML Contract & Consent Trail</span>
                 <span className="font-mono text-xs bg-cyan-500/20 text-cyan-300 px-2 py-0.5 rounded border border-cyan-500/30">
                   {txn.txnId || txn.id}
                 </span>
               </h2>
               <p className="text-xs text-slate-400 mt-0.5">
-                Step-by-step Git DAG graph representation of signed DAML choices and interbank node consents.
+                Step-by-step audit lineage of signed DAML choices and interbank node consents.
               </p>
             </div>
           </div>
@@ -2046,8 +2045,8 @@ function GitDamlWorkflowModal({ txn, onClose }) {
           {/* Overview Banner */}
           <div className="bg-slate-900 text-slate-200 p-4 rounded-2xl border border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4 font-mono text-xs">
             <div className="space-y-1">
-              <span className="text-slate-400 text-[10px] uppercase font-bold block">Git HEAD Target</span>
-              <p className="text-cyan-400 font-bold text-sm">ref: refs/heads/main @ {gitCommits[gitCommits.length - 1]?.sha}</p>
+              <span className="text-slate-400 text-[10px] uppercase font-bold block">CANTON SYNCHRONIZER DOMAIN</span>
+              <p className="text-cyan-400 font-bold text-sm">Domain: Alpha-Interbank-v1 @ Contract ID {damlConsentTrail[damlConsentTrail.length - 1]?.contractId}</p>
             </div>
             <div className="flex items-center gap-4">
               <div>
@@ -2065,59 +2064,59 @@ function GitDamlWorkflowModal({ txn, onClose }) {
             <div className="p-8 text-center text-xs text-slate-500">Loading Canton DAML Contract workflow history...</div>
           ) : (
             <>
-              {/* GIT DAG WORKFLOW GRAPH VISUALIZER */}
+              {/* CANTON DAML STATE TRANSITION TRAIL */}
               <div className="bg-white dark:bg-slate-900 p-5 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-md space-y-4">
                 <h3 className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                  <span>🌿</span> Git Commit DAG Branch Visualization
+                  <span>⛓️</span> DAML Contract State Transition Trail
                 </h3>
 
-                {/* Commit Steps Timeline */}
+                {/* State Steps Timeline */}
                 <div className="relative pl-8 space-y-4 before:absolute before:left-3.5 before:top-3 before:bottom-3 before:w-1 before:bg-gradient-to-b before:from-indigo-500 before:via-cyan-500 before:to-emerald-500">
-                  {gitCommits.map((commit, idx) => (
+                  {damlConsentTrail.map((st, idx) => (
                     <div
                       key={idx}
-                      onClick={() => setSelectedCommitIdx(idx)}
+                      onClick={() => setSelectedStateIdx(idx)}
                       className={`relative p-3.5 rounded-2xl border transition-all cursor-pointer flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                        selectedCommitIdx === idx
+                        selectedStateIdx === idx
                           ? 'bg-indigo-50/80 dark:bg-indigo-950/40 border-indigo-400 ring-2 ring-indigo-500/20 shadow-md'
                           : 'bg-slate-50 dark:bg-slate-800/40 border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800/80'
                       }`}
                     >
                       {/* Node Dot */}
                       <div className={`absolute -left-8 top-4 w-4 h-4 rounded-full border-2 ring-4 ring-white dark:ring-slate-900 transition-all ${
-                        selectedCommitIdx === idx ? 'bg-indigo-600 border-indigo-200 scale-110' : 'bg-slate-400 border-slate-300'
+                        selectedStateIdx === idx ? 'bg-indigo-600 border-indigo-200 scale-110' : 'bg-slate-400 border-slate-300'
                       }`}></div>
 
                       <div className="space-y-1">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">{commit.sha}</span>
+                          <span className="font-mono text-xs font-bold text-indigo-600 dark:text-indigo-400">{st.contractId}</span>
                           <span className="text-[10px] font-mono bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 px-2 py-0.5 rounded font-bold">
-                            {commit.branch}
+                            {st.template}
                           </span>
                           <span className="text-[10px] font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full">
-                            {commit.status}
+                            {st.status}
                           </span>
                         </div>
 
-                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{commit.title}</p>
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400">{commit.desc}</p>
+                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{st.title}</p>
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400">{st.desc}</p>
                       </div>
 
-                      <div className="text-right text-[10px] text-slate-400 space-y-0.5 self-start sm:self-auto">
-                        <p className="font-bold text-slate-700 dark:text-slate-300">Author: {commit.author}</p>
-                        <p className="font-mono">Node: {commit.bank}</p>
+                      <div className="text-right text-[10px] text-slate-400 space-y-0.5 self-start sm:self-auto font-mono">
+                        <p className="font-bold text-slate-700 dark:text-slate-300">Signatory: {st.author}</p>
+                        <p>Validator Node: {st.bank}</p>
                       </div>
                     </div>
                   ))}
                 </div>
               </div>
 
-              {/* SELECTED COMMIT DETAILED INSPECTOR CARD */}
+              {/* SELECTED STATE DETAILED INSPECTOR CARD */}
               <div className="bg-slate-900 text-slate-100 p-5 rounded-2xl border border-slate-800 shadow-xl space-y-3">
                 <div className="flex items-center justify-between border-b border-slate-800 pb-2">
                   <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold uppercase text-slate-400">Selected Commit Spec:</span>
-                    <span className="font-mono text-xs font-bold text-cyan-300">{selectedCommit.sha}</span>
+                    <span className="text-xs font-bold uppercase text-slate-400">Selected DAML Contract State:</span>
+                    <span className="font-mono text-xs font-bold text-cyan-300">{selectedState.contractId}</span>
                   </div>
                   <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-950/60 px-2 py-0.5 rounded border border-emerald-800">
                     DAML Contract Signature Verified
@@ -2127,21 +2126,21 @@ function GitDamlWorkflowModal({ txn, onClose }) {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                   <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700 space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">DAML Contract Reference</span>
-                    <p className="font-mono text-xs font-bold text-indigo-300 break-all">{selectedCommit.contractRef}</p>
+                    <p className="font-mono text-xs font-bold text-indigo-300 break-all">{selectedState.contractRef}</p>
                   </div>
 
                   <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700 space-y-1">
                     <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Signing Authority</span>
-                    <p className="font-bold text-xs text-emerald-300">{selectedCommit.author} ({selectedCommit.bank})</p>
+                    <p className="font-bold text-xs text-emerald-300">{selectedState.author} ({selectedState.bank})</p>
                   </div>
                 </div>
 
                 <div className="bg-slate-800/40 p-3 rounded-xl border border-slate-800 text-[11px] text-slate-300 leading-relaxed font-mono">
-                  <span className="text-slate-500 font-bold block mb-1">Git Commit Log Message:</span>
-                  <p>{selectedCommit.sha}</p>
-                  <p>Author: {selectedCommit.author} &lt;daml-party@{selectedCommit.bank.toLowerCase()}.canton&gt;</p>
-                  <p>Branch: {selectedCommit.branch}</p>
-                  <p className="text-cyan-300 mt-1">    feat(daml): {selectedCommit.title} - {selectedCommit.desc}</p>
+                  <span className="text-slate-500 font-bold block mb-1">Canton DAML Choice Log Trace:</span>
+                  <p>Contract ID: {selectedState.contractId}</p>
+                  <p>Signatory Party: {selectedState.author} &lt;daml-party@{selectedState.bank.toLowerCase()}.canton&gt;</p>
+                  <p>DAML Template: {selectedState.template}</p>
+                  <p className="text-cyan-300 mt-1">    daml.choice: {selectedState.title} - {selectedState.desc}</p>
                 </div>
               </div>
             </>

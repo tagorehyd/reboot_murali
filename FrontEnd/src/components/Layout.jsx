@@ -1,6 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Moon, Sun } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import NvidiaNimChatbot from './NvidiaNimChatbot';
+
+// Ultra-premium Day/Night Theme Toggle Switch matching user reference image exactly
+function DayNightThemeToggleSwitch({ isDark, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`relative w-20 h-10 rounded-full p-1 transition-all duration-500 cursor-pointer shadow-inner border border-slate-300/40 dark:border-slate-700/60 overflow-hidden focus:outline-none ${
+        isDark
+          ? 'bg-gradient-to-r from-indigo-700 via-purple-700 to-slate-900 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]'
+          : 'bg-gradient-to-r from-rose-400 via-pink-400 to-amber-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]'
+      }`}
+      aria-label="Toggle Light and Dark Mode"
+    >
+      {/* Background Icons Layer */}
+      <div className="absolute inset-0 flex items-center justify-between px-2.5 pointer-events-none select-none">
+        {/* Left Side: Crescent Moon & Sparkle Stars (Visible in Dark Mode) */}
+        <div className={`flex items-center gap-0.5 transition-opacity duration-300 ${isDark ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="#fde047" />
+            <path d="M19 5l.5 1.5L21 7l-1.5.5L19 9l-.5-1.5L17 7l1.5-.5z" fill="#ffffff" />
+            <path d="M12 18l.3.9L13 19l-.9.3L12 20l-.3-.9L11 19l.9-.3z" fill="#ffffff" />
+          </svg>
+        </div>
+
+        {/* Right Side: Sun & Fluffy White Cloud (Visible in Light Mode) */}
+        <div className={`flex items-center transition-opacity duration-300 ${!isDark ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+          <svg width="26" height="18" viewBox="0 0 32 24" fill="none">
+            {/* Bright Yellow Sun */}
+            <circle cx="20" cy="9" r="6" fill="#facc15" />
+            <path d="M20 1v2M20 15v2M12 9h2M26 9h2M14.34 3.34l1.42 1.42M24.24 13.24l1.42 1.42M14.34 14.66l1.42-1.42M24.24 4.76l1.42-1.42" stroke="#facc15" strokeWidth="1.5" strokeLinecap="round" />
+            {/* Soft White Cloud */}
+            <path d="M8 18h13a4 4 0 00.5-7.97A5 5 0 0013.5 6.1a4.5 4.5 0 00-5.5 4.2A3.5 3.5 0 008 18z" fill="#ffffff" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Floating 3D Sliding Circular Knob */}
+      <div
+        className={`w-8 h-8 rounded-full bg-gradient-to-b from-white via-slate-50 to-slate-200 shadow-md transform transition-transform duration-500 ease-out flex items-center justify-center border border-white/80 ${
+          isDark ? 'translate-x-10 shadow-[0_2px_8px_rgba(0,0,0,0.6)]' : 'translate-x-0 shadow-[0_2px_6px_rgba(0,0,0,0.3)]'
+        }`}
+      >
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white/90 to-slate-100/50" />
+      </div>
+    </button>
+  );
+}
 
 export default function Layout({ children, currentView, onNavigate }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -127,12 +175,11 @@ export default function Layout({ children, currentView, onNavigate }) {
             </button>
           </div>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-full text-slate-500 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800 transition-colors"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+            {/* Animated Day/Night Theme Toggle Switch */}
+            <DayNightThemeToggleSwitch
+              isDark={isDarkMode}
+              onToggle={() => setIsDarkMode(!isDarkMode)}
+            />
           </div>
         </header>
 
@@ -156,4 +203,3 @@ export default function Layout({ children, currentView, onNavigate }) {
     </div>
   );
 }
-
