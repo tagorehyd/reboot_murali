@@ -1,6 +1,8 @@
 package com.fraudshield.canton;
 
 import com.fraudshield.config.CantonProperties;
+import com.fraudshield.model.canton.CantonPartyMapping;
+import com.fraudshield.repository.canton.CantonPartyMappingRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -28,6 +30,7 @@ import java.util.Map;
 public class CantonDamlJsonApiGateway implements CantonDamlGateway {
 
     private final CantonProperties cantonProperties;
+    private final CantonPartyMappingRepository partyMappingRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
     @Override
@@ -65,8 +68,9 @@ public class CantonDamlJsonApiGateway implements CantonDamlGateway {
         payload.put("operator", submitterParty);
         payload.put("escrowId", "escrow-" + txnId);
         payload.put("txnId", txnId);
-        payload.put("payerUserId", userId);
+        payload.put("fromUserId", userId);
         payload.put("amount", amount);
+        payload.put("status", "ACTIVE");
 
         return createContract(templateEscrow(), payload, commandId, correlationId, submitterParty);
     }
@@ -76,86 +80,114 @@ public class CantonDamlJsonApiGateway implements CantonDamlGateway {
         String submitterParty = resolveSubmitterParty();
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("operator", submitterParty);
-        payload.put("settlementId", "settlement-" + txnId);
+        payload.put("settlementId", "settle-" + txnId);
         payload.put("txnId", txnId);
-        payload.put("triggeredBy", userId);
+        payload.put("fromUserId", userId);
 
         return createContract(templateSettlement(), payload, commandId, correlationId, submitterParty);
     }
 
     @Override
     public void exerciseApproval(String approvalContractRef, String actingParty, String commandId, String correlationId) {
-        exerciseChoice(templateApproval(), approvalContractRef, "Approve", Map.of(), commandId, correlationId, actingParty);
+        Map<String, Object> args = new LinkedHashMap<>();
+        args.put("approver", actingParty);
+        exerciseChoice(templateApproval(), approvalContractRef, "Approve", args, commandId, correlationId, actingParty);
     }
 
     @Override
     public void exerciseRejection(String approvalContractRef, String actingParty, String commandId, String correlationId) {
-        exerciseChoice(templateApproval(), approvalContractRef, "Reject", Map.of(), commandId, correlationId, actingParty);
+        Map<String, Object> args = new LinkedHashMap<>();
+        args.put("rejector", actingParty);
+        exerciseChoice(templateApproval(), approvalContractRef, "Reject", args, commandId, correlationId, actingParty);
     }
 
     @Override
     public void exerciseReleaseHold(String holdContractRef, String actingParty, String commandId, String correlationId) {
-        exerciseChoice(templateHold(), holdContractRef, "ReleaseHold", Map.of(), commandId, correlationId, actingParty);
+        exerciseChoice(templateHold(), holdContractRef, "ReleaseHold", new LinkedHashMap<>(), commandId, correlationId, actingParty);
     }
 
     @Override
     public void exerciseSettleEscrow(String escrowContractRef, String actingParty, String commandId, String correlationId) {
-        exerciseChoice(templateEscrow(), escrowContractRef, "SettleEscrow", Map.of(), commandId, correlationId, actingParty);
+        exerciseChoice(templateEscrow(), escrowContractRef, "SettleEscrow", new LinkedHashMap<>(), commandId, correlationId, actingParty);
     }
 
-    private String createContract(String templateId, Map<String, Object> payload, String commandId, String correlationId, String submitterParty) {
+    private String resolvePartyId(String appUserId) {
+        return partyMappingRepository.findByAppUserId(appUserId)
+                .map(CantonPartyMapping::getCantonPartyId)
+                .orElseThrow(() -> new IllegalStateException("No canton party mapping for " + appUserId));
+    }
+
+    private String createContract(String templateId, Map<String, Object> payload,
+                                  String commandId, String correlationId, String actAsParty) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("commandId", commandId);
+        if (correlationId != null) {
+            meta.put("submissionId", correlationId); // submissionId used for tracking
+        }
+
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("templateId", templateId);
         body.put("payload", payload);
-        body.put("party", submitterParty);
-        body.put("commandId", commandId);
-        body.put("meta", Map.of("correlationId", correlationId));
+        body.put("meta", meta);
+        body.put("actAs", new java.util.ArrayList<>(java.util.List.of(actAsParty)));
 
-        Map<String, Object> response = postJson("/v1/create", body);
-        Object result = response.get("result");
-        if (!(result instanceof Map<?, ?> resultMap)) {
-            throw new IllegalStateException("JSON API /v1/create returned no result map");
-        }
-
-        Object contractId = resultMap.get("contractId");
-        if (contractId == null) {
-            throw new IllegalStateException("JSON API /v1/create returned no contractId");
-        }
-        return String.valueOf(contractId);
+        Map<String, Object> resp = postJson("/v1/create", body, generateJwtToken(actAsParty));
+        return (String) resp.get("contractId");
     }
 
-    private void exerciseChoice(String templateId, String contractId, String choice,
-                                Map<String, Object> argument, String commandId,
-                                String correlationId, String actingParty) {
-        if (contractId == null || contractId.isBlank()) {
-            throw new IllegalArgumentException("contractId is required for exercising choice " + choice);
+    private void exerciseChoice(String templateId, String contractId, String choice, Map<String, Object> choiceArgs,
+                                String commandId, String correlationId, String submitterParty) {
+        Map<String, Object> meta = new LinkedHashMap<>();
+        meta.put("commandId", commandId);
+        if (correlationId != null) {
+            meta.put("submissionId", correlationId);
         }
-
-        String submitterParty = actingParty != null && !actingParty.isBlank() ? actingParty : resolveSubmitterParty();
 
         Map<String, Object> body = new LinkedHashMap<>();
         body.put("templateId", templateId);
         body.put("contractId", contractId);
         body.put("choice", choice);
-        body.put("argument", argument == null ? Map.of() : argument);
-        body.put("party", submitterParty);
-        body.put("commandId", commandId);
-        body.put("meta", Map.of(
-                "correlationId", correlationId,
-            "actingParty", submitterParty
-        ));
+        body.put("argument", choiceArgs);
+        body.put("meta", meta);
+        body.put("actAs", new java.util.ArrayList<>(java.util.List.of(submitterParty)));
 
-        postJson("/v1/exercise", body);
+        postJson("/v1/exercise", body, generateJwtToken(submitterParty));
+    }
+
+    private String generateJwtToken(String partyId) {
+        try {
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> header = Map.of("alg", "none", "typ", "JWT");
+            
+            String ledgerId = cantonProperties.getJsonApi().getDefaultParticipant();
+            if (ledgerId == null || ledgerId.isBlank()) {
+                ledgerId = "banka";
+            }
+
+            Map<String, Object> payload = new LinkedHashMap<>();
+            payload.put("actAs", java.util.List.of(partyId));
+            payload.put("readAs", java.util.List.of(partyId));
+            payload.put("ledgerId", ledgerId);
+            payload.put("applicationId", "FraudShield");
+            
+            String h = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(mapper.writeValueAsBytes(header));
+            String p = java.util.Base64.getUrlEncoder().withoutPadding().encodeToString(mapper.writeValueAsBytes(payload));
+            return h + "." + p + ".";
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to generate JWT", e);
+        }
     }
 
     @SuppressWarnings("unchecked")
-    private Map<String, Object> postJson(String path, Map<String, Object> body) {
+    private Map<String, Object> postJson(String path, Map<String, Object> body, String token) {
         CantonProperties.JsonApiEndpoint endpoint = resolveJsonApiEndpoint();
         String url = trimTrailingSlash(endpoint.getBaseUrl()) + path;
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
-        if (endpoint.getToken() != null && !endpoint.getToken().isBlank()) {
+        if (token != null) {
+            headers.setBearerAuth(token);
+        } else if (endpoint.getToken() != null && !endpoint.getToken().isBlank()) {
             headers.setBearerAuth(endpoint.getToken());
         }
 
@@ -194,10 +226,17 @@ public class CantonDamlJsonApiGateway implements CantonDamlGateway {
             key = "banka";
         }
         CantonProperties.ParticipantEndpoint endpoint = cantonProperties.getParticipants().get(key);
+        String baseParty = "BankA_Party";
         if (endpoint != null && endpoint.getParty() != null && !endpoint.getParty().isBlank()) {
-            return endpoint.getParty();
+            baseParty = endpoint.getParty();
         }
-        return "BankA_Party";
+        
+        String finalBaseParty = baseParty;
+        return partyMappingRepository.findAll().stream()
+                .map(CantonPartyMapping::getCantonPartyId)
+                .filter(id -> id != null && id.startsWith(finalBaseParty + "::"))
+                .findFirst()
+                .orElse(baseParty);
     }
 
     private String templateHold() {

@@ -372,6 +372,25 @@ public class CortexAiService {
         String context = buildUserContext(user, mempool, history);
         int analyzed = mempool.size() + history.size();
 
+        if (dummyMode) {
+            return AnomalyReviewResponse.builder()
+                    .verdict("CLEAR")
+                    .riskLevel("LOW")
+                    .summary("Simulated dummy Cortex review (no anomalies).")
+                    .anomalies(List.of())
+                    .recommendation("Proceed with transaction.")
+                    .scope("USER_HISTORY")
+                    .userId(userId)
+                    .transactionsAnalyzed(analyzed)
+                    .generatedAt(Instant.now())
+                    .model("dummy-simulator")
+                    .build();
+        }
+
+        if (!cortexEnabled) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Cortex AI is currently disabled");
+        }
+
         AnomalyReviewResponse result = callCortex(context);
         result.setScope("USER_HISTORY");
         result.setUserId(userId);
@@ -395,6 +414,26 @@ public class CortexAiService {
                 .collect(Collectors.toList());
 
         String context = buildSingleTxnContext(user, txn, recent);
+
+        if (dummyMode) {
+            return AnomalyReviewResponse.builder()
+                    .verdict("CLEAR")
+                    .riskLevel("LOW")
+                    .summary("Simulated dummy Cortex review (no anomalies).")
+                    .anomalies(List.of())
+                    .recommendation("Proceed with transaction.")
+                    .scope("SINGLE_TXN")
+                    .txnId(txnId)
+                    .userId(txn.getFromUserId())
+                    .transactionsAnalyzed(1 + recent.size())
+                    .generatedAt(Instant.now())
+                    .model("dummy-simulator")
+                    .build();
+        }
+
+        if (!cortexEnabled) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE, "Cortex AI is currently disabled");
+        }
 
         AnomalyReviewResponse result = callCortex(context);
         result.setScope("SINGLE_TXN");

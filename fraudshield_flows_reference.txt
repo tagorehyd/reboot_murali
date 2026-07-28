@@ -1,0 +1,166 @@
+================================================================================
+FRAUDSHIELD -- COMPLETE FLOW & BEHAVIOR REFERENCE
+Generated: 2026-07-27
+================================================================================
+
+
+--------------------------------------------------------------------------------
+1. RISK SCORING & ROUTING
+--------------------------------------------------------------------------------
+
+Risk Score   | Routing Decision    | Initial Status          | Canton Triggered
+-------------|---------------------|-------------------------|------------------
+  0 -  39    | AUTO_APPROVE        | APPROVED                | None
+ 40 -  69    | ADMIN_REVIEW        | PENDING_BANK_APPROVAL   | Hold + Bank Approval
+ 70+         | CONSENT_REQUIRED    | PENDING_BANK_APPROVAL   | Hold + Bank Approval
+
+
+--------------------------------------------------------------------------------
+2. RISK RULES ENGINE
+--------------------------------------------------------------------------------
+
+Rule               | Points    | Trigger Condition
+-------------------|-----------|---------------------------------------------------
+LARGE_AMOUNT       | +20       | Amount > 25,000
+NEW_PAYEE          | +15       | Recipient not in sender's trusted payee list
+VELOCITY           | +15       | Multiple transactions in short time window
+ISOLATION_FOREST   | +6 to +15 | ML anomaly score flags unusual pattern
+BENEFICIARY_TRUST  | -5 to -15 | Recipient has SILVER/GOLD trust tier (discount)
+
+
+--------------------------------------------------------------------------------
+3. TRANSACTION INITIATION FLOWS
+--------------------------------------------------------------------------------
+
+#   | Trigger                    | Amount    | Risk  | Endpoint                         | Initial Status          | Canton Contracts Created
+----|----------------------------|-----------|-------|----------------------------------|-------------------------|-------------------------------
+F1  | Low-risk send              | 150       |  0    | POST /api/txn/initiate           | APPROVED                | None
+F2  | High-risk (consent path)   | 28,000    | 74    | POST /api/txn/initiate           | PENDING_BANK_APPROVAL   | HoldRequest + MultiSigApproval
+F3  | High-risk (admin path)     | 45,000    | 46-75 | POST /api/txn/initiate           | PENDING_BANK_APPROVAL   | HoldRequest + MultiSigApproval
+F4  | Escrow opt-in              | Any       | Any   | POST /api/canton/txn/{id}/escrow-optin | unchanged         | EscrowAgreement (additive)
+
+
+--------------------------------------------------------------------------------
+4. DECISION / ACTION FLOWS
+--------------------------------------------------------------------------------
+
+#   | Actor | Action         | Endpoint                              | Canton Exercise                         | Before Status         | After Status    | Settlement Contract
+----|-------|----------------|---------------------------------------|------------------------------------------|-----------------------|-----------------|--------------------
+F5  | User  | Consent APPROVE| POST /api/admin/txn/{id}/consent      | exerciseUserConsent -> Approval.Approve  | PENDING_BANK_APPROVAL | PENDING_ADMIN   | --
+    |       |                | Body: {"approved": true}              |                                          |                       |                 |
+----|-------|----------------|---------------------------------------|------------------------------------------|-----------------------|-----------------|--------------------
+F6  | Admin | APPROVE        | POST /api/admin/txn/{id}/decide       | exerciseApproval + releaseHold +         | PENDING_ADMIN         | APPROVED        | #settlement-{txnId}
+    |       |                | Body: {"approved": true}              | settleEscrow (if present)                |                       |                 |
+----|-------|----------------|---------------------------------------|------------------------------------------|-----------------------|-----------------|--------------------
+F7  | Admin | REJECT         | POST /api/admin/txn/{id}/decide       | exerciseRejection -> Approval.Reject     | PENDING_BANK_APPROVAL | REJECTED        | --
+    |       |                | Body: {"approved": false}             |                                          |                       |                 |
+----|-------|----------------|---------------------------------------|------------------------------------------|-----------------------|-----------------|--------------------
+F8  | User  | Consent DENY   | POST /api/admin/txn/{id}/consent      | exerciseRejection -> Approval.Reject     | PENDING_BANK_APPROVAL | REJECTED        | --
+    |       |                | Body: {"approved": false}             |                                          |                       |                 |
+
+
+--------------------------------------------------------------------------------
+5. CANTON CONTRACT LIFECYCLE PER TRANSACTION
+--------------------------------------------------------------------------------
+
+Contract Type          | DAML Template                        | Created When     | Released/Settled When | Reference Field
+-----------------------|--------------------------------------|------------------|-----------------------|----------------------
+HoldRequest            | FraudShield:HoldRequest              | Score >= 40      | Admin APPROVE         | holdContractRef
+MultiSigApproval       | FraudShield:MultiSigApproval         | Score >= 40      | Admin/User APPROVE or REJECT | approvalContractRef
+EscrowAgreement        | FraudShield:EscrowAgreement          | User opts in     | Admin APPROVE         | escrowContractRef
+SettlementAuthorization| FraudShield:SettlementAuthorization  | Admin APPROVE    | -- (final)            | settlementContractRef
+
+
+--------------------------------------------------------------------------------
+6. CANTON MONGODB PROJECTIONS WRITTEN
+--------------------------------------------------------------------------------
+
+Collection                  | Written On Event              | Key Fields
+----------------------------|-------------------------------|------------------------------------------
+cantonContractRefs          | Every Canton command          | holdRef, approvalRef, escrowRef, settlementRef
+cantonHoldProjections       | Hold created/released/cancelled | status, expiresAt, bankId
+cantonApprovalProjections   | Approval created/exercised/rejected | status, actingParty, bankId
+cantonEscrowProjections     | Escrow created/settled        | status, contractRef
+cantonSettlementProjections | Admin approve                 | status=SETTLED, settlementEventId
+cantonTransactionLogs       | Every Canton event            | eventType, contractRef, actingParty, payload
+cantonBankLedgerCopies      | Every Canton event            | blockLikeHash, previousHash (tamper-evident)
+cantonCommandAudit          | Every Canton command          | commandId, correlationId, commandType, status
+cantonPartyMappings         | Static / seeded               | appUserId -> cantonPartyId, bankId, participantId
+
+
+--------------------------------------------------------------------------------
+7. READ / QUERY APIs
+--------------------------------------------------------------------------------
+
+#   | Endpoint                                    | Purpose                            | Canton Involvement
+----|---------------------------------------------|------------------------------------|------------------------------
+F9  | GET  /api/canton/contract-refs/{txnId}      | Fetch all contract refs for a txn  | Read cantonContractRefs
+F10 | GET  /api/canton/party-mappings             | List all user -> Canton party maps | Read cantonPartyMappings
+--  | GET  /api/canton/party-mappings/{userId}    | Single user party mapping          | Read cantonPartyMappings
+--  | GET  /api/canton/status                     | Canton infra health + counts       | Pings ledger/admin ports
+--  | GET  /api/canton/config                     | Runtime config (enabled, realSub)  | Checks network readiness
+--  | POST /api/canton/config                     | Toggle Canton on/off at runtime    | Guarded by toggleAllowed flag
+--  | GET  /api/admin/queue                       | List all pending txns for admin    | Reads mempool for HOLD_ACTIVE etc.
+
+
+--------------------------------------------------------------------------------
+8. CANTON INFRASTRUCTURE (LIVE STATUS)
+--------------------------------------------------------------------------------
+
+Participant    | Role                | Ledger Port | Admin Port | Status
+---------------|---------------------|-------------|------------|--------
+banka          | BankA node          | 5001        | 5002       | UP
+bankb          | BankB node          | 5011        | 5012       | UP
+bankc          | BankC node          | 5021        | 5022       | UP
+synchronizer   | Global synchronizer | 5031        | 5032       | UP
+
+
+--------------------------------------------------------------------------------
+9. FULL STATUS STATE MACHINE
+--------------------------------------------------------------------------------
+
+  [Score 0-39]
+       |
+       v
+   APPROVED  <----------------------------------------- (low-risk or admin approved)
+       |
+  [Score 40+]
+       |
+       v
+  PENDING_BANK_APPROVAL
+       |
+       |--- [User consent APPROVE] --> PENDING_ADMIN
+       |                                   |
+       |                                   |--- [Admin APPROVE] --> APPROVED --> SETTLED
+       |                                   |--- [Admin REJECT]  --> REJECTED
+       |
+       |--- [User consent DENY]  --> REJECTED
+       |--- [Admin REJECT]       --> REJECTED
+       |--- [Admin APPROVE]      --> APPROVED --> SETTLED
+
+  ESCROW_ACTIVE  (additive layer on any status, cleared to SETTLED on APPROVE)
+  HOLD_ACTIVE    (intermediate, transitions to PENDING_BANK_APPROVAL)
+
+
+--------------------------------------------------------------------------------
+10. VERIFICATION RESULTS (Run: 2026-07-27T16:56:33)
+--------------------------------------------------------------------------------
+
+Flow | Test Name                                            | Status | TxnId
+-----|------------------------------------------------------|--------|----------------------------------------
+ 01  | Low-risk AUTO_APPROVE (no Canton contracts)          | PASS   | TXN-b37426f8-8495-4893-8296-236a260b0abb
+ 02  | CONSENT_REQUIRED / PENDING_CONSENT (risk=74)         | PASS   | TXN-3d241e47-69e1-454b-8439-849d52bc6b18
+ 03  | High-risk PENDING_BANK_APPROVAL (hold + approval)    | PASS   | TXN-1fda76f5-661b-43f0-b54d-177f79bb3b3a
+ 04  | Escrow opt-in (EscrowAgreement contract)             | PASS   | TXN-1fda76f5-661b-43f0-b54d-177f79bb3b3a
+ 05  | User consent APPROVE -> PENDING_ADMIN                | PASS   | TXN-3d241e47-69e1-454b-8439-849d52bc6b18
+ 06  | Admin APPROVE -> APPROVED + settlement contract      | PASS   | TXN-3d241e47-69e1-454b-8439-849d52bc6b18
+ 07  | Admin REJECT -> REJECTED                             | PASS   | TXN-3bd849b7-05ac-4f39-a8d5-5b6e8b8cc3a5
+ 08  | User consent DENY -> REJECTED                        | PASS   | TXN-26bce25f-861c-4e81-9365-957bb9276566
+ 09  | Contract ref lookup (hold + approval + escrow refs)  | PASS   | TXN-1fda76f5-661b-43f0-b54d-177f79bb3b3a
+ 10  | Party mappings (11 parties mapped)                   | PASS   | --
+
+OVERALL RESULT: 10/10 PASSED
+
+================================================================================
+END OF REFERENCE
+================================================================================

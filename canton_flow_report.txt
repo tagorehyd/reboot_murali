@@ -1,0 +1,143 @@
+======================================================================
+FRAUDSHIELD — FULL CANTON FLOW VERIFICATION REPORT
+Generated : 2026-07-27T16:56:33.484731
+======================================================================
+
+CANTON INFRASTRUCTURE
+  Status              : UP
+  Enabled             : True
+  banka               : ledger=UP  admin=UP
+  bankb               : ledger=UP  admin=UP
+  bankc               : ledger=UP  admin=UP
+  synchronizer        : ledger=UP  admin=UP
+
+FLOW RESULTS SUMMARY
+  Total flows : 10
+  PASS        : 10
+  FAIL        : 0
+  SKIP        : 0
+
+  ✅  FLOW 01 [PASS] Low-risk AUTO_APPROVE (no Canton contracts)
+  ✅  FLOW 02 [PASS] CONSENT_REQUIRED / PENDING_CONSENT (user approval contract)
+  ✅  FLOW 03 [PASS] High-risk PENDING_BANK_APPROVAL (hold + bank approval)
+  ✅  FLOW 04 [PASS] Escrow opt-in (EscrowAgreement contract created)
+  ✅  FLOW 05 [PASS] User consent APPROVE → PENDING_ADMIN
+  ✅  FLOW 06 [PASS] Admin APPROVE → APPROVED + settlement contract
+  ✅  FLOW 07 [PASS] Admin REJECT → REJECTED
+  ✅  FLOW 08 [PASS] User consent DENY → REJECTED
+  ✅  FLOW 09 [PASS] Contract ref lookup (hold + approval + escrow refs)
+  ✅  FLOW 10 [PASS] Party mappings (/api/canton/party-mappings)
+
+======================================================================
+DETAILED FLOW RESULTS
+======================================================================
+
+------------------------------------------------------------
+FLOW 01 — Low-risk AUTO_APPROVE (no Canton contracts)
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-b37426f8-8495-4893-8296-236a260b0abb
+  status                        : APPROVED
+  riskScore                     : 0
+  routing                       : AUTO_APPROVE
+  canton_contract_ref_written   : False
+
+------------------------------------------------------------
+FLOW 02 — CONSENT_REQUIRED / PENDING_CONSENT (user approval contract)
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-3d241e47-69e1-454b-8439-849d52bc6b18
+  status                        : PENDING_BANK_APPROVAL
+  riskScore                     : 74
+  routing                       : CONSENT_REQUIRED
+  approvalContractRef           : #approval-bank_approval-3d241e47
+
+------------------------------------------------------------
+FLOW 03 — High-risk PENDING_BANK_APPROVAL (hold + bank approval)
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-1fda76f5-661b-43f0-b54d-177f79bb3b3a
+  status                        : PENDING_BANK_APPROVAL
+  riskScore                     : 75
+  routing                       : CONSENT_REQUIRED
+  holdContractRef               : #hold-1fda76f5
+  approvalContractRef           : #approval-bank_approval-1fda76f5
+
+------------------------------------------------------------
+FLOW 04 — Escrow opt-in (EscrowAgreement contract created)
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-1fda76f5-661b-43f0-b54d-177f79bb3b3a
+  escrowContractRef             : #escrow-1fda76f5
+  escrowOptIn                   : True
+  persistedRef                  : #escrow-1fda76f5
+
+------------------------------------------------------------
+FLOW 05 — User consent APPROVE → PENDING_ADMIN
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-3d241e47-69e1-454b-8439-849d52bc6b18
+  resultStatus                  : PENDING_ADMIN
+  msg                           : User consent granted. Transaction moved to admin review queue.
+
+------------------------------------------------------------
+FLOW 06 — Admin APPROVE → APPROVED + settlement contract
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-3d241e47-69e1-454b-8439-849d52bc6b18
+  resultStatus                  : APPROVED
+  settlementContractRef         : #settlement-3d241e47
+
+------------------------------------------------------------
+FLOW 07 — Admin REJECT → REJECTED
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-3bd849b7-05ac-4f39-a8d5-5b6e8b8cc3a5
+  initStatus                    : PENDING_BANK_APPROVAL
+  resultStatus                  : REJECTED
+
+------------------------------------------------------------
+FLOW 08 — User consent DENY → REJECTED
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-26bce25f-861c-4e81-9365-957bb9276566
+  initStatus                    : APPROVED
+  resultStatus                  : REJECTED
+
+------------------------------------------------------------
+FLOW 09 — Contract ref lookup (hold + approval + escrow refs)
+Status : ✅ PASS
+Details:
+  txnId                         : TXN-1fda76f5-661b-43f0-b54d-177f79bb3b3a
+  http_status                   : 200
+  holdContractRef               : #hold-1fda76f5
+  approvalContractRef           : #approval-bank_approval-1fda76f5
+  escrowContractRef             : #escrow-1fda76f5
+  settlementContractRef         : None
+
+------------------------------------------------------------
+FLOW 10 — Party mappings (/api/canton/party-mappings)
+Status : ✅ PASS
+Details:
+  totalMappings                 : 11
+  sampleUser                    : U001
+  sampleParty                   : U001_Party::1220b6c3a3a6b600f7226fa98c7110c5bf23378f58dd1decdcb4b4533c010a43e993
+  sampleBank                    : BankA
+
+======================================================================
+CANTON COLLECTION COUNTS (before → after)
+======================================================================
+  cantonPartyMappings                :   11  →    11   (+0)
+  cantonContractRefs                 :   15  →    18   (+3)
+  cantonHoldProjections              :   17  →    21   (+4)
+  cantonApprovalProjections          :   14  →    18   (+4)
+  cantonEscrowProjections            :    2  →     3   (+1)
+  cantonSettlementProjections        :    2  →     3   (+1)
+  cantonEventOffsets                 :    0  →     0   (+0)
+  cantonCommandAudit                 :   27  →    37   (+10)
+  cantonTransactionLogs              :   32  →    43   (+11)
+  cantonBankLedgerCopies             :   29  →    40   (+11)
+
+======================================================================
+RESULT: ALL FLOWS PASSED ✅
+======================================================================

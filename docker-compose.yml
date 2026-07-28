@@ -93,7 +93,7 @@ services:
     image: digitalasset/daml-sdk:2.7.6
     container_name: fraudshield-json-api-banka
     restart: unless-stopped
-    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --allow-insecure-tokens"]
+    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5001 --http-port 7575 --address 0.0.0.0 --allow-insecure-tokens"]
     depends_on:
       canton-dar-upload:
         condition: service_completed_successfully
@@ -104,7 +104,7 @@ services:
     image: digitalasset/daml-sdk:2.7.6
     container_name: fraudshield-json-api-bankb
     restart: unless-stopped
-    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --allow-insecure-tokens"]
+    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5011 --http-port 7585 --address 0.0.0.0 --allow-insecure-tokens"]
     depends_on:
       canton-dar-upload:
         condition: service_completed_successfully
@@ -115,7 +115,7 @@ services:
     image: digitalasset/daml-sdk:2.7.6
     container_name: fraudshield-json-api-bankc
     restart: unless-stopped
-    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --allow-insecure-tokens"]
+    command: ["bash", "-lc", "daml json-api --ledger-host canton --ledger-port 5021 --http-port 7595 --address 0.0.0.0 --allow-insecure-tokens"]
     depends_on:
       canton-dar-upload:
         condition: service_completed_successfully
@@ -163,11 +163,11 @@ services:
       CANTON_SYNCHRONIZER_ADMIN_PORT: 5032
       CANTON_JSON_API_DEFAULT_PARTICIPANT: ${CANTON_JSON_API_DEFAULT_PARTICIPANT:-banka}
       CANTON_JSON_API_BANKA_BASE_URL: ${CANTON_JSON_API_BANKA_BASE_URL:-http://json-api-banka:7575}
-      CANTON_JSON_API_BANKA_TOKEN: ${CANTON_JSON_API_BANKA_TOKEN:-BankA_Party}
+      CANTON_JSON_API_BANKA_TOKEN: ${CANTON_JSON_API_BANKA_TOKEN:-eyJhbGciOiAibm9uZSIsICJ0eXAiOiAiSldUIn0.eyJodHRwczovL2RhbWwuY29tL2p3dC8xLjAiOiB7ImFkbWluIjogdHJ1ZSwgImxlZGdlcklkIjogImNhbnRvbiJ9fQ.}
       CANTON_JSON_API_BANKB_BASE_URL: ${CANTON_JSON_API_BANKB_BASE_URL:-http://json-api-bankb:7585}
-      CANTON_JSON_API_BANKB_TOKEN: ${CANTON_JSON_API_BANKB_TOKEN:-BankB_Party}
+      CANTON_JSON_API_BANKB_TOKEN: ${CANTON_JSON_API_BANKB_TOKEN:-eyJhbGciOiAibm9uZSIsICJ0eXAiOiAiSldUIn0.eyJodHRwczovL2RhbWwuY29tL2p3dC8xLjAiOiB7ImFkbWluIjogdHJ1ZSwgImxlZGdlcklkIjogImNhbnRvbiJ9fQ.}
       CANTON_JSON_API_BANKC_BASE_URL: ${CANTON_JSON_API_BANKC_BASE_URL:-http://json-api-bankc:7595}
-      CANTON_JSON_API_BANKC_TOKEN: ${CANTON_JSON_API_BANKC_TOKEN:-BankC_Party}
+      CANTON_JSON_API_BANKC_TOKEN: ${CANTON_JSON_API_BANKC_TOKEN:-eyJhbGciOiAibm9uZSIsICJ0eXAiOiAiSldUIn0.eyJodHRwczovL2RhbWwuY29tL2p3dC8xLjAiOiB7ImFkbWluIjogdHJ1ZSwgImxlZGdlcklkIjogImNhbnRvbiJ9fQ.}
       CANTON_DAML_TEMPLATE_HOLD_REQUEST: ${CANTON_DAML_TEMPLATE_HOLD_REQUEST:-FraudShield:HoldRequest}
       CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL: ${CANTON_DAML_TEMPLATE_MULTI_SIG_APPROVAL:-FraudShield:MultiSigApproval}
       CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT: ${CANTON_DAML_TEMPLATE_ESCROW_AGREEMENT:-FraudShield:EscrowAgreement}

@@ -1,0 +1,127 @@
+================================================================
+FRAUDSHIELD LIVE TRANSACTION RESULT
+Timestamp      : 2026-07-27T16:49:52.813473
+================================================================
+Request        : U002 -> U006, GBP 32,000.00
+HTTP Status    : 200
+txnId          : TXN-fa97184d-4430-4ac0-b05b-cd5d2ef66213
+nonce          : de07d22f2f2dd87728e984bc7e0045cc
+status         : PENDING_BANK_APPROVAL
+routingDecision: ADMIN_REVIEW
+riskScore      : 46
+createdAt      : 2026-07-27T11:19:52.853831380Z
+escrowOptIn    : False
+
+Risk Breakdown:
+  [LARGE_AMOUNT] +20pts  Amount £32000.0 exceeds the £25,000 large-value threshold
+  [NEW_PAYEE] +15pts  Recipient is not in the sender's trusted payee list
+  [ISOLATION_FOREST] +11pts  Isolation Forest flagged unusual transaction magnitude (GBP 32,000.00); Unusual multi-dimensional pattern with unverified payee
+
+Canton Projections (post-txn):
+  cantonPartyMappings: 11
+  cantonContractRefs: 9
+  cantonHoldProjections: 9
+  cantonApprovalProjections: 6
+  cantonEscrowProjections: 0
+  cantonSettlementProjections: 0
+  cantonEventOffsets: 0
+  cantonCommandAudit: 12
+  cantonTransactionLogs: 15
+  cantonBankLedgerCopies: 12
+
+Canton Participants:
+  banka: ledger=UP admin=UP
+  bankb: ledger=UP admin=UP
+  bankc: ledger=UP admin=UP
+  synchronizer: ledger=UP admin=UP
+
+Full JSON Response:
+{
+  "txnId": "TXN-fa97184d-4430-4ac0-b05b-cd5d2ef66213",
+  "nonce": "de07d22f2f2dd87728e984bc7e0045cc",
+  "fromUserId": "U002",
+  "toUserId": "U006",
+  "amount": 32000.0,
+  "status": "PENDING_BANK_APPROVAL",
+  "routingDecision": "ADMIN_REVIEW",
+  "riskScore": 46,
+  "riskBreakdown": [
+    {
+      "rule": "LARGE_AMOUNT",
+      "points": 20,
+      "reason": "Amount \u00a332000.0 exceeds the \u00a325,000 large-value threshold"
+    },
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 11,
+      "reason": "Isolation Forest flagged unusual transaction magnitude (GBP 32,000.00); Unusual multi-dimensional pattern with unverified payee"
+    }
+  ],
+  "beneficiaryTrustTier": "NONE",
+  "beneficiaryTrustDiscount": 0,
+  "message": "Transaction scored and accepted into mempool",
+  "createdAt": "2026-07-27T11:19:52.853831380Z",
+  "escrowOptIn": false
+}
+
+Canton Status JSON:
+{
+  "readiness": {
+    "enabled": true,
+    "checkedAt": "2026-07-27T11:19:54.181879783Z",
+    "globalSynchronizerParty": "GlobalSynchronizer_Party",
+    "participants": {
+      "banka": {
+        "host": "canton",
+        "ledgerPort": 5001,
+        "adminPort": 5002,
+        "party": "BankA_Party",
+        "ledger": "UP",
+        "admin": "UP"
+      },
+      "bankb": {
+        "host": "canton",
+        "ledgerPort": 5011,
+        "adminPort": 5012,
+        "party": "BankB_Party",
+        "ledger": "UP",
+        "admin": "UP"
+      },
+      "bankc": {
+        "host": "canton",
+        "ledgerPort": 5021,
+        "adminPort": 5022,
+        "party": "BankC_Party",
+        "ledger": "UP",
+        "admin": "UP"
+      },
+      "synchronizer": {
+        "host": "canton",
+        "ledgerPort": 5031,
+        "adminPort": 5032,
+        "party": "GlobalSynchronizer_Party",
+        "ledger": "UP",
+        "admin": "UP"
+      }
+    },
+    "status": "UP"
+  },
+  "collections": {
+    "cantonPartyMappings": 11,
+    "cantonContractRefs": 9,
+    "cantonHoldProjections": 9,
+    "cantonApprovalProjections": 6,
+    "cantonEscrowProjections": 0,
+    "cantonSettlementProjections": 0,
+    "cantonEventOffsets": 0,
+    "cantonCommandAudit": 12,
+    "cantonTransactionLogs": 15,
+    "cantonBankLedgerCopies": 12
+  }
+}
+================================================================

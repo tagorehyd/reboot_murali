@@ -73,7 +73,7 @@ public class CantonCommandService {
         projectionUpdater.appendTransactionLog(txnId, "HOLD_CREATED", holdRef, party,
                 Map.of("amount", amount, "expiresAt", holdExpiry.toString(), "riskTier", "HIGH"));
         projectionUpdater.appendBankLedgerCopy(txnId, bankId,
-                Map.of("event", "HOLD_CREATED", "holdRef", holdRef, "expiresAt", holdExpiry.toString()));
+                Map.of("event", "HOLD_CREATED", "holdRef", String.valueOf(holdRef), "expiresAt", holdExpiry.toString()));
         projectionUpdater.recordCommandAudit(commandId, correlationId,
                 resolveParticipantId(fromUserId), party, "CREATE_HOLD", "COMPLETED",
                 Map.of("txnId", txnId, "amount", amount));
@@ -327,7 +327,11 @@ public class CantonCommandService {
                                          String commandId, String correlationId) {
         if (cantonProperties.isEnabled() && cantonProperties.isRealSubmissionEnabled()) {
             try {
-                return cantonDamlGateway.createHold(txnId, userId, amount, commandId, correlationId);
+                String result = cantonDamlGateway.createHold(txnId, userId, amount, commandId, correlationId);
+                if (result != null && !result.isBlank()) {
+                    return result;  // real Canton contractId
+                }
+                log.warn("[Canton] createHold returned null/blank for txnId={} — falling back to simulation.", txnId);
             } catch (Exception ex) {
                 log.warn("[Canton] Real DAML hold submission failed for txnId={} ({}). Falling back to simulation.", txnId, ex.getMessage());
             }
@@ -341,7 +345,11 @@ public class CantonCommandService {
                                              String commandId, String correlationId) {
         if (cantonProperties.isEnabled() && cantonProperties.isRealSubmissionEnabled()) {
             try {
-                return cantonDamlGateway.createApproval(txnId, userId, approvalType, commandId, correlationId);
+                String result = cantonDamlGateway.createApproval(txnId, userId, approvalType, commandId, correlationId);
+                if (result != null && !result.isBlank()) {
+                    return result;  // real Canton contractId
+                }
+                log.warn("[Canton] createApproval returned null/blank for txnId={} — falling back to simulation.", txnId);
             } catch (Exception ex) {
                 log.warn("[Canton] Real DAML approval submission failed for txnId={} ({}). Falling back to simulation.", txnId, ex.getMessage());
             }
