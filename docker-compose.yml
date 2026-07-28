@@ -187,6 +187,7 @@ services:
       fraudshield-backend:
         condition: service_started
     ports:
+      - "80:80"
       - "3000:80"
       - "5173:5173"
 
