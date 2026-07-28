@@ -836,10 +836,10 @@ export default function UserPortal({ userId }) {
             <div className="flex-1 flex bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
               <div className="overflow-y-auto flex-1 p-5 space-y-4 w-full">
                 {!transactionResponse ? (
-                  <div className="max-w-6xl mx-auto space-y-4">
+                  <div className="max-w-6xl mx-auto space-y-4 h-full flex flex-col">
                     {/* Beneficiary Zone */}
-                    <div className="grid grid-cols-1 xl:grid-cols-12 gap-4 items-start">
-                      <div className="xl:col-span-7 space-y-4">
+                    <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
+                      <div className="xl:col-span-7 flex flex-col gap-4 min-h-0">
                         {/* Beneficiary Quick Select */}
                         <div className="bg-gradient-to-br from-cyan-50 to-sky-50 dark:from-cyan-950/40 dark:to-sky-950/40 border border-cyan-200 dark:border-cyan-800/50 rounded-2xl p-5">
                           <div className="flex items-center justify-between mb-3">
@@ -915,7 +915,7 @@ export default function UserPortal({ userId }) {
                         )}
 
                         {/* Manage Beneficiaries */}
-                        <div className="bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5">
+                        <div className="flex-1 min-h-0 flex flex-col bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/50 rounded-2xl p-5">
                           <h4 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-4">⚙️ Manage Beneficiaries</h4>
                           <div className="flex gap-2 mb-3">
                             <select
@@ -961,7 +961,7 @@ export default function UserPortal({ userId }) {
                           </div>
 
                           {beneficiaries.length > 0 && (
-                            <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
+                            <div className="flex-1 min-h-0 mt-2 space-y-2 overflow-y-auto pr-1 custom-scrollbar">
                               {beneficiaries.map((b) => (
                                 <div key={`${b.id || b.recipientUserId}-manage`} className="flex items-center justify-between rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 px-3 py-2 shadow-sm">
                                   <div className="min-w-0">
@@ -983,9 +983,9 @@ export default function UserPortal({ userId }) {
                       </div>
 
                       {/* Beneficiary Management */}
-                      <div className="xl:col-span-5 h-full">
-                        <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 space-y-4 xl:sticky xl:top-2">
-                          <div className="space-y-3">
+                      <div className="xl:col-span-5 flex flex-col min-h-0">
+                        <div className="flex-1 flex flex-col bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 xl:sticky xl:top-2">
+                          <div className="flex-1 flex flex-col space-y-3 min-h-0">
                             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">💸 Quick Pay</h4>
                             <select
                               value={recipientId}
@@ -1005,7 +1005,7 @@ export default function UserPortal({ userId }) {
                               })}
                             </select>
 
-                            <form onSubmit={handleSubmit} className="space-y-2 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-3">
+                            <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 space-y-2 bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-900/20 dark:to-cyan-900/20 border border-teal-200 dark:border-teal-800 rounded-xl p-3">
                               <div>
                                 <label className="block text-[11px] uppercase tracking-wider font-bold text-slate-800 dark:text-slate-200 mb-1">Amount</label>
                                 <div className="flex items-baseline gap-2">
@@ -1097,7 +1097,7 @@ export default function UserPortal({ userId }) {
                               <button
                                 type="submit"
                                 disabled={isLoading || !amount || !recipientId}
-                                className="w-full px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-bold rounded-lg hover:from-teal-700 hover:to-cyan-700 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed transition-all shadow-md mt-2"
+                                className="mt-auto w-full px-4 py-2 bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-bold rounded-lg hover:from-teal-700 hover:to-cyan-700 disabled:from-slate-400 disabled:to-slate-400 disabled:cursor-not-allowed transition-all shadow-md"
                               >
                                 {isLoading ? 'Processing...' : 'Send Money'}
                               </button>

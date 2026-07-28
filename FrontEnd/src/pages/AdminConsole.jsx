@@ -178,7 +178,7 @@ export default function AdminConsole() {
   }
 
   return (
-    <div className="w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-200 px-6 py-4">
+    <div className="w-full min-h-full flex flex-col bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-200 px-6 py-4">
       {/* Header */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
@@ -290,7 +290,7 @@ export default function AdminConsole() {
       )}
 
       {/* Queue Display */}
-      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5 md:p-6">
+      <div className="flex-1 flex flex-col rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5 md:p-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap items-center gap-4">
             <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
@@ -503,12 +503,14 @@ export default function AdminConsole() {
       )}
 
       {/* Footer Note */}
-      <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+      <div className="mt-auto pt-4 pb-0">
+        <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
         <p className="text-xs text-slate-600 dark:text-slate-400">
           Decision flow: prioritize highest risk scores first, then clear consent-required items.
           Canton-held transactions (🔒 HOLD_ACTIVE / PENDING_BANK_APPROVAL) must be approved before the 60-minute hold expiry.
           Escrow-backed transactions (🔏) are released automatically during admin approval when a Canton escrow contract exists.
         </p>
+        </div>
       </div>
     </div>
   );
