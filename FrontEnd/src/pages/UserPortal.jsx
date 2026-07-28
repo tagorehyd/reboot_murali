@@ -35,6 +35,7 @@ export default function UserPortal({ userId }) {
   const [recipientId, setRecipientId] = useState('');
   const [amount, setAmount] = useState('');
   const [transactionType, setTransactionType] = useState('DOMESTIC');
+  const [escrowOptIn, setEscrowOptIn] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMessage, setSuccessMessage] = useState('');
@@ -415,6 +416,14 @@ export default function UserPortal({ userId }) {
       setRecipientId('');
       if (response.data.status === 'APPROVED' && response.data.routingDecision === 'AUTO_APPROVE') {
         setSuccessMessage('✅ Transaction auto-approved and accepted into mempool!');
+      } else if (response.data.status === 'HOLD_ACTIVE') {
+        setSuccessMessage('🔒 High-risk transaction placed under Canton hold (60 min). Awaiting bank approval.');
+      } else if (response.data.status === 'PENDING_BANK_APPROVAL') {
+        setSuccessMessage('🏦 Transaction held. Awaiting bank approval via Canton contract.');
+      } else if (response.data.status === 'PENDING_USER_APPROVAL') {
+        setSuccessMessage('🔐 Medium-risk transaction. Please provide your approval (15 min window).');
+      } else if (response.data.status === 'ESCROW_ACTIVE') {
+        setSuccessMessage('🔏 Transaction approved with Canton escrow service active.');
       } else if (response.data.status === 'PENDING_ADMIN') {
         setSuccessMessage('⏳ Transaction accepted. Our fraud team is reviewing your request.');
       } else if (response.data.status === 'PENDING_CONSENT') {
@@ -438,6 +447,7 @@ export default function UserPortal({ userId }) {
       toUserId: recipientId,
       amount: parsedAmount,
       transactionType,
+      escrowOptIn: escrowOptIn || undefined,
     };
 
     // Client-side limit warning check
@@ -475,6 +485,12 @@ export default function UserPortal({ userId }) {
       case 'PENDING_CONSENT': return '🔐';
       case 'REJECTED': return '❌';
       case 'COMMITTED': return '✓';
+      case 'HOLD_ACTIVE': return '🔒';
+      case 'PENDING_USER_APPROVAL': return '👤';
+      case 'PENDING_BANK_APPROVAL': return '🏦';
+      case 'ESCROW_ACTIVE': return '🔏';
+      case 'SETTLED': return '✅';
+      case 'EXPIRED': return '⌛';
       default: return '•';
     }
   };
@@ -483,11 +499,18 @@ export default function UserPortal({ userId }) {
     switch (status) {
       case 'APPROVED':
       case 'COMMITTED':
+      case 'SETTLED':
         return 'text-green-600';
       case 'PENDING_ADMIN':
       case 'PENDING_CONSENT':
+      case 'HOLD_ACTIVE':
+      case 'PENDING_USER_APPROVAL':
+      case 'PENDING_BANK_APPROVAL':
         return 'text-yellow-600';
+      case 'ESCROW_ACTIVE':
+        return 'text-violet-600';
       case 'REJECTED':
+      case 'EXPIRED':
         return 'text-red-600';
       default:
         return 'text-gray-600';
@@ -954,6 +977,28 @@ export default function UserPortal({ userId }) {
                                 </select>
                               </div>
 
+                              {/* Canton Escrow Opt-in */}
+                              <div className={`rounded-xl border px-4 py-3 transition-all ${escrowOptIn ? 'border-violet-400 bg-violet-50' : 'border-slate-200 bg-slate-50'}`}>
+                                <label className="flex items-start gap-3 cursor-pointer">
+                                  <input
+                                    type="checkbox"
+                                    checked={escrowOptIn}
+                                    onChange={(e) => setEscrowOptIn(e.target.checked)}
+                                    disabled={isLoading}
+                                    className="mt-0.5 rounded border-slate-300 text-violet-600 focus:ring-violet-500"
+                                  />
+                                  <div>
+                                    <p className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                                      🔏 Canton Escrow Service
+                                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-violet-100 text-violet-700 uppercase tracking-wide">Optional</span>
+                                    </p>
+                                    <p className="text-xs text-slate-600 mt-0.5">
+                                      Add a Canton EscrowAgreement contract to this transaction. Escrow is available for all risk tiers and does not replace hold or approval controls.
+                                    </p>
+                                  </div>
+                                </label>
+                              </div>
+
                               <button
                                 type="submit"
                                 disabled={isLoading || !amount || !recipientId}
@@ -1093,9 +1138,13 @@ export default function UserPortal({ userId }) {
                         <div className="flex justify-between items-center">
                           <p className="text-sm text-slate-600">Status</p>
                           <span className={`text-sm font-bold px-3 py-1 rounded-full ${
-                            transactionResponse.status === 'APPROVED' ? 'bg-emerald-100 text-emerald-700' :
+                            transactionResponse.status === 'APPROVED' || transactionResponse.status === 'SETTLED' ? 'bg-emerald-100 text-emerald-700' :
                             transactionResponse.status === 'PENDING_ADMIN' ? 'bg-yellow-100 text-yellow-700' :
                             transactionResponse.status === 'PENDING_CONSENT' ? 'bg-orange-100 text-orange-700' :
+                            transactionResponse.status === 'HOLD_ACTIVE' ? 'bg-red-100 text-red-700' :
+                            transactionResponse.status === 'PENDING_BANK_APPROVAL' ? 'bg-amber-100 text-amber-700' :
+                            transactionResponse.status === 'PENDING_USER_APPROVAL' ? 'bg-blue-100 text-blue-700' :
+                            transactionResponse.status === 'ESCROW_ACTIVE' ? 'bg-violet-100 text-violet-700' :
                             'bg-slate-100 text-slate-700'
                           }`}>
                             {getStatusIcon(transactionResponse.status)} {transactionResponse.status}
@@ -1110,6 +1159,54 @@ export default function UserPortal({ userId }) {
                         beneficiaryTrustTier={transactionResponse.beneficiaryTrustTier}
                         beneficiaryTrustDiscount={transactionResponse.beneficiaryTrustDiscount}
                       />
+
+                      {/* Canton Escrow Service Badge */}
+                      {transactionResponse.escrowOptIn && (
+                        <div className="rounded-2xl border border-violet-200 bg-violet-50 px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">🔏</span>
+                            <div>
+                              <p className="text-sm font-bold text-violet-900">Canton Escrow Service Active</p>
+                              <p className="text-xs text-violet-700 mt-0.5">
+                                An EscrowAgreement contract has been created on the Canton ledger for this transaction.
+                                Escrow runs alongside your risk controls and does not replace hold or approval requirements.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Canton Hold Notice */}
+                      {(transactionResponse.status === 'HOLD_ACTIVE' || transactionResponse.status === 'PENDING_BANK_APPROVAL') && (
+                        <div className="rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">🔒</span>
+                            <div>
+                              <p className="text-sm font-bold text-red-900">Canton Hold Active</p>
+                              <p className="text-xs text-red-700 mt-0.5">
+                                A HoldRequest contract has been created on the Canton ledger. The hold expires in 60 minutes.
+                                A bank approver must approve before expiry, or the transaction will be rejected.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Canton User Approval Notice */}
+                      {transactionResponse.status === 'PENDING_USER_APPROVAL' && (
+                        <div className="rounded-2xl border border-blue-200 bg-blue-50 px-5 py-4">
+                          <div className="flex items-center gap-3">
+                            <span className="text-2xl">👤</span>
+                            <div>
+                              <p className="text-sm font-bold text-blue-900">Canton User Approval Required</p>
+                              <p className="text-xs text-blue-700 mt-0.5">
+                                A user-approval contract has been created on Canton. You have 15 minutes to approve.
+                                The transaction will expire if no action is taken.
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Consent Panel */}
                       {transactionResponse.status === 'PENDING_CONSENT' && (
@@ -1168,13 +1265,27 @@ export default function UserPortal({ userId }) {
                   <p className="text-sm text-slate-500 text-center py-12">No pending items</p>
                 ) : (
                   pendingTransactions.map((txn) => (
-                    <div key={txn.id || txn.txnId} className="bg-amber-50 border border-amber-200 rounded-lg p-2.5 hover:bg-amber-100 transition-colors">
+                    <div key={txn.id || txn.txnId} className={`border rounded-lg p-2.5 hover:opacity-90 transition-colors ${
+                      txn.status === 'HOLD_ACTIVE' ? 'bg-red-50 border-red-200' :
+                      txn.status === 'PENDING_BANK_APPROVAL' ? 'bg-amber-50 border-amber-200' :
+                      txn.status === 'PENDING_USER_APPROVAL' ? 'bg-blue-50 border-blue-200' :
+                      txn.status === 'ESCROW_ACTIVE' ? 'bg-violet-50 border-violet-200' :
+                      'bg-amber-50 border-amber-200'
+                    }`}>
                       <div className="flex items-center justify-between mb-1.5">
-                        <p className="text-xs font-bold text-amber-700 uppercase tracking-wide">{txn.status}</p>
+                        <p className={`text-xs font-bold uppercase tracking-wide flex items-center gap-1 ${
+                          txn.status === 'HOLD_ACTIVE' ? 'text-red-700' :
+                          txn.status === 'PENDING_BANK_APPROVAL' ? 'text-amber-700' :
+                          txn.status === 'PENDING_USER_APPROVAL' ? 'text-blue-700' :
+                          txn.status === 'ESCROW_ACTIVE' ? 'text-violet-700' :
+                          'text-amber-700'
+                        }`}>
+                          {getStatusIcon(txn.status)} {txn.status}
+                        </p>
                         <p className="text-lg font-bold text-indigo-600">£{txn.amount}</p>
                       </div>
                       <p className="font-mono text-xs text-slate-600 break-all">{(txn.id || txn.txnId).substring(0, 20)}...</p>
-                      <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-amber-200">
+                      <div className="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-200">
                         <div>
                           <p className="text-xs text-slate-500 uppercase tracking-wider font-semibold">From</p>
                           <p className="text-xs font-bold text-slate-900">{txn.fromUserId}</p>
@@ -1184,6 +1295,11 @@ export default function UserPortal({ userId }) {
                           <p className="text-xs font-bold text-slate-900">{txn.toUserId}</p>
                         </div>
                       </div>
+                      {txn.escrowOptIn && (
+                        <div className="mt-2 pt-2 border-t border-violet-200">
+                          <p className="text-xs font-bold text-violet-700">🔏 Escrow service active</p>
+                        </div>
+                      )}
                     </div>
                   ))
                 )}

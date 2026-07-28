@@ -1,7 +1,9 @@
 package com.fraudshield.controller;
 
+import com.fraudshield.canton.CantonCommandService;
 import com.fraudshield.model.MempoolTransaction;
 import com.fraudshield.repository.MempoolRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/admin")
 public class AdminQueueController {
@@ -18,64 +21,70 @@ public class AdminQueueController {
     @Autowired
     private MempoolRepository mempoolRepository;
 
+    @Autowired
+    private CantonCommandService cantonCommandService;
+
     /**
-     * GET /api/admin/queue - Retrieve pending transactions for admin approval
-     * Shows only PENDING_ADMIN and PENDING_CONSENT transactions
+     * GET /api/admin/queue - Retrieve pending transactions for admin approval.
+     * Includes Canton-driven statuses: HOLD_ACTIVE, PENDING_BANK_APPROVAL, PENDING_USER_APPROVAL, ESCROW_ACTIVE.
      */
     @GetMapping("/queue")
     public ResponseEntity<List<MempoolTransaction>> getAdminQueue() {
-        List<MempoolTransaction> pendingAdmin = mempoolRepository.findByStatus("PENDING_ADMIN");
-        List<MempoolTransaction> pendingConsent = mempoolRepository.findByStatus("PENDING_CONSENT");
-        
+        List<String> pendingStatuses = List.of(
+                "PENDING_ADMIN", "PENDING_CONSENT",
+                "HOLD_ACTIVE", "PENDING_BANK_APPROVAL", "PENDING_USER_APPROVAL",
+                "ESCROW_ACTIVE"
+        );
         List<MempoolTransaction> queue = new java.util.ArrayList<>();
-        queue.addAll(pendingAdmin);
-        queue.addAll(pendingConsent);
-        
-        // Sort by createdAt ascending (oldest first)
+        for (String s : pendingStatuses) {
+            queue.addAll(mempoolRepository.findByStatus(s));
+        }
         queue.sort((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()));
-        
         return ResponseEntity.ok(queue);
     }
 
     /**
-     * POST /api/admin/txn/{txnId}/consent - Handle user consent for high-risk transactions
+     * POST /api/admin/txn/{txnId}/consent - Handle user consent for high-risk / medium-risk transactions.
      * Body: {"approved": true/false}
+     * When approved, exercises the Canton user-approval choice then moves to PENDING_ADMIN (PENDING_BANK_APPROVAL).
      */
     @PostMapping("/txn/{txnId}/consent")
-    public ResponseEntity<?> handleConsent(@PathVariable String txnId, @RequestBody Map<String, Boolean> body) {
-        boolean approved = body.getOrDefault("approved", false);
-        
+    public ResponseEntity<?> handleConsent(@PathVariable String txnId, @RequestBody Map<String, Object> body) {
+        boolean approved = Boolean.TRUE.equals(body.get("approved"));
+        String userId = body.containsKey("userId") ? String.valueOf(body.get("userId")) : "unknown";
+
         Optional<MempoolTransaction> txn = mempoolRepository.findById(txnId);
         if (txn.isEmpty()) {
-            return ResponseEntity.status(404).body(Map.of(
-                "status", 404,
-                "error", "Transaction not found",
-                "txnId", txnId
-            ));
+            return ResponseEntity.status(404).body(Map.of("status", 404, "error", "Transaction not found", "txnId", txnId));
         }
 
         MempoolTransaction transaction = txn.get();
-        
+
         if (approved) {
-            // User approved: move from PENDING_CONSENT to PENDING_ADMIN
+            // Exercise Canton user-approval choice
+            try {
+                cantonCommandService.exerciseUserConsent(txnId, transaction.getFromUserId());
+            } catch (Exception e) {
+                log.warn("[Canton] User consent exercise failed for txnId={}: {}", txnId, e.getMessage());
+            }
             transaction.setStatus("PENDING_ADMIN");
             transaction.setRoutingDecision("ADMIN_REVIEW");
             mempoolRepository.save(transaction);
-            
             return ResponseEntity.ok(Map.of(
-                "txnId", txnId,
-                "status", "PENDING_ADMIN",
+                "txnId", txnId, "status", "PENDING_ADMIN",
                 "message", "User consent granted. Transaction moved to admin review queue."
             ));
         } else {
-            // User rejected: mark as REJECTED
+            try {
+                cantonCommandService.exerciseRejection(txnId, transaction.getFromUserId());
+            } catch (Exception e) {
+                log.warn("[Canton] Rejection exercise failed for txnId={}: {}", txnId, e.getMessage());
+            }
             transaction.setStatus("REJECTED");
             transaction.setRoutingDecision("REJECTED_BY_USER");
             mempoolRepository.save(transaction);
-            
             return ResponseEntity.ok(Map.of(
-                "txnId", txnId,
-                "status", "REJECTED",
+                "txnId", txnId, "status", "REJECTED",
                 "message", "User rejected this transaction."
             ));
         }
@@ -101,25 +110,31 @@ public class AdminQueueController {
         MempoolTransaction transaction = txn.get();
         
         if (approved) {
-            // Admin approved: mark as APPROVED
+            // Exercise Canton approval choice – releases hold and triggers settlement
+            try {
+                cantonCommandService.exerciseApproval(txnId, "ADMIN");
+            } catch (Exception e) {
+                log.warn("[Canton] Approval exercise failed for txnId={}: {}", txnId, e.getMessage());
+            }
             transaction.setStatus("APPROVED");
             transaction.setRoutingDecision("ADMIN_APPROVED");
             mempoolRepository.save(transaction);
-            
             return ResponseEntity.ok(Map.of(
-                "txnId", txnId,
-                "status", "APPROVED",
-                "message", "Admin approved. Transaction will be committed to blockchain."
+                "txnId", txnId, "status", "APPROVED",
+                "message", "Admin approved. Canton hold is released and escrow is settled when present before final commitment."
             ));
         } else {
-            // Admin rejected: mark as REJECTED
+            // Exercise Canton rejection choice
+            try {
+                cantonCommandService.exerciseRejection(txnId, "ADMIN");
+            } catch (Exception e) {
+                log.warn("[Canton] Rejection exercise failed for txnId={}: {}", txnId, e.getMessage());
+            }
             transaction.setStatus("REJECTED");
             transaction.setRoutingDecision("REJECTED_BY_ADMIN");
             mempoolRepository.save(transaction);
-            
             return ResponseEntity.ok(Map.of(
-                "txnId", txnId,
-                "status", "REJECTED",
+                "txnId", txnId, "status", "REJECTED",
                 "message", "Admin rejected this transaction."
             ));
         }

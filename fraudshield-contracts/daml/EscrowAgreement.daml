@@ -1,0 +1,25 @@
+module EscrowAgreement where
+
+template EscrowAgreement
+  with
+    sender : Party
+    receiver : Party
+    synchronizer : Party
+    amount : Decimal
+  where
+    signatory sender, receiver, synchronizer
+    
+    choice FundEscrow : ()
+      controller sender
+      do
+        return ()
+
+    choice SettleEscrow : ()
+      controller synchronizer
+      do
+        return ()
+
+    choice CancelEscrow : ()
+      controller synchronizer
+      do
+        return ()

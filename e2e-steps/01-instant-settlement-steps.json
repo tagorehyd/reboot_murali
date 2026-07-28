@@ -1,0 +1,44 @@
+[
+  {
+    "step": 1,
+    "label": "Navigate to FraudShield application home",
+    "timestampMs": 1046,
+    "timestampFormatted": "1.05s"
+  },
+  {
+    "step": 2,
+    "label": "Click User Portal navigation tab",
+    "timestampMs": 12691,
+    "timestampFormatted": "12.69s"
+  },
+  {
+    "step": 3,
+    "label": "Select account U001 (Alice Walker)",
+    "timestampMs": 17255,
+    "timestampFormatted": "17.25s"
+  },
+  {
+    "step": 4,
+    "label": "Select recipient Bob Taylor",
+    "timestampMs": 23119,
+    "timestampFormatted": "23.12s"
+  },
+  {
+    "step": 5,
+    "label": "Enter low-risk transfer amount £150",
+    "timestampMs": 27587,
+    "timestampFormatted": "27.59s"
+  },
+  {
+    "step": 6,
+    "label": "Click Send Money button",
+    "timestampMs": 33165,
+    "timestampFormatted": "33.16s"
+  },
+  {
+    "step": 7,
+    "label": "Verify instant settlement status and consensus status",
+    "timestampMs": 38649,
+    "timestampFormatted": "38.65s"
+  }
+]

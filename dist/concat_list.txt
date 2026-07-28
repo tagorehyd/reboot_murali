@@ -1,0 +1,4 @@
+file 'C:/Users/newab/OneDrive/Desktop/antigravityhackathon/reboot_murali/dist/capsules/01-instant-settlement.mp4'
+file 'C:/Users/newab/OneDrive/Desktop/antigravityhackathon/reboot_murali/dist/capsules/02-isolation-forest-hold.mp4'
+file 'C:/Users/newab/OneDrive/Desktop/antigravityhackathon/reboot_murali/dist/capsules/03-ai-rag-assistant.mp4'
+file 'C:/Users/newab/OneDrive/Desktop/antigravityhackathon/reboot_murali/dist/capsules/04-chain-explorer-audit.mp4'

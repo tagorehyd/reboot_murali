@@ -17,7 +17,7 @@ public class UserRuleSettingsService {
 
     /** All supported rule keys. */
     public static final java.util.List<String> ALL_RULES = java.util.List.of(
-            "LARGE_AMOUNT", "NEW_PAYEE", "VELOCITY", "ROUND_AMOUNT", "OFF_HOURS", "RAPID_DRAIN", "CORTEX_AI"
+            "LARGE_AMOUNT", "NEW_PAYEE", "VELOCITY", "ROUND_AMOUNT", "OFF_HOURS", "RAPID_DRAIN", "CORTEX_AI", "ISOLATION_FOREST"
     );
 
     private final UserRepository userRepository;

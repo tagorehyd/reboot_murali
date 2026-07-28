@@ -23,20 +23,6 @@
         <java.version>17</java.version>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>central</id>
-            <name>Nexus Repository</name>
-            <url>http://dockerhub.pffc.ia.alf.uk:8081/repository/dpa-maven-public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>false</enabled>
-            </snapshots>
-        </repository>
-    </repositories>
-
     <pluginRepositories>
         <pluginRepository>
             <id>central</id>
@@ -47,17 +33,6 @@
             </releases>
             <snapshots>
                 <enabled>false</enabled>
-            </snapshots>
-        </pluginRepository>
-        <pluginRepository>
-            <id>nexus</id>
-            <name>Nexus Repository</name>
-            <url>http://dockerhub.pffc.ia.alf.uk:8081/repository/dpa-maven-public</url>
-            <releases>
-                <enabled>true</enabled>
-            </releases>
-            <snapshots>
-                <enabled>true</enabled>
             </snapshots>
         </pluginRepository>
     </pluginRepositories>

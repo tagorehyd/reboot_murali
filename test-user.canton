@@ -1,0 +1,7 @@
+try {
+  val p1 = banka.parties.enable("TestParty")
+  banka.users.create("TestAdmin", p1)
+  println("User created!")
+} catch {
+  case e: Exception => e.printStackTrace()
+}

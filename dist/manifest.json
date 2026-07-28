@@ -1,0 +1,42 @@
+[
+  {
+    "feature": "Low-Risk Payment Instant Settlement \u2014 Multi-Chain Verification",
+    "slug": "01-instant-settlement",
+    "spec_file": "e2e/01-instant-settlement.spec.ts",
+    "status": "PASSED",
+    "video_duration_seconds": 48.64,
+    "audio_duration_seconds": 38.52,
+    "capsule_duration_seconds": 48.63,
+    "output_path": "dist/capsules/01-instant-settlement.mp4"
+  },
+  {
+    "feature": "Isolation Forest ML \u2014 Anomaly Detection & Multi-Sig Hold",
+    "slug": "02-isolation-forest-hold",
+    "spec_file": "e2e/02-isolation-forest-hold.spec.ts",
+    "status": "PASSED",
+    "video_duration_seconds": 60.2,
+    "audio_duration_seconds": 47.5,
+    "capsule_duration_seconds": 60.2,
+    "output_path": "dist/capsules/02-isolation-forest-hold.mp4"
+  },
+  {
+    "feature": "AI Fraud Analyst Assistant \u2014 Retrieval-Augmented Generation",
+    "slug": "03-ai-rag-assistant",
+    "spec_file": "e2e/03-ai-rag-assistant.spec.ts",
+    "status": "PASSED",
+    "video_duration_seconds": 44.0,
+    "audio_duration_seconds": 38.59,
+    "capsule_duration_seconds": 44.0,
+    "output_path": "dist/capsules/03-ai-rag-assistant.mp4"
+  },
+  {
+    "feature": "Multi-Chain Ledger Explorer \u2014 Tamper-Evident Audit Trail",
+    "slug": "04-chain-explorer-audit",
+    "spec_file": "e2e/04-chain-explorer-audit.spec.ts",
+    "status": "PASSED",
+    "video_duration_seconds": 32.72,
+    "audio_duration_seconds": 30.29,
+    "capsule_duration_seconds": 32.73,
+    "output_path": "dist/capsules/04-chain-explorer-audit.mp4"
+  }
+]

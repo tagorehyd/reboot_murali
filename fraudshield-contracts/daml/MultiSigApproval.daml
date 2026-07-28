@@ -1,0 +1,33 @@
+module MultiSigApproval where
+
+import Common
+
+template MultiSigApproval
+  with
+    bank : Party
+    customer : Party
+    threshold : Int
+    riskTier : RiskTier
+  where
+    signatory bank
+    observer customer
+    
+    choice Approve : ()
+      controller customer
+      do
+        return ()
+        
+    choice Reject : ()
+      controller customer
+      do
+        return ()
+        
+    choice ExpireApproval : ()
+      controller bank
+      do
+        return ()
+        
+    choice FinalizeIfThresholdMet : ()
+      controller bank
+      do
+        return ()

@@ -1,0 +1,9 @@
+db.cantonPartyMappings.updateOne({"_id":"U001"},{"$set":{"cantonPartyId":"U001_Party::12202b691950eb69922944eedbf26cbe38cf4e10a6b809d5692c24417e92e9a243d7"}});
+db.cantonPartyMappings.updateOne({"_id":"U002"},{"$set":{"cantonPartyId":"U002_Party::12202b691950eb69922944eedbf26cbe38cf4e10a6b809d5692c24417e92e9a243d7"}});
+db.cantonPartyMappings.updateOne({"_id":"U003"},{"$set":{"cantonPartyId":"U003_Party::122060877fde4b5ae77bad93cd8f43d9476d1c22f9e3fb492bf8807cba9cb2442a4a"}});
+db.cantonPartyMappings.updateOne({"_id":"U004"},{"$set":{"cantonPartyId":"U004_Party::122060877fde4b5ae77bad93cd8f43d9476d1c22f9e3fb492bf8807cba9cb2442a4a"}});
+db.cantonPartyMappings.updateOne({"_id":"U005"},{"$set":{"cantonPartyId":"U005_Party::122085d6b87c3af89986ddddabc4b6da1b411c11776c3605af7bd0201fb71a02fd80"}});
+db.cantonPartyMappings.updateOne({"_id":"U006"},{"$set":{"cantonPartyId":"U006_Party::122085d6b87c3af89986ddddabc4b6da1b411c11776c3605af7bd0201fb71a02fd80"}});
+db.cantonPartyMappings.updateOne({"_id":"U007"},{"$set":{"cantonPartyId":"U007_Party::122085d6b87c3af89986ddddabc4b6da1b411c11776c3605af7bd0201fb71a02fd80"}});
+db.cantonPartyMappings.updateOne({"_id":"ADMIN"},{"$set":{"cantonPartyId":"GlobalSynchronizer_Party::1220962427551ed488ce1a67786e1dae85666e693d2e435deaf21b30cee205fc5669"}});
+print("Done");

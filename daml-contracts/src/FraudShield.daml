@@ -1,0 +1,70 @@
+module FraudShield where
+
+template HoldRequest
+  with
+    operator : Party
+    holdId : Text
+    txnId : Text
+    fromUserId : Text
+    amount : Decimal
+  where
+    signatory operator
+
+    choice ReleaseHold : ()
+      controller operator
+      do
+        archive self
+
+
+template MultiSigApproval
+  with
+    operator : Party
+    approvalId : Text
+    txnId : Text
+    initiatorUserId : Text
+    policyTier : Text
+    approvalThreshold : Int
+    state : Text
+  where
+    signatory operator
+
+    choice Approve : ()
+      controller operator
+      do
+        archive self
+
+    choice Reject : ()
+      controller operator
+      do
+        archive self
+
+
+template EscrowAgreement
+  with
+    operator : Party
+    escrowId : Text
+    txnId : Text
+    payerUserId : Text
+    amount : Decimal
+  where
+    signatory operator
+
+    choice SettleEscrow : ()
+      controller operator
+      do
+        archive self
+
+
+template SettlementAuthorization
+  with
+    operator : Party
+    settlementId : Text
+    txnId : Text
+    triggeredBy : Text
+  where
+    signatory operator
+
+    choice FinalizeSettlement : ()
+      controller operator
+      do
+        archive self

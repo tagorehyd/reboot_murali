@@ -1,0 +1,14 @@
+sdk-version: 2.7.6
+name: fraudshield-canton-contracts
+version: 1.0.0
+source: src
+parties:
+  - BankA_Party
+  - BankB_Party
+  - BankC_Party
+  - GlobalSynchronizer_Party
+dependencies:
+  - daml-prim
+  - daml-stdlib
+build-options:
+  - --target=1.15

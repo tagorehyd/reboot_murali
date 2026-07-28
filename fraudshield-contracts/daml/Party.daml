@@ -1,0 +1,16 @@
+module Party where
+
+template BankProfile
+  with
+    bank : Party
+    name : Text
+  where
+    signatory bank
+
+template CustomerProfile
+  with
+    customer : Party
+    bank : Party
+    name : Text
+  where
+    signatory customer, bank

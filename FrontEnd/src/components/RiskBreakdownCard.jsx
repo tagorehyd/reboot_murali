@@ -49,6 +49,7 @@ export default function RiskBreakdownCard({
     OFF_HOURS: 'Off-Hours Activity',
     RAPID_DRAIN: 'Rapid Balance Drain',
     CORTEX_AI: 'Cortex AI Anomaly',
+    ISOLATION_FOREST: 'Isolation Forest ML',
     BENEFICIARY_GLOBAL_LIMIT_REVIEW: 'Global Beneficiary Limit Review',
     BENEFICIARY_LIMIT_REVIEW: 'Beneficiary Limit Review',
     BENEFICIARY_TRUST_DISCOUNT: 'Beneficiary Trust Discount',
@@ -90,7 +91,7 @@ export default function RiskBreakdownCard({
         </div>
       </div>
 
-      {/* Breakdown items — every risk point with its reason, AI included */}
+      {/* Breakdown items — every risk point with its reason, AI & ML included */}
       {riskBreakdown && riskBreakdown.length > 0 ? (
         <div className="space-y-2">
           <p className="text-sm font-semibold text-slate-700">Risk Factors</p>
@@ -98,12 +99,15 @@ export default function RiskBreakdownCard({
             {riskBreakdown.map((item, idx) => {
               const isDiscount = item.points < 0;
               const isAi = item.rule === 'CORTEX_AI';
+              const isIf = item.rule === 'ISOLATION_FOREST';
               return (
                 <div
                   key={idx}
                   className={`rounded-lg p-3 border ${
                     isAi
                       ? 'bg-violet-50 border-violet-200'
+                      : isIf
+                      ? 'bg-emerald-50 border-emerald-200'
                       : isDiscount
                       ? 'bg-cyan-50 border-cyan-200'
                       : 'bg-white border-slate-200'
@@ -112,9 +116,10 @@ export default function RiskBreakdownCard({
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-semibold text-slate-800 flex items-center gap-1.5">
                       {isAi && <span>🧠</span>}
+                      {isIf && <span>🌲</span>}
                       {ruleLabel(item.rule)}
                     </span>
-                    <span className={`text-sm font-bold ${isDiscount ? 'text-cyan-700' : 'text-slate-900'}`}>
+                    <span className={`text-sm font-bold ${isIf ? 'text-emerald-800' : isDiscount ? 'text-cyan-700' : 'text-slate-900'}`}>
                       {item.points > 0 ? `+${item.points}` : item.points}
                     </span>
                   </div>

@@ -1,0 +1,57 @@
+=== FraudShield Transaction API Results ===
+Executed at 2026-07-27T15:18:09.631168
+
+--- Transaction 1: Txn 1 - Low Risk ---
+1. [Frontend -> Java Backend] POST /api/txn/initiate
+Payload: {"fromUserId": "U003", "toUserId": "U002", "amount": 150.0}
+Response (200):
+{
+  "txnId": "TXN-43c99ce3-8227-4d93-98b4-ad9351c8dfb4",
+  "nonce": "a953c5bcf430d8d197876f4b6897e85c",
+  "fromUserId": "U003",
+  "toUserId": "U002",
+  "amount": 150.0,
+  "status": "APPROVED",
+  "routingDecision": "AUTO_APPROVE",
+  "riskScore": 15,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 0,
+      "reason": "Isolation Forest anomaly score: 0.27"
+    }
+  ],
+  "beneficiaryTrustTier": "NONE",
+  "beneficiaryTrustDiscount": 0,
+  "message": "Transaction scored and accepted into mempool",
+  "createdAt": "2026-07-27T09:48:09.659782258Z",
+  "escrowOptIn": false
+}
+
+--- Transaction 2: Txn 2 - Medium Risk (Admin Approval) ---
+1. [Frontend -> Java Backend] POST /api/txn/initiate
+Payload: {"fromUserId": "U004", "toUserId": "U005", "amount": 28000.0}
+Response (400):
+{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Daily transaction limit exceeded. Limit: \u00a31000000.0",
+  "timestamp": "2026-07-27T09:48:10.557768766Z"
+}
+
+--- Transaction 3: Txn 3 - High Risk (Consent/Approval/Canton Hold) ---
+1. [Frontend -> Java Backend] POST /api/txn/initiate
+Payload: {"fromUserId": "U006", "toUserId": "U003", "amount": 120000.0}
+Response (400):
+{
+  "status": 400,
+  "error": "Bad Request",
+  "message": "Insufficient balance",
+  "timestamp": "2026-07-27T09:48:10.570178589Z"
+}
+

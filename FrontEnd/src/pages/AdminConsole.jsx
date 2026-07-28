@@ -16,15 +16,23 @@ export default function AdminConsole() {
     avgRiskScore: 0,
     highRiskCount: 0,
     consentCount: 0,
+    holdActiveCount: 0,
+    escrowCount: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [refreshKey, setRefreshKey] = useState(0);
   const [lastUpdated, setLastUpdated] = useState(null);
+  const [cantonEnabled, setCantonEnabled] = useState(false);
+  const [cantonNetworkStatus, setCantonNetworkStatus] = useState('DISABLED');
+  const [cantonToggling, setCantonToggling] = useState(false);
+  const [cantonToggleAllowed, setCantonToggleAllowed] = useState(false);
+  const [cantonRealSubmissionEnabled, setCantonRealSubmissionEnabled] = useState(false);
 
   // Load admin queue on mount and when refreshKey changes
   useEffect(() => {
     loadQueue();
+    loadCantonConfig();
   }, [refreshKey]);
 
   // Set up WebSocket for real-time updates
@@ -88,7 +96,9 @@ export default function AdminConsole() {
       );
       const avgRiskScore = pendingCount > 0 ? Math.round(totalRiskScore / pendingCount) : 0;
       const highRiskCount = transactions.filter((txn) => (txn.riskScore || 0) >= 70).length;
-      const consentCount = transactions.filter((txn) => txn.status === 'PENDING_CONSENT').length;
+      const consentCount = transactions.filter((txn) => txn.status === 'PENDING_CONSENT' || txn.status === 'PENDING_USER_APPROVAL').length;
+      const holdActiveCount = transactions.filter((txn) => txn.status === 'HOLD_ACTIVE' || txn.status === 'PENDING_BANK_APPROVAL').length;
+      const escrowCount = transactions.filter((txn) => txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE').length;
 
       setStats({
         pendingCount,
@@ -96,6 +106,8 @@ export default function AdminConsole() {
         avgRiskScore,
         highRiskCount,
         consentCount,
+        holdActiveCount,
+        escrowCount,
       });
       setLastUpdated(new Date());
     } catch (err) {
@@ -109,6 +121,36 @@ export default function AdminConsole() {
   const handleRefresh = () => {
     setRefreshKey((prev) => prev + 1);
   };
+
+    const loadCantonConfig = async () => {
+      try {
+        const res = await axios.get('/api/canton/config');
+        setCantonEnabled(!!res.data.enabled);
+        setCantonNetworkStatus(res.data.networkStatus || 'DISABLED');
+        setCantonToggleAllowed(!!res.data.toggleAllowed);
+        setCantonRealSubmissionEnabled(!!res.data.realSubmissionEnabled);
+      } catch (err) {
+        console.error('Failed to load Canton config:', err);
+      }
+    };
+
+    const toggleCanton = async () => {
+      if (!cantonToggleAllowed) {
+        return;
+      }
+      setCantonToggling(true);
+      try {
+        const res = await axios.post('/api/canton/config', { enabled: !cantonEnabled });
+        setCantonEnabled(!!res.data.enabled);
+        setCantonNetworkStatus(res.data.networkStatus || 'DISABLED');
+        setCantonToggleAllowed(!!res.data.toggleAllowed);
+        setCantonRealSubmissionEnabled(!!res.data.realSubmissionEnabled);
+      } catch (err) {
+        console.error('Failed to toggle Canton:', err);
+      } finally {
+        setCantonToggling(false);
+      }
+    };
 
   const prioritizedTransactions = [...queueTransactions].sort(
     (a, b) => (b.riskScore || 0) - (a.riskScore || 0)
@@ -133,13 +175,64 @@ export default function AdminConsole() {
             <h1 className="text-3xl font-black tracking-tight text-slate-900">Admin Dashboard</h1>
             <p className="text-slate-600 mt-1">Review, decide, and clear high-risk transactions first.</p>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={isLoading}
-            className="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg hover:bg-black transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
-          >
-            {isLoading ? 'Refreshing...' : 'Refresh'}
-          </button>
+          <div className="flex items-center gap-3">
+            {/* Canton Integration Toggle */}
+            <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
+              cantonEnabled
+                ? 'bg-emerald-50 border-emerald-300'
+                : 'bg-slate-50 border-slate-200'
+            }`}>
+              <div className="text-right leading-tight">
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Canton</p>
+                <p className={`text-xs font-black ${cantonEnabled ? 'text-emerald-700' : 'text-slate-500'}`}>
+                  {cantonEnabled ? 'Enabled' : 'Disabled'}
+                </p>
+              </div>
+              <button
+                onClick={toggleCanton}
+                disabled={cantonToggling || !cantonToggleAllowed}
+                title={!cantonToggleAllowed
+                  ? 'Canton switch becomes available when the Canton server is reachable'
+                  : cantonEnabled
+                    ? 'Disable Canton – commands will be skipped'
+                    : 'Enable Canton – commands will be submitted to the Canton network (or simulated if network is down)'}
+                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed ${
+                  cantonEnabled ? 'bg-emerald-500' : 'bg-slate-300'
+                }`}
+              >
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                  cantonEnabled ? 'translate-x-6' : 'translate-x-1'
+                }`} />
+              </button>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                cantonNetworkStatus === 'UP'
+                  ? 'bg-emerald-100 text-emerald-700'
+                  : cantonNetworkStatus === 'DOWN'
+                    ? 'bg-red-100 text-red-700'
+                    : 'bg-slate-100 text-slate-500'
+              }`}>
+                {cantonNetworkStatus}
+              </span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                cantonToggleAllowed ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+              }`}>
+                {cantonToggleAllowed ? 'READY' : 'WAITING'}
+              </span>
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                cantonRealSubmissionEnabled ? 'bg-cyan-100 text-cyan-700' : 'bg-amber-100 text-amber-700'
+              }`}>
+                {cantonRealSubmissionEnabled ? 'REAL' : 'SIMULATED'}
+              </span>
+            </div>
+
+            <button
+              onClick={handleRefresh}
+              disabled={isLoading}
+              className="px-4 py-2 bg-slate-800 text-white font-bold rounded-lg hover:bg-black transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed"
+            >
+              {isLoading ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-xs">
           <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold">Live Queue</span>
@@ -151,7 +244,7 @@ export default function AdminConsole() {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4 mb-8">
         <div className="bg-gradient-to-br from-sky-50 to-cyan-100 border border-cyan-200 rounded-xl p-5">
           <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">Pending Approvals</p>
           <p className="text-4xl font-black text-cyan-700 mt-2">{stats.pendingCount}</p>
@@ -167,6 +260,14 @@ export default function AdminConsole() {
         <div className="bg-gradient-to-br from-violet-50 to-indigo-100 border border-indigo-200 rounded-xl p-5">
           <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">Needs Consent</p>
           <p className="text-4xl font-black text-indigo-700 mt-2">{stats.consentCount}</p>
+        </div>
+        <div className="bg-gradient-to-br from-red-50 to-rose-100 border border-rose-300 rounded-xl p-5">
+          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">🔒 Canton Holds</p>
+          <p className="text-4xl font-black text-rose-700 mt-2">{stats.holdActiveCount}</p>
+        </div>
+        <div className="bg-gradient-to-br from-violet-50 to-purple-100 border border-purple-200 rounded-xl p-5">
+          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">🔏 Escrow Active</p>
+          <p className="text-4xl font-black text-purple-700 mt-2">{stats.escrowCount}</p>
         </div>
       </div>
 
@@ -193,6 +294,16 @@ export default function AdminConsole() {
             <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-indigo-700">
               Consent: {stats.consentCount}
             </span>
+            {stats.holdActiveCount > 0 && (
+              <span className="rounded-full border border-rose-300 bg-rose-50 px-2.5 py-1 text-rose-700">
+                🔒 Holds: {stats.holdActiveCount}
+              </span>
+            )}
+            {stats.escrowCount > 0 && (
+              <span className="rounded-full border border-purple-200 bg-purple-50 px-2.5 py-1 text-purple-700">
+                🔏 Escrow: {stats.escrowCount}
+              </span>
+            )}
           </div>
         </div>
 
@@ -231,6 +342,8 @@ export default function AdminConsole() {
       <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
         <p className="text-xs text-slate-600">
           Decision flow: prioritize highest risk scores first, then clear consent-required items.
+          Canton-held transactions (🔒 HOLD_ACTIVE / PENDING_BANK_APPROVAL) must be approved before the 60-minute hold expiry.
+          Escrow-backed transactions (🔏) are released automatically during admin approval when a Canton escrow contract exists.
         </p>
       </div>
     </div>

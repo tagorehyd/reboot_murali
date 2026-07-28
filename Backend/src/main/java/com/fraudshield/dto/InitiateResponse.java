@@ -23,4 +23,6 @@ public class InitiateResponse {
     private Integer beneficiaryTrustDiscount;
     private String message;
     private Instant createdAt;
+    /** True when the user opted into the Canton escrow service for this transaction. */
+    private Boolean escrowOptIn;
 }

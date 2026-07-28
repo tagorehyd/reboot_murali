@@ -100,6 +100,25 @@ public class FraudRulesEngine {
      */
     public RiskResult scoreTransaction(String fromUserId, String toUserId, double amount,
                                        int aiPoints, String aiReason, boolean aiEvaluated) {
+        return scoreTransaction(fromUserId, toUserId, amount, aiPoints, aiReason, aiEvaluated, 0, "", false);
+    }
+
+    /**
+     * Main entry point for fraud scoring.
+     * Produces a unified risk score that combines the rules engine, the Cortex AI
+     * anomaly pre-step, Isolation Forest ML score, and the beneficiary-trust adjustment into a single score,
+     * with a per-rule reason for every contribution.
+     *
+     * @param aiPoints    weighted AI contribution (0 when disabled/normal)
+     * @param aiReason    human-readable AI reason(s)
+     * @param aiEvaluated whether the AI actually ran (false = disabled or failed)
+     * @param ifPoints    weighted Isolation Forest contribution (0 when disabled/normal)
+     * @param ifReason    human-readable Isolation Forest reason(s)
+     * @param ifEvaluated whether Isolation Forest ML actually ran
+     */
+    public RiskResult scoreTransaction(String fromUserId, String toUserId, double amount,
+                                       int aiPoints, String aiReason, boolean aiEvaluated,
+                                       int ifPoints, String ifReason, boolean ifEvaluated) {
         List<MempoolTransaction.RiskBreakdownItem> breakdown = new ArrayList<>();
         int totalScore = 0;
 
@@ -189,6 +208,18 @@ public class FraudRulesEngine {
                             : aiReason)
                     .build());
             totalScore += aiPoints;
+        }
+
+        // Isolation Forest ML anomaly step: fold IF ML points into the score
+        if (ifEvaluated && UserRuleSettingsService.isRuleEnabled(sender, "ISOLATION_FOREST")) {
+            breakdown.add(MempoolTransaction.RiskBreakdownItem.builder()
+                    .rule("ISOLATION_FOREST")
+                    .points(ifPoints)
+                    .reason(ifReason == null || ifReason.isBlank()
+                            ? "Isolation Forest ML anomaly detection evaluated"
+                            : ifReason)
+                    .build());
+            totalScore += ifPoints;
         }
 
         // Beneficiary trust optimization: active beneficiaries reduce risk.

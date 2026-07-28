@@ -1,0 +1,60 @@
+// Combined bootstrap + DAR upload Canton script
+// Connects all participants to the fraudshield domain and enables all parties
+
+val darPath = sys.env.getOrElse("DAR_PATH", "/daml-dist/fraudshield-canton-contracts-1.0.0.dar")
+
+try {
+  // Step 1: Connect participants to the domain
+  println("Connecting participants to fraudshield-domain...")
+  banka.domains.connect("fraudshield", "http://canton:4011")
+  bankb.domains.connect("fraudshield", "http://canton:4011")
+  bankc.domains.connect("fraudshield", "http://canton:4011")
+  synchronizer.domains.connect("fraudshield", "http://canton:4011")
+  println("All participants connected to domain.")
+
+  // Step 2: Upload DARs
+  println(s"Uploading ${darPath} to all participants...")
+  Seq(banka, bankb, bankc, synchronizer).foreach { participant =>
+    println(s"  Uploading to ${participant.name}")
+    participant.dars.upload(darPath)
+  }
+  println("DAR upload completed.")
+
+  // Step 3: Enable parties
+  println("Enabling parties...")
+  val p1 = banka.parties.enable("BankA_Party")
+  val p2 = banka.parties.enable("BankAdmin")
+  val p3 = banka.parties.enable("U001_Party")
+  val p4 = banka.parties.enable("U002_Party")
+
+  val p5 = bankb.parties.enable("BankB_Party")
+  val p6 = bankb.parties.enable("U003_Party")
+  val p7 = bankb.parties.enable("U004_Party")
+
+  val p8 = bankc.parties.enable("BankC_Party")
+  val p9 = bankc.parties.enable("U005_Party")
+  val p10 = bankc.parties.enable("U006_Party")
+  val p11 = bankc.parties.enable("U007_Party")
+
+  val p12 = synchronizer.parties.enable("GlobalSynchronizer_Party")
+
+  println("Parties enabled:")
+  println(s"  BankA_Party: ${p1}")
+  println(s"  BankAdmin: ${p2}")
+  println(s"  U001_Party: ${p3}")
+  println(s"  U002_Party: ${p4}")
+  println(s"  BankB_Party: ${p5}")
+  println(s"  U003_Party: ${p6}")
+  println(s"  U004_Party: ${p7}")
+  println(s"  BankC_Party: ${p8}")
+  println(s"  U005_Party: ${p9}")
+  println(s"  U006_Party: ${p10}")
+  println(s"  U007_Party: ${p11}")
+  println(s"  GlobalSynchronizer_Party: ${p12}")
+
+  println("Bootstrap complete!")
+} catch {
+  case e: Exception =>
+    println(s"Bootstrap failed: ${e.getMessage}")
+    e.printStackTrace()
+}
