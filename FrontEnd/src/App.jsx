@@ -7,6 +7,7 @@ import ChainExplorer from './pages/ChainExplorer'
 import SuspiciousTransactions from './pages/SuspiciousTransactions'
 import AIAnomalyReview from './pages/AIAnomalyReview'
 import SystemDashboard from './pages/SystemDashboard'
+import UserHistory from './pages/UserHistory'
 
 const DEMO_USERS = [
   { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-emerald-400 to-emerald-500' },
@@ -64,6 +65,10 @@ export default function App() {
   }, [])
 
   const renderContent = () => {
+    if (view === 'user-history') {
+      return <UserHistory selectedUserId={selectedUser} onSelectUser={setSelectedUser} />
+    }
+
     if (view === 'user-portal' && selectedUser) {
       return <UserPortal userId={selectedUser} />
     }

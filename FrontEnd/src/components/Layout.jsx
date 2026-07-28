@@ -34,7 +34,7 @@ export default function Layout({ children, currentView, onNavigate }) {
       title: 'Users',
       items: [
         { id: 'portal', icon: '💳', label: 'Users', view: 'user-select' },
-        { id: 'history', icon: '📜', label: 'User History', view: 'user-portal' },
+        { id: 'history', icon: '📜', label: 'User History', view: 'user-history' },
       ]
     },
     {
