@@ -5,6 +5,7 @@ import UserPortal from './pages/UserPortal'
 import AdminConsole from './pages/AdminConsole'
 import ChainExplorer from './pages/ChainExplorer'
 import SuspiciousTransactions from './pages/SuspiciousTransactions'
+import NvidiaNimChatbot from './components/NvidiaNimChatbot'
 
 const DEMO_USERS = [
   { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-emerald-400 to-emerald-500' },
@@ -268,6 +269,7 @@ export default function App() {
   return (
     <Layout currentView={view} onNavigate={setView}>
       {renderContent()}
+      <NvidiaNimChatbot />
     </Layout>
   )
 }
