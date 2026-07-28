@@ -48,6 +48,7 @@ public class TransactionService {
     private final CortexAiService cortexAiService;
     private final IsolationForestService isolationForestService;
     private final CantonCommandService cantonCommandService;
+    private final LedgerStateService ledgerStateService;
     private final SecureRandom secureRandom = new SecureRandom();
 
     public InitiateResponse initiateTransaction(InitiateRequest request) {
@@ -153,6 +154,7 @@ public class TransactionService {
         // ── Canton contract creation ──────────────────────────────────────────
         // High risk (score >= 70) → hold + bank approval contracts
         // Medium risk (40-69) → user approval contract
+        // Low risk (0-39) → settlement contract & ledger_state recording
         // Escrow opt-in (any tier) → escrow contract in addition to risk controls
         try {
             int score = riskResult.getTotalScore();
@@ -163,6 +165,9 @@ public class TransactionService {
             } else if (score >= 40 || STATUS_PENDING_CONSENT.equals(status)) {
                 // Medium risk: create user approval contract
                 cantonCommandService.createUserApprovalContract(txnId, fromUser.getId());
+            } else {
+                // Low risk (0-39): create low-risk settlement contract & record SETTLEMENT_COMPLETED in ledger_state
+                cantonCommandService.createLowRiskSettlement(txnId, fromUser.getId(), toUser.getId(), request.getAmount());
             }
             if (escrowOptIn) {
                 // Escrow is additive – runs regardless of risk tier
@@ -201,6 +206,58 @@ public class TransactionService {
             case ROUTING_CONSENT_REQUIRED -> STATUS_PENDING_CONSENT;
             default -> STATUS_APPROVED;
         };
+    }
+
+    public MempoolTransaction processUserConsent(String txnId, boolean approved) {
+        MempoolTransaction txn = mempoolRepository.findById(txnId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Transaction not found"));
+
+        if (approved) {
+            // User gave consent within 15s prompt window:
+            cantonCommandService.createLowRiskSettlement(txn.getId(), txn.getFromUserId(), txn.getToUserId(), txn.getAmount());
+            ledgerStateService.recordState(
+                    txn.getId(),
+                    "USER_CONSENT_RECEIVED",
+                    txn.getAmount(),
+                    txn.getFromUserId(),
+                    txn.getToUserId(),
+                    "banka",
+                    "bankb",
+                    null,
+                    null,
+                    txn.getFromUserId(),
+                    "User granted consent within 15s window",
+                    null
+            );
+            txn.setStatus(STATUS_APPROVED);
+            mempoolRepository.save(txn);
+            log.info("[UserConsent] Txn {} user consent APPROVED -> Settled", txnId);
+        } else {
+            // User declined consent OR 15s timer expired -> Escalate to Bank Admin!
+            ledgerStateService.recordState(
+                    txn.getId(),
+                    "USER_CONSENT_DECLINED",
+                    txn.getAmount(),
+                    txn.getFromUserId(),
+                    txn.getToUserId(),
+                    "banka",
+                    "bankb",
+                    null,
+                    null,
+                    txn.getFromUserId(),
+                    "User consent declined or prompt timed out - escalated to Admin review",
+                    null
+            );
+            // Trigger Admin DAML contracts
+            cantonCommandService.createHoldContract(txn.getId(), txn.getFromUserId(), txn.getAmount());
+            cantonCommandService.createBankApprovalContract(txn.getId(), txn.getFromUserId());
+
+            txn.setStatus(STATUS_PENDING_ADMIN);
+            mempoolRepository.save(txn);
+            log.info("[UserConsent] Txn {} user consent DECLINED/TIMEOUT -> Escalated to PENDING_ADMIN", txnId);
+        }
+
+        return txn;
     }
 
     public MempoolStatusResponse getMempoolStatus() {
