@@ -57,7 +57,7 @@ export default function AdminApprovalCard({ txnId, transaction, onApprove, onRej
   };
 
   return (
-    <div className={`border rounded-xl p-4 shadow-sm transition-shadow ${
+    <div className={`border rounded-xl p-4 shadow-sm transition-shadow flex flex-col h-full ${
       hasEscrow
         ? 'bg-purple-50/40 border-purple-300 dark:bg-purple-900/20 dark:border-purple-600/50 dark:shadow-[0_0_20px_rgba(168,85,247,0.15)]'
         : 'bg-white border-slate-200 dark:bg-slate-900 dark:border-slate-700'
@@ -74,6 +74,16 @@ export default function AdminApprovalCard({ txnId, transaction, onApprove, onRej
             {transaction.createdAt ? new Date(transaction.createdAt).toLocaleString() : '—'}
           </p>
         </div>
+      </div>
+
+      <div className="mb-3">
+        <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-1">
+          <span className="font-semibold text-slate-800 dark:text-slate-200">{transaction.fromUserDisplayName || transaction.fromUserId}</span>
+          <span className="text-slate-500"> ({transaction.fromUserId})</span>
+          <span className="mx-1.5 text-slate-400">→</span>
+          <span className="font-semibold text-slate-800 dark:text-slate-200">{transaction.toUserDisplayName || transaction.toUserId}</span>
+          <span className="text-slate-500"> ({transaction.toUserId})</span>
+        </p>
       </div>
 
       {compact && (
@@ -103,11 +113,15 @@ export default function AdminApprovalCard({ txnId, transaction, onApprove, onRej
         )}
       </div>
 
-      {hasEscrow && (
-        <div className="mb-3 rounded border border-purple-200 dark:border-purple-800/50 bg-purple-50 dark:bg-purple-900/20 px-2.5 py-1.5 text-[11px] text-purple-900 dark:text-purple-300">
-          Escrow is enabled. Automatic release will occur upon admin approval via Canton.
-        </div>
-      )}
+      <div className={`mb-3 rounded border px-2.5 py-1.5 text-[11px] ${
+        hasEscrow 
+          ? 'border-purple-200 dark:border-purple-800/50 bg-purple-50 dark:bg-purple-900/20 text-purple-900 dark:text-purple-300'
+          : 'border-slate-200 dark:border-slate-700/50 bg-slate-50 dark:bg-slate-800/20 text-slate-700 dark:text-slate-300'
+      }`}>
+        {hasEscrow 
+          ? 'Escrow is enabled. Automatic release will occur upon admin approval via Canton.'
+          : 'Standard transaction. Manual admin approval required to release funds.'}
+      </div>
 
       {expanded && (
         <div className="space-y-3 mb-3">
@@ -115,11 +129,11 @@ export default function AdminApprovalCard({ txnId, transaction, onApprove, onRej
           <div className="grid grid-cols-1 gap-3 bg-slate-50 dark:bg-slate-800/30 rounded-lg p-3 border border-slate-200 dark:border-slate-700 sm:grid-cols-2">
             <div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">From</p>
-              <p className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-0.5">{transaction.fromUserId}</p>
+              <p className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-0.5">{transaction.fromUserDisplayName || transaction.fromUserId} <span className="text-slate-500 font-normal">({transaction.fromUserId})</span></p>
             </div>
             <div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">To</p>
-              <p className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-0.5">{transaction.toUserId}</p>
+              <p className="font-bold text-slate-900 dark:text-slate-100 text-xs mt-0.5">{transaction.toUserDisplayName || transaction.toUserId} <span className="text-slate-500 font-normal">({transaction.toUserId})</span></p>
             </div>
             <div>
               <p className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold">Amount</p>
@@ -170,7 +184,7 @@ export default function AdminApprovalCard({ txnId, transaction, onApprove, onRej
       )}
 
       {/* Action Buttons */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-auto pt-2">
         <button
           onClick={handleApprove}
           disabled={isLoading}

@@ -10,6 +10,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import com.fraudshield.repository.MempoolRepository;
+import com.fraudshield.model.MempoolTransaction;
 
 /**
  * Admin endpoint to adjust user balances for demo/testing purposes only.
@@ -21,6 +24,9 @@ public class AdminBalanceController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private MempoolRepository mempoolRepository;
 
     /**
      * Add balance to a user account (demo-only endpoint).
@@ -92,11 +98,22 @@ public class AdminBalanceController {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+        List<MempoolTransaction> pendingTxns = mempoolRepository.findByFromUserIdAndStatusInOrderByCreatedAtDesc(
+            userId,
+            List.of("PENDING_ADMIN", "PENDING_CONSENT", "APPROVED",
+                    "HOLD_ACTIVE", "PENDING_USER_APPROVAL",
+                    "PENDING_BANK_APPROVAL", "ESCROW_ACTIVE")
+        );
+        double holdAmount = pendingTxns.stream().mapToDouble(MempoolTransaction::getAmount).sum();
+        double usableBalance = user.getBalance() - holdAmount;
+
         Map<String, Object> response = new HashMap<>();
         response.put("userId", userId);
         response.put("username", user.getUsername());
         response.put("displayName", user.getDisplayName());
         response.put("balance", user.getBalance());
+        response.put("holdAmount", holdAmount);
+        response.put("usableBalance", usableBalance);
         response.put("accountNumber", user.getAccountNumber());
 
         return ResponseEntity.ok(response);

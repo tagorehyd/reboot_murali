@@ -377,16 +377,16 @@ public class FraudRulesEngine {
     /**
      * Determine routing based on risk score.
      * 0-39: AUTO_APPROVE
-     * 40-69: ADMIN_REVIEW
-     * 70+: CONSENT_REQUIRED
+     * 40-69: CONSENT_REQUIRED
+     * 70+: ADMIN_REVIEW
      */
     private String determineRouting(int score) {
         if (score < 40) {
             return "AUTO_APPROVE";
         } else if (score < 70) {
-            return "ADMIN_REVIEW";
-        } else {
             return "CONSENT_REQUIRED";
+        } else {
+            return "ADMIN_REVIEW";
         }
     }
 }

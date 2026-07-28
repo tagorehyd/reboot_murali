@@ -22,12 +22,35 @@ export default function Layout({ children, currentView, onNavigate }) {
     }
   }, [isDarkMode]);
 
-  const navItems = [
-    { id: 'home', icon: '🏠', label: 'Home', view: 'home' },
-    { id: 'portal', icon: '💳', label: 'User Portal', view: 'user-select' },
-    { id: 'admin', icon: '👮‍♂️', label: 'Admin Console', view: 'admin' },
-    { id: 'explorer', icon: '🔎', label: 'Chain Explorer', view: 'explorer' },
-    { id: 'suspicious', icon: '⚠️', label: 'Suspicious Txns', view: 'suspicious' },
+  const navSections = [
+    {
+      title: '',
+      items: [
+        { id: 'home', icon: '🏠', label: 'Home', view: 'home' },
+        { id: 'dashboard', icon: '📊', label: 'Dashboard', view: 'dashboard' },
+      ]
+    },
+    {
+      title: 'Users',
+      items: [
+        { id: 'portal', icon: '💳', label: 'Users', view: 'user-select' },
+        { id: 'history', icon: '📜', label: 'User History', view: 'user-portal' },
+      ]
+    },
+    {
+      title: 'Admin',
+      items: [
+        { id: 'admin', icon: '👮‍♂️', label: 'Admin Portal', view: 'admin' },
+        { id: 'admin-history', icon: '📁', label: 'Admin History', view: 'admin-history' },
+      ]
+    },
+    {
+      title: 'Analytics',
+      items: [
+        { id: 'explorer', icon: '🔎', label: 'Chain Explorer', view: 'explorer' },
+        { id: 'suspicious', icon: '⚠️', label: 'Suspicious Txns', view: 'suspicious' },
+      ]
+    }
   ];
 
   return (
@@ -54,22 +77,33 @@ export default function Layout({ children, currentView, onNavigate }) {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => {
-                onNavigate(item.view);
-                if (window.innerWidth < 1024) setIsSidebarOpen(false);
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentView === item.view
-                  ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/30'
-                  : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                }`}
-            >
-              <span className="text-xl">{item.icon}</span>
-              <span className="font-semibold">{item.label}</span>
-            </button>
+        <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto">
+          {navSections.map((section, idx) => (
+            <div key={idx} className={section.title === '' ? '-mt-4' : ''}>
+              {section.title && (
+                <h3 className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  {section.title}
+                </h3>
+              )}
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onNavigate(item.view);
+                      if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentView === item.view
+                        ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/30'
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                      }`}
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <span className="font-semibold">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
           ))}
         </nav>
 
