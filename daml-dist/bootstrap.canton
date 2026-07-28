@@ -1,0 +1,27 @@
+try {
+  banka.domains.connect("fraudshield", "http://canton:4011")
+  bankb.domains.connect("fraudshield", "http://canton:4011")
+  bankc.domains.connect("fraudshield", "http://canton:4011")
+  synchronizer.domains.connect("fraudshield", "http://canton:4011")
+
+  val p1 = banka.parties.enable("BankA_Party")
+  val p2 = banka.parties.enable("BankAdmin")
+  val p3 = banka.parties.enable("U001_Party")
+  val p4 = banka.parties.enable("U002_Party")
+
+  val p5 = bankb.parties.enable("BankB_Party")
+  val p6 = bankb.parties.enable("U003_Party")
+  val p7 = bankb.parties.enable("U004_Party")
+
+  val p8 = bankc.parties.enable("BankC_Party")
+  val p9 = bankc.parties.enable("U005_Party")
+  val p10 = bankc.parties.enable("U006_Party")
+
+  val p11 = synchronizer.parties.enable("GlobalSynchronizer_Party")
+
+  println("Bootstrapped Canton network and allocated parties.")
+} catch {
+  case e: Exception =>
+    println("Failed to bootstrap:")
+    e.printStackTrace()
+}

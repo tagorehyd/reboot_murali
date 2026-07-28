@@ -1,0 +1,32 @@
+[
+  {
+    "step": 1,
+    "label": "Navigate to FraudShield application home",
+    "timestampMs": 98,
+    "timestampFormatted": "0.10s"
+  },
+  {
+    "step": 2,
+    "label": "Click Chain Explorer navigation tab",
+    "timestampMs": 7334,
+    "timestampFormatted": "7.33s"
+  },
+  {
+    "step": 3,
+    "label": "Observe multi-chain node columns (Alpha, Beta, Gamma)",
+    "timestampMs": 14399,
+    "timestampFormatted": "14.40s"
+  },
+  {
+    "step": 4,
+    "label": "Click on recent block card to inspect block details",
+    "timestampMs": 19960,
+    "timestampFormatted": "19.96s"
+  },
+  {
+    "step": 5,
+    "label": "Verify cryptographic block hash, Merkle root, and consensus status",
+    "timestampMs": 25020,
+    "timestampFormatted": "25.02s"
+  }
+]

@@ -1,0 +1,62 @@
+[
+  {
+    "step": 1,
+    "label": "Navigate to FraudShield application home",
+    "timestampMs": 97,
+    "timestampFormatted": "0.10s"
+  },
+  {
+    "step": 2,
+    "label": "Click User Portal navigation tab",
+    "timestampMs": 9851,
+    "timestampFormatted": "9.85s"
+  },
+  {
+    "step": 3,
+    "label": "Select account U001 (Alice Walker)",
+    "timestampMs": 15349,
+    "timestampFormatted": "15.35s"
+  },
+  {
+    "step": 4,
+    "label": "Select recipient Carlos Rivera",
+    "timestampMs": 20236,
+    "timestampFormatted": "20.24s"
+  },
+  {
+    "step": 5,
+    "label": "Enter high-risk transfer amount £4,500",
+    "timestampMs": 24174,
+    "timestampFormatted": "24.17s"
+  },
+  {
+    "step": 6,
+    "label": "Click Send Money to initiate anomaly scoring",
+    "timestampMs": 29705,
+    "timestampFormatted": "29.70s"
+  },
+  {
+    "step": 7,
+    "label": "Confirm limit warning prompt",
+    "timestampMs": 36234,
+    "timestampFormatted": "36.23s"
+  },
+  {
+    "step": 8,
+    "label": "Verify Isolation Forest anomaly score & risk breakdown",
+    "timestampMs": 41804,
+    "timestampFormatted": "41.80s"
+  },
+  {
+    "step": 9,
+    "label": "Click Admin Console navigation tab",
+    "timestampMs": 50873,
+    "timestampFormatted": "50.87s"
+  },
+  {
+    "step": 10,
+    "label": "Review pending hold request in Admin Review Queue",
+    "timestampMs": 54470,
+    "timestampFormatted": "54.47s"
+  }
+]

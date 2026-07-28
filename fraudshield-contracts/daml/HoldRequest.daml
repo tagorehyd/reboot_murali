@@ -1,0 +1,23 @@
+module HoldRequest where
+
+import Common
+
+template HoldRequest
+  with
+    bank : Party
+    customer : Party
+    amount : Decimal
+    riskTier : RiskTier
+  where
+    signatory bank
+    observer customer
+    
+    choice ReleaseHold : ()
+      controller bank
+      do
+        return ()
+        
+    choice ExpireHold : ()
+      controller bank
+      do
+        return ()

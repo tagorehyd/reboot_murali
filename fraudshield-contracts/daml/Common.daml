@@ -1,0 +1,7 @@
+module Common where
+
+-- Define RiskTier enum
+data RiskTier = LOW | MEDIUM | HIGH
+  deriving (Eq, Show)
+
+-- Common types can go here

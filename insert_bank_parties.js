@@ -1,0 +1,41 @@
+// Add bank-level party mappings so resolveSubmitterParty() finds them
+db.cantonPartyMappings.updateOne(
+  {"_id":"BankA"},
+  {"$set":{
+    "_id":"BankA",
+    "appUserId":"BankA",
+    "bankId":"BankA",
+    "participantId":"banka",
+    "cantonPartyId":"BankA_Party::12202b691950eb69922944eedbf26cbe38cf4e10a6b809d5692c24417e92e9a243d7",
+    "cantonRole":"bank_operator",
+    "_class":"com.fraudshield.model.canton.CantonPartyMapping"
+  }},
+  {upsert:true}
+);
+db.cantonPartyMappings.updateOne(
+  {"_id":"BankB"},
+  {"$set":{
+    "_id":"BankB",
+    "appUserId":"BankB",
+    "bankId":"BankB",
+    "participantId":"bankb",
+    "cantonPartyId":"BankB_Party::122060877fde4b5ae77bad93cd8f43d9476d1c22f9e3fb492bf8807cba9cb2442a4a",
+    "cantonRole":"bank_operator",
+    "_class":"com.fraudshield.model.canton.CantonPartyMapping"
+  }},
+  {upsert:true}
+);
+db.cantonPartyMappings.updateOne(
+  {"_id":"BankC"},
+  {"$set":{
+    "_id":"BankC",
+    "appUserId":"BankC",
+    "bankId":"BankC",
+    "participantId":"bankc",
+    "cantonPartyId":"BankC_Party::122085d6b87c3af89986ddddabc4b6da1b411c11776c3605af7bd0201fb71a02fd80",
+    "cantonRole":"bank_operator",
+    "_class":"com.fraudshield.model.canton.CantonPartyMapping"
+  }},
+  {upsert:true}
+);
+print("Bank party mappings inserted");

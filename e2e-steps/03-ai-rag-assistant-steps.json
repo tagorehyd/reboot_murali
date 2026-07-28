@@ -1,0 +1,38 @@
+[
+  {
+    "step": 1,
+    "label": "Navigate to FraudShield application home",
+    "timestampMs": 177,
+    "timestampFormatted": "0.18s"
+  },
+  {
+    "step": 2,
+    "label": "Click AI Assistant floating widget toggle button",
+    "timestampMs": 9196,
+    "timestampFormatted": "9.20s"
+  },
+  {
+    "step": 3,
+    "label": "Ask question: How does the Isolation Forest ML model work?",
+    "timestampMs": 14410,
+    "timestampFormatted": "14.41s"
+  },
+  {
+    "step": 4,
+    "label": "Observe AI response from RAG Knowledge Base",
+    "timestampMs": 19518,
+    "timestampFormatted": "19.52s"
+  },
+  {
+    "step": 5,
+    "label": "Ask follow-up question: What are the 3 risk tiers?",
+    "timestampMs": 28563,
+    "timestampFormatted": "28.56s"
+  },
+  {
+    "step": 6,
+    "label": "Verify 3-tier risk routing explanation",
+    "timestampMs": 34190,
+    "timestampFormatted": "34.19s"
+  }
+]
