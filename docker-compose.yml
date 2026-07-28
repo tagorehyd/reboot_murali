@@ -140,7 +140,7 @@ services:
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://fraudshield:fraudshield-local-password@mongodb:27017/fraudshield?authSource=admin
       SPRING_DATA_MONGODB_DATABASE: fraudshield
-      APP_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:3000,http://127.0.0.1:3000,http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173
+      APP_CORS_ALLOWED_ORIGIN_PATTERNS: http://localhost:*,http://127.0.0.1:*,http://*:*,https://*:*
       CORTEX_API_KEY: ${CORTEX_API_KEY:-PASTE_YOUR_CORTEX_API_KEY_HERE}
       # ── Isolation Forest ML (added by isolation-forest-ml branch) ──────────
       ISOLATION_FOREST_BASE_URL: http://ml-service:5001
