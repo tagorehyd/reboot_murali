@@ -66,6 +66,7 @@ public class SingleChainBlockBuilderService {
     private final UserRepository userRepository;
     private final TxnHistoryRepository txnHistoryRepository;
     private final FraudShieldWebSocketHandler webSocketHandler;
+    private final LedgerStateService ledgerStateService;
 
     private final AtomicBoolean building = new AtomicBoolean(false);
     private final AtomicReference<Boolean> forceNextConsensusFailure = new AtomicReference<>(false);
@@ -235,6 +236,21 @@ public class SingleChainBlockBuilderService {
 
             txnHistoryRepository.save(outHistory);
             txnHistoryRepository.save(inHistory);
+
+            ledgerStateService.recordState(
+                    tx.getId(),
+                    "SETTLEMENT_COMPLETED",
+                    tx.getAmount(),
+                    fromUser.getId(),
+                    toUser.getId(),
+                    fromUser.getBankId(),
+                    toUser.getBankId(),
+                    "#settlement-" + tx.getId().substring(Math.max(0, tx.getId().length() - 8)),
+                    "evt-block-" + blockNumber + "-" + tx.getId(),
+                    fromUser.getId() + "_Party",
+                    "Block " + blockNumber + " committed with 2-of-3 consensus across Canton Network",
+                    Map.of("blockNumber", blockNumber, "consensus", true)
+            );
 
             notifyTxnStatusUpdate(fromUser.getId(), tx.getId(), STATUS_COMMITTED);
             notifyTxnStatusUpdate(toUser.getId(), tx.getId(), STATUS_COMMITTED);
