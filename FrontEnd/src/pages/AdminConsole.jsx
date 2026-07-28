@@ -28,6 +28,9 @@ export default function AdminConsole() {
   const [cantonToggling, setCantonToggling] = useState(false);
   const [cantonToggleAllowed, setCantonToggleAllowed] = useState(false);
   const [cantonRealSubmissionEnabled, setCantonRealSubmissionEnabled] = useState(false);
+  const [viewMode, setViewMode] = useState('grid');
+  const [filterMode, setFilterMode] = useState('ALL');
+  const [toast, setToast] = useState(null);
 
   // Load admin queue on mount and when refreshKey changes
   useEffect(() => {
@@ -156,35 +159,43 @@ export default function AdminConsole() {
     (a, b) => (b.riskScore || 0) - (a.riskScore || 0)
   );
 
+  const filteredTransactions = prioritizedTransactions.filter((txn) => {
+    if (filterMode === 'ALL') return true;
+    const isEscrow = Boolean(txn.escrowOptIn || txn.escrowContractRef || txn.status === 'ESCROW_ACTIVE');
+    if (filterMode === 'ESCROW') return isEscrow;
+    if (filterMode === 'STANDARD') return !isEscrow;
+    return true;
+  });
+
   if (isLoading && queueTransactions.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl ring-1 ring-slate-200 p-8">
+      <div className="max-w-7xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-200 p-8">
         <div className="flex items-center justify-center h-64">
-          <p className="text-slate-600 text-lg">⏳ Loading admin dashboard...</p>
+          <p className="text-slate-600 dark:text-slate-400 text-lg">⏳ Loading admin dashboard...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto bg-white rounded-2xl shadow-xl ring-1 ring-slate-200 p-8 md:p-10">
+    <div className="w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-200 px-6 py-4">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-3xl font-black tracking-tight text-slate-900">Admin Dashboard</h1>
-            <p className="text-slate-600 mt-1">Review, decide, and clear high-risk transactions first.</p>
+            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">Admin Dashboard</h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-1">Review, decide, and clear high-risk transactions first.</p>
           </div>
           <div className="flex items-center gap-3">
             {/* Canton Integration Toggle */}
             <div className={`flex items-center gap-2 px-4 py-2 rounded-xl border transition-all ${
               cantonEnabled
                 ? 'bg-emerald-50 border-emerald-300'
-                : 'bg-slate-50 border-slate-200'
+                : 'bg-slate-50 dark:bg-slate-800/50 border-slate-200 dark:border-slate-700'
             }`}>
               <div className="text-right leading-tight">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Canton</p>
-                <p className={`text-xs font-black ${cantonEnabled ? 'text-emerald-700' : 'text-slate-500'}`}>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Canton</p>
+                <p className={`text-xs font-black ${cantonEnabled ? 'text-emerald-700' : 'text-slate-500 dark:text-slate-500'}`}>
                   {cantonEnabled ? 'Enabled' : 'Disabled'}
                 </p>
               </div>
@@ -200,7 +211,7 @@ export default function AdminConsole() {
                   cantonEnabled ? 'bg-emerald-500' : 'bg-slate-300'
                 }`}
               >
-                <span className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                <span className={`inline-block h-4 w-4 transform rounded-full bg-white dark:bg-slate-900 shadow transition-transform ${
                   cantonEnabled ? 'translate-x-6' : 'translate-x-1'
                 }`} />
               </button>
@@ -209,12 +220,12 @@ export default function AdminConsole() {
                   ? 'bg-emerald-100 text-emerald-700'
                   : cantonNetworkStatus === 'DOWN'
                     ? 'bg-red-100 text-red-700'
-                    : 'bg-slate-100 text-slate-500'
+                    : 'bg-slate-100 text-slate-500 dark:text-slate-500'
               }`}>
                 {cantonNetworkStatus}
               </span>
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-                cantonToggleAllowed ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600'
+                cantonToggleAllowed ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-200 text-slate-600 dark:text-slate-400'
               }`}>
                 {cantonToggleAllowed ? 'READY' : 'WAITING'}
               </span>
@@ -234,40 +245,40 @@ export default function AdminConsole() {
             </button>
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs">
+        <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
           <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-700 font-bold">Live Queue</span>
           <span className="px-2.5 py-1 rounded-full bg-amber-100 text-amber-700 font-bold">High Risk Prioritized</span>
           {lastUpdated && (
-            <span className="text-slate-500 font-medium">Updated {lastUpdated.toLocaleTimeString()}</span>
+            <span className="text-slate-500 dark:text-slate-500 font-medium">Updated {lastUpdated.toLocaleTimeString()}</span>
           )}
         </div>
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-6 gap-4 mb-8">
-        <div className="bg-gradient-to-br from-sky-50 to-cyan-100 border border-cyan-200 rounded-xl p-5">
-          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">Pending Approvals</p>
-          <p className="text-4xl font-black text-cyan-700 mt-2">{stats.pendingCount}</p>
+      <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3 mb-3">
+        <div className="bg-gradient-to-br from-sky-50 to-cyan-100 dark:from-sky-950/40 dark:to-cyan-950/40 border border-cyan-200 dark:border-cyan-800/50 rounded-xl p-3">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">Pending</p>
+          <p className="text-2xl font-black text-cyan-700 dark:text-cyan-400 mt-0.5">{stats.pendingCount}</p>
         </div>
-        <div className="bg-gradient-to-br from-amber-50 to-orange-100 border border-orange-200 rounded-xl p-5">
-          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">Total Risk Score</p>
-          <p className="text-4xl font-black text-orange-700 mt-2">{stats.totalRiskScore}</p>
+        <div className="bg-gradient-to-br from-amber-50 to-orange-100 dark:from-amber-950/40 dark:to-orange-950/40 border border-orange-200 dark:border-orange-800/50 rounded-xl p-3">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">Risk Score</p>
+          <p className="text-2xl font-black text-orange-700 dark:text-orange-400 mt-0.5">{stats.totalRiskScore}</p>
         </div>
-        <div className="bg-gradient-to-br from-rose-50 to-red-100 border border-red-200 rounded-xl p-5">
-          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">High Risk (70+)</p>
-          <p className="text-4xl font-black text-red-700 mt-2">{stats.highRiskCount}</p>
+        <div className="bg-gradient-to-br from-rose-50 to-red-100 dark:from-rose-950/40 dark:to-red-950/40 border border-red-200 dark:border-red-800/50 rounded-xl p-3">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">High Risk</p>
+          <p className="text-2xl font-black text-red-700 dark:text-red-400 mt-0.5">{stats.highRiskCount}</p>
         </div>
-        <div className="bg-gradient-to-br from-violet-50 to-indigo-100 border border-indigo-200 rounded-xl p-5">
-          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">Needs Consent</p>
-          <p className="text-4xl font-black text-indigo-700 mt-2">{stats.consentCount}</p>
+        <div className="bg-gradient-to-br from-violet-50 to-indigo-100 dark:from-violet-950/40 dark:to-indigo-950/40 border border-indigo-200 dark:border-indigo-800/50 rounded-xl p-3">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">Needs Consent</p>
+          <p className="text-2xl font-black text-indigo-700 dark:text-indigo-400 mt-0.5">{stats.consentCount}</p>
         </div>
-        <div className="bg-gradient-to-br from-red-50 to-rose-100 border border-rose-300 rounded-xl p-5">
-          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">🔒 Canton Holds</p>
-          <p className="text-4xl font-black text-rose-700 mt-2">{stats.holdActiveCount}</p>
+        <div className="bg-gradient-to-br from-red-50 to-rose-100 dark:from-red-950/40 dark:to-rose-950/40 border border-rose-300 dark:border-rose-800/50 rounded-xl p-3">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">Canton Holds</p>
+          <p className="text-2xl font-black text-rose-700 dark:text-rose-400 mt-0.5">{stats.holdActiveCount}</p>
         </div>
-        <div className="bg-gradient-to-br from-violet-50 to-purple-100 border border-purple-200 rounded-xl p-5">
-          <p className="text-xs text-slate-600 uppercase tracking-wider font-semibold">🔏 Escrow Active</p>
-          <p className="text-4xl font-black text-purple-700 mt-2">{stats.escrowCount}</p>
+        <div className="bg-gradient-to-br from-violet-50 to-purple-100 dark:from-violet-950/40 dark:to-purple-950/40 border border-purple-200 dark:border-purple-800/50 rounded-xl p-3">
+          <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-wider font-bold">Escrow Active</p>
+          <p className="text-2xl font-black text-purple-700 dark:text-purple-400 mt-0.5">{stats.escrowCount}</p>
         </div>
       </div>
 
@@ -279,11 +290,52 @@ export default function AdminConsole() {
       )}
 
       {/* Queue Display */}
-      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 md:p-6">
+      <div className="rounded-2xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 p-5 md:p-6">
         <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-2xl font-black tracking-tight text-slate-900">
-            Pending Transactions {stats.pendingCount > 0 && `(${stats.pendingCount})`}
-          </h2>
+          <div className="flex flex-wrap items-center gap-4">
+            <h2 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+              Pending Transactions {stats.pendingCount > 0 && `(${stats.pendingCount})`}
+            </h2>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg shadow-inner text-xs font-bold">
+                <button
+                  onClick={() => setFilterMode('ALL')}
+                  className={`px-3 py-1.5 rounded-md transition-all ${filterMode === 'ALL' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                >
+                  All
+                </button>
+                <button
+                  onClick={() => setFilterMode('STANDARD')}
+                  className={`px-3 py-1.5 rounded-md transition-all ${filterMode === 'STANDARD' ? 'bg-white dark:bg-slate-700 shadow-sm text-slate-900 dark:text-slate-100' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                >
+                  Standard
+                </button>
+                <button
+                  onClick={() => setFilterMode('ESCROW')}
+                  className={`px-3 py-1.5 rounded-md transition-all flex items-center gap-1 ${filterMode === 'ESCROW' ? 'bg-white dark:bg-slate-700 shadow-sm text-purple-700 dark:text-purple-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                >
+                  <span className="text-[10px]">🔏</span> Escrow
+                </button>
+              </div>
+
+              <div className="flex items-center bg-slate-200/50 dark:bg-slate-800 p-1 rounded-lg shadow-inner hidden sm:flex">
+                <button 
+                  onClick={() => setViewMode('grid')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'grid' ? 'bg-white dark:bg-slate-700 shadow-sm text-cyan-600 dark:text-cyan-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                  title="Card View"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg>
+                </button>
+                <button 
+                  onClick={() => setViewMode('table')}
+                  className={`p-1.5 rounded-md transition-all ${viewMode === 'table' ? 'bg-white dark:bg-slate-700 shadow-sm text-cyan-600 dark:text-cyan-400' : 'text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200'}`}
+                  title="Table View"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" x2="21" y1="6" y2="6"/><line x1="8" x2="21" y1="12" y2="12"/><line x1="8" x2="21" y1="18" y2="18"/><line x1="3" x2="3.01" y1="6" y2="6"/><line x1="3" x2="3.01" y1="12" y2="12"/><line x1="3" x2="3.01" y1="18" y2="18"/></svg>
+                </button>
+              </div>
+            </div>
+          </div>
           <div className="flex flex-wrap items-center gap-2 text-xs font-bold">
             <span className="rounded-full border border-red-200 bg-red-50 px-2.5 py-1 text-red-700">
               High: {stats.highRiskCount}
@@ -312,9 +364,13 @@ export default function AdminConsole() {
             <p className="text-emerald-700 text-lg font-bold">Queue clear. No pending approvals.</p>
             <p className="text-emerald-600 mt-2">All flagged transactions are currently resolved.</p>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            {prioritizedTransactions.map((txn) => {
+        ) : viewMode === 'grid' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
+            {prioritizedTransactions.filter((txn) => {
+              if (filterMode === 'ALL') return true;
+              const isEscrow = Boolean(txn.escrowOptIn || txn.escrowContractRef || txn.status === 'ESCROW_ACTIVE');
+              return filterMode === 'ESCROW' ? isEscrow : !isEscrow;
+            }).map((txn) => {
               const txId = txn.txnId || txn.id || txn._id;
               return (
                 <AdminApprovalCard
@@ -323,11 +379,13 @@ export default function AdminConsole() {
                   transaction={txn}
                   compact
                   onApprove={() => {
-                    console.log('Transaction approved:', txId);
+                    setToast({ type: 'approve', txId });
+                    setTimeout(() => setToast(null), 3500);
                     handleRefresh();
                   }}
                   onReject={() => {
-                    console.log('Transaction rejected:', txId);
+                    setToast({ type: 'reject', txId });
+                    setTimeout(() => setToast(null), 3500);
                     handleRefresh();
                   }}
                   onRefresh={handleRefresh}
@@ -335,12 +393,118 @@ export default function AdminConsole() {
               );
             })}
           </div>
+        ) : (
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-600 dark:text-slate-300">
+                <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase font-bold text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-700">
+                  <tr>
+                    <th className="px-5 py-4">Transaction ID</th>
+                    <th className="px-5 py-4">Risk & Routing</th>
+                    <th className="px-5 py-4">Amount</th>
+                    <th className="px-5 py-4">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                  {prioritizedTransactions.filter((txn) => {
+                    if (filterMode === 'ALL') return true;
+                    const isEscrow = Boolean(txn.escrowOptIn || txn.escrowContractRef || txn.status === 'ESCROW_ACTIVE');
+                    return filterMode === 'ESCROW' ? isEscrow : !isEscrow;
+                  }).map((txn) => {
+                    const txId = txn.txnId || txn.id || txn._id;
+                    const isEscrow = Boolean(txn.escrowOptIn || txn.escrowContractRef || txn.status === 'ESCROW_ACTIVE');
+                    return (
+                      <tr key={txId} className="hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
+                        <td className="px-5 py-4 align-top">
+                          <p className="font-mono text-[11px] font-bold text-slate-900 dark:text-slate-100 break-all">{txId}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{new Date(txn.createdAt).toLocaleString()}</p>
+                        </td>
+                        <td className="px-5 py-4 align-top">
+                          <div className="flex flex-col gap-1.5 items-start">
+                            <span className="px-2 py-0.5 rounded border text-[10px] font-bold bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800/50">
+                              SCORE: {txn.riskScore || 0}
+                            </span>
+                            <span className="text-[10px] font-semibold text-slate-600 dark:text-slate-400">{txn.routingDecision || 'ADMIN_REVIEW'}</span>
+                          </div>
+                        </td>
+                        <td className="px-5 py-4 align-top">
+                          <p className="text-sm font-black text-slate-900 dark:text-slate-100">£{Number(txn.amount || 0).toLocaleString()}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1">{txn.fromUserId} → {txn.toUserId}</p>
+                        </td>
+                        <td className="px-5 py-4 align-top">
+                          <div className="flex flex-col gap-2">
+                            <div className="flex flex-wrap gap-2">
+                              <span className="px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 text-[10px] font-bold">
+                                {txn.status || 'PENDING_ADMIN'}
+                              </span>
+                              {isEscrow && (
+                                <span className="px-2 py-0.5 rounded border border-purple-200 dark:border-purple-800/50 bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-[10px] font-bold flex items-center gap-1">
+                                  <span className="text-[10px]">🔏</span> Escrow
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 mt-1">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await axios.post(`/api/admin/txn/${txId}/decide`, { approved: true });
+                                    setToast({ type: 'approve', txId });
+                                    setTimeout(() => setToast(null), 3500);
+                                    handleRefresh();
+                                  } catch (e) { console.error(e); }
+                                }}
+                                className="px-3 py-1.5 text-[10px] bg-emerald-600 text-white font-bold rounded hover:bg-emerald-700 transition-colors"
+                              >
+                                Approve
+                              </button>
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    await axios.post(`/api/admin/txn/${txId}/decide`, { approved: false });
+                                    setToast({ type: 'reject', txId });
+                                    setTimeout(() => setToast(null), 3500);
+                                    handleRefresh();
+                                  } catch (e) { console.error(e); }
+                                }}
+                                className="px-3 py-1.5 text-[10px] bg-rose-600 text-white font-bold rounded hover:bg-rose-700 transition-colors"
+                              >
+                                Reject
+                              </button>
+                            </div>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
         )}
       </div>
 
+      {toast && (
+        <div className={`fixed bottom-6 right-6 p-4 rounded-xl shadow-2xl border flex items-start gap-3 transform transition-all duration-300 z-50 ${
+          toast.type === 'approve'
+            ? 'bg-emerald-800 text-white border-emerald-900 shadow-emerald-900/20'
+            : 'bg-rose-800 text-white border-rose-900 shadow-rose-900/20'
+        }`}>
+          <span className="text-xl mt-0.5">{toast.type === 'approve' ? '✅' : '🚫'}</span>
+          <div>
+            <p className="font-bold">{toast.type === 'approve' ? 'Transaction Approved' : 'Transaction Rejected'}</p>
+            <p className="text-sm opacity-90 mt-1">
+              {toast.type === 'approve' ? 'Successfully approved' : 'Successfully rejected'} transaction <span className="font-mono text-[11px] bg-black/20 px-1 py-0.5 rounded">{toast.txId}</span>.
+            </p>
+          </div>
+          <button onClick={() => setToast(null)} className="opacity-70 hover:opacity-100 ml-2 mt-1 transition-opacity" aria-label="Close">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+          </button>
+        </div>
+      )}
+
       {/* Footer Note */}
-      <div className="mt-8 p-4 bg-slate-50 rounded-xl border border-slate-200">
-        <p className="text-xs text-slate-600">
+      <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-200 dark:border-slate-700">
+        <p className="text-xs text-slate-600 dark:text-slate-400">
           Decision flow: prioritize highest risk scores first, then clear consent-required items.
           Canton-held transactions (🔒 HOLD_ACTIVE / PENDING_BANK_APPROVAL) must be approved before the 60-minute hold expiry.
           Escrow-backed transactions (🔏) are released automatically during admin approval when a Canton escrow contract exists.
