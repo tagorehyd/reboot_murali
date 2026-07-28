@@ -42,7 +42,8 @@ public class SeedRunner implements ApplicationRunner {
     public void run(ApplicationArguments args) {
         if (userRepository.count() > 0) {
             backfillCantonMappingsForExistingUsers();
-            log.info("[Seed] Data already present — skipping seed.");
+            seedSecurityAuditDataIfEmpty();
+            log.info("[Seed] Data already present — skipping user seed.");
             return;
         }
 
@@ -51,6 +52,7 @@ public class SeedRunner implements ApplicationRunner {
         seedGenesisBlocks();
         seedBlockNonce();
         seedSystemLocks();
+        seedSecurityAuditDataIfEmpty();
         log.info("[Seed] ✅ Seed complete.");
     }
 
@@ -320,5 +322,79 @@ public class SeedRunner implements ApplicationRunner {
 
         systemLockRepository.saveAll(List.of(mempoolLock, writeLock));
         log.info("[Seed] System locks initialised.");
+    }
+
+    private void seedSecurityAuditDataIfEmpty() {
+        if (suspiciousTransactionRepository.count() == 0) {
+            SuspiciousTransaction s1 = SuspiciousTransaction.builder()
+                    .txnIds(List.of("TXN-5f8889c4-7f7b-4e0a-b48d-145169e0c689"))
+                    .reason("TAMPER_ATTEMPT_DETECTED")
+                    .sourceTrigger("MANUAL_TAMPER_SIMULATION")
+                    .riskSummary(List.of(new SuspiciousTransaction.RiskSummaryItem("TXN-5f8889c4-7f7b-4e0a-b48d-145169e0c689", 92)))
+                    .createdAt(Instant.now().minusSeconds(1200))
+                    .reviewStatus("PENDING_REVIEW")
+                    .notes("Operational MongoDB record amount altered to £150,000. Verified against signed Canton DAML contract state (£100,000). Discrepancy flagged for audit.")
+                    .build();
+
+            SuspiciousTransaction s2 = SuspiciousTransaction.builder()
+                    .txnIds(List.of("TXN-78179b6c-a3f7-4768-8404-e5327a4beff2"))
+                    .reason("CONSENSUS_FAILURE")
+                    .sourceTrigger("COUNT_TRIGGER")
+                    .riskSummary(List.of(new SuspiciousTransaction.RiskSummaryItem("TXN-78179b6c-a3f7-4768-8404-e5327a4beff2", 85)))
+                    .createdAt(Instant.now().minusSeconds(3600))
+                    .reviewStatus("ESCALATED")
+                    .reviewedBy("BankA_ComplianceAdmin")
+                    .notes("Validator node BankB mismatch during interbank consensus round. Escrow hold locked.")
+                    .build();
+
+            SuspiciousTransaction s3 = SuspiciousTransaction.builder()
+                    .txnIds(List.of("TXN-9c5b5acb-4cd7-493b-966c-15d8b3910775"))
+                    .reason("8D_VECTOR_ANOMALY")
+                    .sourceTrigger("ISOLATION_FOREST_ML")
+                    .riskSummary(List.of(new SuspiciousTransaction.RiskSummaryItem("TXN-9c5b5acb-4cd7-493b-966c-15d8b3910775", 78)))
+                    .createdAt(Instant.now().minusSeconds(7200))
+                    .reviewStatus("PENDING_REVIEW")
+                    .notes("Isolation Forest ML engine flagged 88% velocity rate spike and 92% device fingerprint mismatch.")
+                    .build();
+
+            suspiciousTransactionRepository.saveAll(List.of(s1, s2, s3));
+            log.info("[Seed] Initialised suspicious transactions audit queue.");
+        }
+
+        if (alertRepository.count() == 0) {
+            Alert a1 = Alert.builder()
+                    .type("TAMPER_DETECTED")
+                    .severity("CRITICAL")
+                    .chain("alpha")
+                    .blockNumber(2)
+                    .message("Operational MongoDB transaction amount modified from £100,000 to £150,000. Canton ledger integrity intact.")
+                    .detectedAt(Instant.now().minusSeconds(1200))
+                    .resolved(false)
+                    .build();
+
+            Alert a2 = Alert.builder()
+                    .type("CONSENSUS_FAILURE")
+                    .severity("WARNING")
+                    .chain("alpha")
+                    .blockNumber(1)
+                    .message("Multi-sig participant signature mismatch between BankA and BankB validator nodes.")
+                    .detectedAt(Instant.now().minusSeconds(3600))
+                    .resolved(false)
+                    .build();
+
+            Alert a3 = Alert.builder()
+                    .type("FREEZE_MODE")
+                    .severity("INFO")
+                    .chain("all")
+                    .blockNumber(0)
+                    .message("System auto-repair protocol verified DAML ledger states against operational databases.")
+                    .detectedAt(Instant.now().minusSeconds(10800))
+                    .resolved(true)
+                    .resolvedAt(Instant.now().minusSeconds(10000))
+                    .build();
+
+            alertRepository.saveAll(List.of(a1, a2, a3));
+            log.info("[Seed] Initialised security alerts queue.");
+        }
     }
 }

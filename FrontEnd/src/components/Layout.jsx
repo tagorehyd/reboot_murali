@@ -41,7 +41,6 @@ export default function Layout({ children, currentView, onNavigate }) {
       title: 'Admin',
       items: [
         { id: 'admin', icon: '👮‍♂️', label: 'Admin Portal', view: 'admin' },
-        { id: 'admin-history', icon: '📁', label: 'Admin History', view: 'admin-history' },
       ]
     },
     {
@@ -136,8 +135,8 @@ export default function Layout({ children, currentView, onNavigate }) {
           </div>
         </header>
 
-        <main className={`flex-1 flex flex-col ${currentView === 'user-portal' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-          <div className={`flex-1 flex flex-col min-h-0 ${currentView === 'user-portal' ? '' : 'p-4 sm:p-6 lg:p-8'}`}>
+        <main className={`flex-1 flex flex-col ${(currentView === 'user-portal' || currentView === 'user-history') ? 'overflow-hidden' : 'overflow-y-auto'}`}>
+          <div className={`flex-1 flex flex-col min-h-0 ${(currentView === 'user-portal' || currentView === 'user-history') ? 'p-3 sm:p-4' : 'p-4 sm:p-6 lg:p-8'}`}>
             {children}
           </div>
         </main>

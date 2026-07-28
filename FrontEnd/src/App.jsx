@@ -81,18 +81,6 @@ export default function App() {
       return <SystemDashboard />
     }
 
-    if (view === 'admin-history') {
-      return (
-        <div className="flex-1 flex items-center justify-center h-full min-h-[400px]">
-          <div className="text-center p-8 bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800">
-            <span className="text-4xl mb-4 block">📁</span>
-            <h2 className="text-2xl font-black text-slate-900 dark:text-slate-100">Admin History</h2>
-            <p className="text-slate-500 dark:text-slate-400 mt-2">This view is currently under construction.</p>
-          </div>
-        </div>
-      )
-    }
-
     if (view === 'explorer') {
       return <ChainExplorer />
     }
