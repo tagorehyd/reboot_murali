@@ -8,18 +8,18 @@ import {
 const BANK_COLORS = {
   'Stellar Bank': '#00A865',
   'Nova Finance': '#A3E3AB',
-  'Prime Banking': '#0B3820',
+  'Prime Banking': '#374151',
   'Apex Trust': '#00A865',
   'Quantum Pay': '#A3E3AB',
-  'Gold Standard': '#0B3820',
+  'Gold Standard': '#374151',
   'Liberty Banking': '#00A865',
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] p-2.5 rounded-xl shadow-xl font-mono text-xs z-50">
-        <p className="text-[#A3E3AB] mb-1 font-bold">{label}</p>
+      <div className="bg-white text-[#111827] border border-[#CBD5E1] p-2.5 rounded-xl shadow-xl font-mono text-xs z-50">
+        <p className="text-[#00A865] mb-1 font-bold">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }} className="font-bold">
             {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
@@ -47,7 +47,7 @@ export default function SystemDashboard() {
   const [riskData, setRiskData] = useState([
     { name: 'Low Risk (< £1k)', value: 50, color: '#A3E3AB', percent: '50%' },
     { name: 'Medium Risk (£1k-£5k)', value: 30, color: '#00A865', percent: '30%' },
-    { name: 'High Risk (> £5k)', value: 20, color: '#0B3820', percent: '20%' },
+    { name: 'High Risk (> £5k)', value: 20, color: '#374151', percent: '20%' },
   ]);
   const [timeSeriesData, setTimeSeriesData] = useState([]);
 
@@ -162,7 +162,7 @@ export default function SystemDashboard() {
       setRiskData([
         { name: 'Low Risk (< £1k)', value: lowCount || 50, color: '#A3E3AB', percent: `${Math.round(((lowCount || 50) / totalCalculated) * 100)}%` },
         { name: 'Medium Risk (£1k-£5k)', value: medCount || 30, color: '#00A865', percent: `${Math.round(((medCount || 30) / totalCalculated) * 100)}%` },
-        { name: 'High Risk (> £5k)', value: highCount || 20, color: '#0B3820', percent: `${Math.round(((highCount || 20) / totalCalculated) * 100)}%` },
+        { name: 'High Risk (> £5k)', value: highCount || 20, color: '#374151', percent: `${Math.round(((highCount || 20) / totalCalculated) * 100)}%` },
       ]);
 
       // Construct Hourly Time Series Data
@@ -213,7 +213,7 @@ export default function SystemDashboard() {
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-[#A3E3AB] text-[#082914] px-3 py-1 rounded-full shadow-xs">
+        <div className="flex items-center gap-2 bg-[#A3E3AB] text-[#031D0E] px-3 py-1 rounded-full shadow-xs">
           <div className="w-2 h-2 rounded-full bg-[#00A865] animate-ping"></div>
           <span className="text-[10px] font-extrabold uppercase tracking-wider font-mono">Canton Ledger Active</span>
         </div>
@@ -221,27 +221,27 @@ export default function SystemDashboard() {
 
       {/* Row 1: KPI Stats + Canton Validator Matrix */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-shrink-0">
-        {/* Left 5 Cols: 4 KPI Summary Stat Badges (Forest Green Cards) */}
+        {/* Left 5 Cols: 4 KPI Summary Stat Badges (Crisp White Cards) */}
         <div className="lg:col-span-5 grid grid-cols-2 gap-2">
-          <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
-            <p className="text-[10px] font-extrabold text-[#A3E3AB] uppercase tracking-wider">Total Ledger Txns</p>
-            <p className="text-2xl font-black text-[#E2F7E8] my-0.5">{stats.totalTxns}</p>
-            <p className="text-[9px] text-[#D1EAD0] font-mono">Committed + Mempool</p>
+          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+            <p className="text-[10px] font-extrabold text-[#00A865] uppercase tracking-wider">Total Ledger Txns</p>
+            <p className="text-2xl font-black text-[#111827] my-0.5">{stats.totalTxns}</p>
+            <p className="text-[9px] text-[#111827]/70 font-mono">Committed + Mempool</p>
           </div>
 
-          <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
-            <p className="text-[10px] font-extrabold text-[#A3E3AB] uppercase tracking-wider">Settled Volume</p>
-            <p className="text-2xl font-black text-[#A3E3AB] my-0.5">£{stats.totalVolumeGBP.toLocaleString()}</p>
-            <p className="text-[9px] text-[#D1EAD0] font-mono">Gross Interbank Volume</p>
+          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+            <p className="text-[10px] font-extrabold text-[#00A865] uppercase tracking-wider">Settled Volume</p>
+            <p className="text-2xl font-black text-[#00A865] my-0.5">£{stats.totalVolumeGBP.toLocaleString()}</p>
+            <p className="text-[9px] text-[#111827]/70 font-mono">Gross Interbank Volume</p>
           </div>
 
-          <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
-            <p className="text-[10px] font-extrabold text-[#A3E3AB] uppercase tracking-wider">Committed Blocks</p>
-            <p className="text-2xl font-black text-[#E2F7E8] my-0.5">{stats.blockCount}</p>
-            <p className="text-[9px] text-[#D1EAD0] font-mono">Synchronizer Hash Blocks</p>
+          <div className="bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+            <p className="text-[10px] font-extrabold text-[#00A865] uppercase tracking-wider">Committed Blocks</p>
+            <p className="text-2xl font-black text-[#111827] my-0.5">{stats.blockCount}</p>
+            <p className="text-[9px] text-[#111827]/70 font-mono">Synchronizer Hash Blocks</p>
           </div>
 
-          <div className="bg-[#00A865] text-[#031D0E] border border-[#00A865] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+          <div className="bg-[#00A865] text-white border border-[#00A865] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
             <p className="text-[10px] font-black uppercase tracking-wider">Audit Flags</p>
             <p className="text-2xl font-black my-0.5">{stats.highRiskCount}</p>
             <p className="text-[9px] font-mono font-bold">Tampers & ML Outliers</p>
@@ -249,59 +249,59 @@ export default function SystemDashboard() {
         </div>
 
         {/* Right 7 Cols: Canton Synchronizer & Validator Matrix */}
-        <div className="lg:col-span-7 bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-md flex flex-col justify-between gap-2">
-          <div className="flex items-center justify-between border-b border-[#072914] pb-1.5">
+        <div className="lg:col-span-7 bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-sm flex flex-col justify-between gap-2">
+          <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-1.5">
             <div className="flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-[#00A865] animate-pulse"></span>
-              <span className="text-xs font-black uppercase tracking-wider text-white font-heading">
+              <span className="text-xs font-black uppercase tracking-wider text-[#111827] font-heading">
                 Canton Distributed Synchronizer & Validator Matrix
               </span>
             </div>
-            <span className="text-[9px] font-mono font-extrabold bg-[#A3E3AB] text-[#082914] px-2 py-0.5 rounded-full">
+            <span className="text-[9px] font-mono font-extrabold bg-[#A3E3AB] text-[#031D0E] px-2 py-0.5 rounded-full">
               Alpha-Interbank-v1
             </span>
           </div>
 
           {/* 5 Node Pills */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-xs">
-            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
+            <div className="p-2 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-white truncate">BankA.Node</span>
-                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">18ms</span>
+                <span className="font-extrabold text-[11px] text-[#111827] truncate">BankA.Node</span>
+                <span className="text-[8px] font-bold text-white bg-[#00A865] px-1.5 py-0.5 rounded">18ms</span>
               </div>
-              <p className="text-[9px] text-[#D1EAD0]">DAML Active</p>
+              <p className="text-[9px] text-[#111827]/70">DAML Active</p>
             </div>
 
-            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
+            <div className="p-2 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-white truncate">BankB.Node</span>
-                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">22ms</span>
+                <span className="font-extrabold text-[11px] text-[#111827] truncate">BankB.Node</span>
+                <span className="text-[8px] font-bold text-white bg-[#00A865] px-1.5 py-0.5 rounded">22ms</span>
               </div>
-              <p className="text-[9px] text-[#D1EAD0]">DAML Active</p>
+              <p className="text-[9px] text-[#111827]/70">DAML Active</p>
             </div>
 
-            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
+            <div className="p-2 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-white truncate">BankC.Node</span>
-                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">16ms</span>
+                <span className="font-extrabold text-[11px] text-[#111827] truncate">BankC.Node</span>
+                <span className="text-[8px] font-bold text-white bg-[#00A865] px-1.5 py-0.5 rounded">16ms</span>
               </div>
-              <p className="text-[9px] text-[#D1EAD0]">DAML Active</p>
+              <p className="text-[9px] text-[#111827]/70">DAML Active</p>
             </div>
 
-            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
+            <div className="p-2 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-white truncate">Regulator</span>
-                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">14ms</span>
+                <span className="font-extrabold text-[11px] text-[#111827] truncate">Regulator</span>
+                <span className="text-[8px] font-bold text-white bg-[#00A865] px-1.5 py-0.5 rounded">14ms</span>
               </div>
-              <p className="text-[9px] text-[#D1EAD0]">Observer</p>
+              <p className="text-[9px] text-[#111827]/70">Observer</p>
             </div>
 
-            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
+            <div className="p-2 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-white truncate">Mediator.01</span>
-                <span className="text-[8px] font-bold text-[#031D0E] bg-[#00A865] px-1.5 py-0.5 rounded">1250 TPS</span>
+                <span className="font-extrabold text-[11px] text-[#111827] truncate">Mediator.01</span>
+                <span className="text-[8px] font-bold text-[#031D0E] bg-[#A3E3AB] px-1.5 py-0.5 rounded">1250 TPS</span>
               </div>
-              <p className="text-[9px] text-[#D1EAD0]">BFT Sequencer</p>
+              <p className="text-[9px] text-[#111827]/70">BFT Sequencer</p>
             </div>
           </div>
         </div>
@@ -316,7 +316,7 @@ export default function SystemDashboard() {
               <span className="w-2 h-2 rounded-full bg-[#00A865]"></span>
               Throughput & Flag Rate
             </h3>
-            <span className="text-[9px] font-mono font-bold text-[#082914] bg-[#A3E3AB] px-2 py-0.5 rounded-full">
+            <span className="text-[9px] font-mono font-bold text-[#031D0E] bg-[#A3E3AB] px-2 py-0.5 rounded-full">
               Live
             </span>
           </div>
@@ -329,8 +329,8 @@ export default function SystemDashboard() {
                     <stop offset="95%" stopColor="#00A865" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorFlagged" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0B3820" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#0B3820" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#374151" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#374151" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" vertical={false} />
@@ -338,7 +338,7 @@ export default function SystemDashboard() {
                 <YAxis stroke="#111827" fontSize={9} />
                 <Tooltip content={<CustomTooltip />} />
                 <Area type="monotone" dataKey="total" name="Total Txns" stroke="#00A865" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
-                <Area type="monotone" dataKey="flagged" name="AI Flagged" stroke="#0B3820" strokeWidth={1.5} fillOpacity={1} fill="url(#colorFlagged)" />
+                <Area type="monotone" dataKey="flagged" name="AI Flagged" stroke="#374151" strokeWidth={1.5} fillOpacity={1} fill="url(#colorFlagged)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
@@ -347,7 +347,7 @@ export default function SystemDashboard() {
         {/* 3 Cols: Interbank Volume Bar Chart */}
         <div className="lg:col-span-3 bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-xs flex flex-col min-h-0">
           <h3 className="text-xs font-bold text-[#111827] uppercase tracking-wider font-heading mb-1.5 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-[#0B3820]"></span>
+            <span className="w-2 h-2 rounded-full bg-[#00A865]"></span>
             Volume Transferred
           </h3>
           <div className="flex-1 w-full min-h-0">
@@ -356,7 +356,7 @@ export default function SystemDashboard() {
                 <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" horizontal={false} />
                 <XAxis type="number" stroke="#111827" fontSize={9} hide />
                 <YAxis dataKey="name" type="category" stroke="#111827" fontSize={9} axisLine={false} tickLine={false} width={75} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(11, 56, 32, 0.05)' }} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0, 168, 101, 0.05)' }} />
                 <Bar dataKey="volume" name="Volume (£ GBP)" radius={[0, 4, 4, 0]}>
                   {institutionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -374,7 +374,7 @@ export default function SystemDashboard() {
               <span className="w-2.5 h-2.5 rounded-full bg-[#00A865] animate-pulse"></span>
               3-Tier Risk Distribution Analysis
             </h3>
-            <span className="font-mono text-[10px] font-extrabold text-[#082914] bg-[#A3E3AB] px-2 py-0.5 rounded-full">
+            <span className="font-mono text-[10px] font-extrabold text-[#031D0E] bg-[#A3E3AB] px-2 py-0.5 rounded-full">
               £{stats.totalVolumeGBP.toLocaleString()}
             </span>
           </div>
@@ -396,7 +396,7 @@ export default function SystemDashboard() {
                   >
                     <Cell fill="#A3E3AB" />
                     <Cell fill="#00A865" />
-                    <Cell fill="#0B3820" />
+                    <Cell fill="#374151" />
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
@@ -420,7 +420,7 @@ export default function SystemDashboard() {
                   <div className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#A3E3AB]"></span>
                     <span className="font-extrabold text-[11px] text-[#111827]">Low Risk</span>
-                    <span className="text-[9px] font-mono text-[#0B3820] font-bold">{riskData[0]?.percent || '50%'}</span>
+                    <span className="text-[9px] font-mono text-[#00A865] font-bold">{riskData[0]?.percent || '50%'}</span>
                   </div>
                   <p className="text-[9px] text-[#111827]/70">Instant Auto-Approval</p>
                 </div>
@@ -431,20 +431,20 @@ export default function SystemDashboard() {
                   <div className="flex items-center gap-1.5">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#00A865]"></span>
                     <span className="font-extrabold text-[11px] text-[#111827]">Medium Risk</span>
-                    <span className="text-[9px] font-mono text-[#0B3820] font-bold">{riskData[1]?.percent || '30%'}</span>
+                    <span className="text-[9px] font-mono text-[#00A865] font-bold">{riskData[1]?.percent || '30%'}</span>
                   </div>
                   <p className="text-[9px] text-[#111827]/70">Customer Consent Required</p>
                 </div>
               </div>
 
-              <div className="flex items-center justify-between p-1.5 rounded-xl bg-[#0B3820] text-[#E2F7E8] border border-[#072914]">
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-white text-[#111827] border border-[#CBD5E1]">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-[#00A865]"></span>
-                    <span className="font-extrabold text-[11px] text-white">High Risk</span>
-                    <span className="text-[9px] font-mono text-[#A3E3AB] font-bold">{riskData[2]?.percent || '20%'}</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#374151]"></span>
+                    <span className="font-extrabold text-[11px] text-[#111827]">High Risk</span>
+                    <span className="text-[9px] font-mono text-[#00A865] font-bold">{riskData[2]?.percent || '20%'}</span>
                   </div>
-                  <p className="text-[9px] text-[#D1EAD0]">Bank Multi-Sig Hold</p>
+                  <p className="text-[9px] text-[#111827]/70">Bank Multi-Sig Hold</p>
                 </div>
               </div>
             </div>

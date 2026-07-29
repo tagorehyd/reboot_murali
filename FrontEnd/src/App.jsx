@@ -10,13 +10,13 @@ import SystemDashboard from './pages/SystemDashboard'
 import UserHistory from './pages/UserHistory'
 
 const DEMO_USERS = [
-  { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-[#0B3820] to-[#00A865]' },
-  { id: 'U002', name: 'Bob Taylor', bank: 'Nova Finance', color: 'from-[#00A865] to-teal-700' },
-  { id: 'U003', name: 'Carlos Rivera', bank: 'Prime Banking', color: 'from-[#0B3820] to-[#082914]' },
-  { id: 'U004', name: 'Diana Prince', bank: 'Apex Trust', color: 'from-[#00A865] to-emerald-800' },
-  { id: 'U005', name: 'Eve Chen', bank: 'Quantum Pay', color: 'from-[#0B3820] to-emerald-900' },
-  { id: 'U006', name: 'Frank Okafor', bank: 'Gold Standard', color: 'from-[#00A865] to-[#0B3820]' },
-  { id: 'U007', name: 'Grace Okonkwo', bank: 'Liberty Banking', color: 'from-[#0B3820] to-teal-800' },
+  { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-[#00A865] to-teal-600' },
+  { id: 'U002', name: 'Bob Taylor', bank: 'Nova Finance', color: 'from-[#A3E3AB] to-[#00A865]' },
+  { id: 'U003', name: 'Carlos Rivera', bank: 'Prime Banking', color: 'from-[#00A865] to-emerald-700' },
+  { id: 'U004', name: 'Diana Prince', bank: 'Apex Trust', color: 'from-[#A3E3AB] to-teal-500' },
+  { id: 'U005', name: 'Eve Chen', bank: 'Quantum Pay', color: 'from-[#00A865] to-teal-800' },
+  { id: 'U006', name: 'Frank Okafor', bank: 'Gold Standard', color: 'from-[#A3E3AB] to-emerald-600' },
+  { id: 'U007', name: 'Grace Okonkwo', bank: 'Liberty Banking', color: 'from-[#00A865] to-emerald-800' },
 ]
 
 export default function App() {
@@ -82,23 +82,23 @@ export default function App() {
   const renderUserCardsScreen = () => {
     return (
       <div className="max-w-6xl mx-auto space-y-6 select-none font-sans">
-        <div className="flex items-center justify-between border-b border-[#CBD5E1] dark:border-[#072914] pb-4">
+        <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-4">
           <div>
-            <h1 className="text-3xl font-black text-[#111827] dark:text-[#E2F7E8] font-heading flex items-center gap-3">
+            <h1 className="text-3xl font-black text-[#111827] font-heading flex items-center gap-3">
               <span>👤</span> Select Active Customer Profile
             </h1>
-            <p className="text-sm text-[#111827]/70 dark:text-[#D1EAD0] mt-1">
+            <p className="text-sm text-[#111827]/70 mt-1">
               Choose a customer account profile to initiate DAML interbank transfers, consent choices, and view history.
             </p>
           </div>
           
-          <div className="flex items-center bg-[#CBD5E1]/40 dark:bg-[#072914] p-1 rounded-xl gap-1">
+          <div className="flex items-center bg-white p-1 rounded-xl gap-1 border border-[#CBD5E1]">
             <button
               onClick={() => setAccountViewMode('grid')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 accountViewMode === 'grid'
-                  ? 'bg-[#00A865] text-[#031D0E] shadow-sm'
-                  : 'text-[#111827] dark:text-[#D1EAD0] hover:text-[#00A865]'
+                  ? 'bg-[#00A865] text-white shadow-sm'
+                  : 'text-[#111827] hover:text-[#00A865]'
               }`}
             >
               <span>🔲</span> Grid View
@@ -107,8 +107,8 @@ export default function App() {
               onClick={() => setAccountViewMode('table')}
               className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                 accountViewMode === 'table'
-                  ? 'bg-[#00A865] text-[#031D0E] shadow-sm'
-                  : 'text-[#111827] dark:text-[#D1EAD0] hover:text-[#00A865]'
+                  ? 'bg-[#00A865] text-white shadow-sm'
+                  : 'text-[#111827] hover:text-[#00A865]'
               }`}
             >
               <span>📑</span> Table View
@@ -129,34 +129,34 @@ export default function App() {
                   }}
                   className="group text-left transition-all transform hover:-translate-y-1 hover:shadow-2xl focus:outline-none"
                 >
-                  <div className="p-[2px] rounded-2xl bg-[#0B3820] h-full transition-all shadow-lg border border-[#072914] group-hover:scale-105">
-                    <div className="bg-[#0B3820] text-[#E2F7E8] rounded-[14px] p-5 h-full flex flex-col justify-between">
+                  <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 h-full flex flex-col justify-between shadow-sm group-hover:border-[#00A865] transition-all">
+                    <div>
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="w-14 h-14 rounded-2xl bg-[#00A865] text-[#031D0E] flex items-center justify-center font-black text-xl shadow-sm transform group-hover:rotate-6 transition-transform">
+                        <div className="w-14 h-14 rounded-2xl bg-[#00A865] text-white flex items-center justify-center font-black text-xl shadow-sm transform group-hover:rotate-6 transition-transform">
                           {user.name.charAt(0)}
                         </div>
                         <div>
-                          <p className="text-xs font-extrabold text-[#A3E3AB] uppercase tracking-widest">{user.id}</p>
-                          <p className="text-lg font-black text-white font-heading leading-tight">{user.name}</p>
+                          <p className="text-xs font-extrabold text-[#00A865] uppercase tracking-widest">{user.id}</p>
+                          <p className="text-lg font-black text-[#111827] font-heading leading-tight">{user.name}</p>
                         </div>
                       </div>
 
-                      <div className="pt-3 border-t border-[#072914]">
-                        <p className="text-[10px] text-[#A3E3AB] uppercase tracking-widest font-bold">Banking Institution</p>
-                        <p className="text-sm font-bold text-[#D1EAD0] mt-0.5">{user.bank}</p>
+                      <div className="pt-3 border-t border-[#CBD5E1]">
+                        <p className="text-[10px] text-[#111827]/60 uppercase tracking-widest font-bold">Banking Institution</p>
+                        <p className="text-sm font-bold text-[#111827] mt-0.5">{user.bank}</p>
                       </div>
 
-                      <div className="bg-[#082914] rounded-xl p-4 mt-4 border border-[#072914]">
-                        <p className="text-[10px] text-[#A3E3AB] uppercase tracking-widest font-bold">Available Balance</p>
-                        <p className="text-2xl font-black text-[#E2F7E8] mt-1 font-mono tracking-tight">
+                      <div className="bg-[#ECEEEF] rounded-xl p-4 mt-4 border border-[#CBD5E1]">
+                        <p className="text-[10px] text-[#111827]/60 uppercase tracking-widest font-bold">Available Balance</p>
+                        <p className="text-2xl font-black text-[#00A865] mt-1 font-mono tracking-tight">
                           £{Number(liveBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
                       </div>
+                    </div>
 
-                      <div className="flex items-center justify-between text-[#A3E3AB] mt-4 group-hover:text-[#00A865] transition-colors">
-                        <span className="text-xs font-extrabold uppercase tracking-wider">Access Payment Portal</span>
-                        <span className="text-lg font-bold group-hover:translate-x-1 transition-transform">→</span>
-                      </div>
+                    <div className="flex items-center justify-between text-[#00A865] mt-4 font-bold transition-colors">
+                      <span className="text-xs uppercase tracking-wider">Access Payment Portal</span>
+                      <span className="text-lg group-hover:translate-x-1 transition-transform">→</span>
                     </div>
                   </div>
                 </button>
@@ -164,9 +164,9 @@ export default function App() {
             })}
           </div>
         ) : (
-          <div className="bg-[#0B3820] text-[#E2F7E8] rounded-2xl shadow-sm border border-[#072914] overflow-hidden">
+          <div className="bg-white text-[#111827] rounded-2xl shadow-sm border border-[#CBD5E1] overflow-hidden">
             <table className="w-full text-left text-sm">
-              <thead className="bg-[#082914] text-xs uppercase font-extrabold text-[#A3E3AB] border-b border-[#072914]">
+              <thead className="bg-[#ECEEEF] text-xs uppercase font-extrabold text-[#111827]/70 border-b border-[#CBD5E1]">
                 <tr>
                   <th className="px-6 py-4">User Details</th>
                   <th className="px-6 py-4">Institution</th>
@@ -174,7 +174,7 @@ export default function App() {
                   <th className="px-6 py-4 text-center">Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#072914]">
+              <tbody className="divide-y divide-[#CBD5E1]">
                 {DEMO_USERS.map((user) => {
                   const liveBalance = userBalances[user.id] !== undefined ? userBalances[user.id] : 0;
                   return (
@@ -184,25 +184,25 @@ export default function App() {
                         setSelectedUser(user.id);
                         setView('user-portal');
                       }}
-                      className="hover:bg-[#082914] transition-colors cursor-pointer group"
+                      className="hover:bg-[#A3E3AB]/20 transition-colors cursor-pointer group"
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-[#00A865] text-[#031D0E] flex items-center justify-center font-bold text-lg shadow-sm">
+                          <div className="w-10 h-10 rounded-xl bg-[#00A865] text-white flex items-center justify-center font-bold text-lg shadow-sm">
                             {user.name.charAt(0)}
                           </div>
                           <div>
-                            <p className="font-black text-white font-heading text-base">{user.name}</p>
-                            <p className="text-xs text-[#A3E3AB] font-bold uppercase tracking-widest">{user.id}</p>
+                            <p className="font-black text-[#111827] font-heading text-base">{user.name}</p>
+                            <p className="text-xs text-[#00A865] font-bold uppercase tracking-widest">{user.id}</p>
                           </div>
                         </div>
                       </td>
-                      <td className="px-6 py-4 font-semibold text-[#D1EAD0]">{user.bank}</td>
-                      <td className="px-6 py-4 text-right font-black text-[#E2F7E8] font-mono text-base">
+                      <td className="px-6 py-4 font-semibold text-[#111827]">{user.bank}</td>
+                      <td className="px-6 py-4 text-right font-black text-[#00A865] font-mono text-base">
                         £{Number(liveBalance).toLocaleString(undefined, { minimumFractionDigits: 2 })}
                       </td>
                       <td className="px-6 py-4 text-center">
-                        <button className="px-4 py-1.5 bg-[#00A865] text-[#031D0E] rounded-xl font-bold hover:bg-[#A3E3AB] transition-all text-xs cursor-pointer">
+                        <button className="px-4 py-1.5 bg-[#00A865] text-white rounded-xl font-bold hover:bg-[#008f53] transition-all text-xs cursor-pointer">
                           Access Portal →
                         </button>
                       </td>
@@ -251,7 +251,7 @@ export default function App() {
 
   const renderHome = () => {
     return (
-      <div className="h-full flex flex-col overflow-hidden bg-[#ECEEEF] text-[#111827] dark:bg-[#ECEEEF] dark:text-[#111827] p-3 sm:p-4 gap-3 font-sans select-none">
+      <div className="h-full flex flex-col overflow-hidden bg-[#ECEEEF] text-[#111827] p-3 sm:p-4 gap-3 font-sans select-none">
         {/* Compact Banner Header */}
         <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-2 flex-shrink-0">
           <div className="flex items-center gap-2">
@@ -265,9 +265,9 @@ export default function App() {
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2 bg-[#A3E3AB]/30 border border-[#00A865] px-3 py-1 rounded-full shadow-xs">
+          <div className="flex items-center gap-2 bg-[#A3E3AB] text-[#031D0E] px-3 py-1 rounded-full shadow-xs">
             <div className="w-2 h-2 rounded-full bg-[#00A865] animate-ping"></div>
-            <span className="text-[10px] font-bold text-[#082914] uppercase tracking-wider font-mono">ALL SYSTEMS OPERATIONAL</span>
+            <span className="text-[10px] font-extrabold uppercase tracking-wider font-mono">ALL SYSTEMS OPERATIONAL</span>
           </div>
         </div>
 
@@ -276,26 +276,26 @@ export default function App() {
           
           {/* Left 5 Cols: Platform Overview & Ecosystem Navigation */}
           <div className="lg:col-span-5 flex flex-col gap-3 min-h-0">
-            {/* Canton Blockchain Feature Card - Forest Green */}
-            <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-4 shadow-md flex-1 flex flex-col justify-between min-h-0">
+            {/* Canton Blockchain Feature Card - Crisp White / Mint */}
+            <div className="bg-white border border-[#CBD5E1] rounded-2xl p-4 shadow-sm flex-1 flex flex-col justify-between min-h-0">
               <div>
-                <h3 className="text-xs font-black text-white font-heading uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <span className="text-[#A3E3AB]">⛓️</span> Canton DAML Ledger Integration
+                <h3 className="text-xs font-black text-[#111827] font-heading uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                  <span className="text-[#00A865]">⛓️</span> Canton DAML Ledger Integration
                 </h3>
-                <p className="text-[11px] text-[#D1EAD0] mb-3 leading-relaxed">
+                <p className="text-[11px] text-[#111827]/80 mb-3 leading-relaxed">
                   Permanent, tamper-evident recording of interbank payments, consent choices, and escrow holds.
                 </p>
-                <ul className="space-y-2 text-[11px] text-[#E2F7E8]">
+                <ul className="space-y-2 text-[11px] text-[#111827]">
                   <li className="flex items-center gap-2">
-                    <span className="text-[#A3E3AB] font-bold">✓</span>
+                    <span className="text-[#00A865] font-bold">✓</span>
                     <span><strong>Consensus Validated:</strong> BFT node verification</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#A3E3AB] font-bold">✓</span>
+                    <span className="text-[#00A865] font-bold">✓</span>
                     <span><strong>Immutable Audit Trail:</strong> Signed DAML choices</span>
                   </li>
                   <li className="flex items-center gap-2">
-                    <span className="text-[#A3E3AB] font-bold">✓</span>
+                    <span className="text-[#00A865] font-bold">✓</span>
                     <span><strong>Smart Contracts:</strong> Multi-sig risk approvals</span>
                   </li>
                 </ul>
@@ -308,126 +308,120 @@ export default function App() {
                 <span>🚀</span> Ecosystem Navigation
               </h3>
               <div className="grid grid-cols-2 gap-2 text-[11px]">
-                <button onClick={() => setView('users')} className="p-2.5 rounded-xl bg-[#0B3820] text-[#E2F7E8] border border-[#072914] text-left hover:bg-[#082914] transition-colors cursor-pointer">
-                  <span className="font-extrabold text-[#A3E3AB]">💳 User Cards</span>
-                  <p className="text-[9px] text-[#D1EAD0]">7 Customer Profiles</p>
+                <button onClick={() => setView('users')} className="p-2.5 rounded-xl bg-[#ECEEEF] border border-[#CBD5E1] text-left hover:border-[#00A865] transition-colors cursor-pointer">
+                  <span className="font-extrabold text-[#00A865]">💳 User Cards</span>
+                  <p className="text-[9px] text-[#111827]/70">7 Customer Profiles</p>
                 </button>
-                <button onClick={() => setView('admin')} className="p-2.5 rounded-xl bg-[#0B3820] text-[#E2F7E8] border border-[#072914] text-left hover:bg-[#082914] transition-colors cursor-pointer">
-                  <span className="font-extrabold text-[#A3E3AB]">👮‍♂️ Admin Console</span>
-                  <p className="text-[9px] text-[#D1EAD0]">Review compliance holds</p>
+                <button onClick={() => setView('admin')} className="p-2.5 rounded-xl bg-[#ECEEEF] border border-[#CBD5E1] text-left hover:border-[#00A865] transition-colors cursor-pointer">
+                  <span className="font-extrabold text-[#00A865]">👮‍♂️ Admin Console</span>
+                  <p className="text-[9px] text-[#111827]/70">Review compliance holds</p>
                 </button>
-                <button onClick={() => setView('explorer')} className="p-2.5 rounded-xl bg-[#0B3820] text-[#E2F7E8] border border-[#072914] text-left hover:bg-[#082914] transition-colors cursor-pointer">
-                  <span className="font-extrabold text-[#A3E3AB]">🔎 Chain Explorer</span>
-                  <p className="text-[9px] text-[#D1EAD0]">Block audit graph</p>
+                <button onClick={() => setView('explorer')} className="p-2.5 rounded-xl bg-[#ECEEEF] border border-[#CBD5E1] text-left hover:border-[#00A865] transition-colors cursor-pointer">
+                  <span className="font-extrabold text-[#00A865]">🔎 Chain Explorer</span>
+                  <p className="text-[9px] text-[#111827]/70">Block audit graph</p>
                 </button>
-                <button onClick={() => setView('suspicious')} className="p-2.5 rounded-xl bg-[#0B3820] text-[#E2F7E8] border border-[#072914] text-left hover:bg-[#082914] transition-colors cursor-pointer">
-                  <span className="font-extrabold text-[#A3E3AB]">⚠️ Suspicious Txns</span>
-                  <p className="text-[9px] text-[#D1EAD0]">8D Isolation Forest flags</p>
+                <button onClick={() => setView('suspicious')} className="p-2.5 rounded-xl bg-[#ECEEEF] border border-[#CBD5E1] text-left hover:border-[#00A865] transition-colors cursor-pointer">
+                  <span className="font-extrabold text-[#00A865]">⚠️ Suspicious Txns</span>
+                  <p className="text-[9px] text-[#111827]/70">8D Isolation Forest flags</p>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Right 7 Cols: Infrastructure Telemetry Grid (6 Microservice Cards) */}
-          <div className="lg:col-span-7 bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-4 shadow-md flex flex-col justify-between min-h-0">
-            <div className="flex items-center justify-between border-b border-[#072914] pb-2 mb-2">
-              <h2 className="text-xs font-black text-white font-heading uppercase tracking-wider flex items-center gap-2">
+          {/* Right 7 Cols: Infrastructure Telemetry Grid */}
+          <div className="lg:col-span-7 bg-white border border-[#CBD5E1] rounded-2xl p-4 shadow-sm flex flex-col justify-between min-h-0">
+            <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-2 mb-2">
+              <h2 className="text-xs font-black text-[#111827] font-heading uppercase tracking-wider flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-[#00A865] animate-ping"></span>
                 System Infrastructure Telemetry
               </h2>
-              <span className="px-2.5 py-0.5 bg-[#A3E3AB] text-[#082914] rounded-full text-[9px] font-mono font-bold">
+              <span className="px-2.5 py-0.5 bg-[#A3E3AB] text-[#031D0E] rounded-full text-[9px] font-mono font-bold">
                 ALL SYSTEMS UP ✓
               </span>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 font-sans text-xs flex-1 min-h-0">
-              {/* Card 1: Spring Boot */}
-              <div className="p-3 bg-[#082914] border border-[#072914] rounded-xl flex flex-col justify-between">
+              <div className="p-3 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-[11px] text-white flex items-center gap-1">⚙️ Backend API</span>
-                  <span className="text-[8px] font-bold font-mono text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">
+                  <span className="font-extrabold text-[11px] text-[#111827] flex items-center gap-1">⚙️ Backend API</span>
+                  <span className="text-[8px] font-bold font-mono text-white bg-[#00A865] px-1.5 py-0.5 rounded">
                     {health?.status || 'UP'} ✓
                   </span>
                 </div>
-                <p className="text-[9px] text-[#D1EAD0] mt-1">Spring Boot Java 17</p>
-                <div className="pt-1.5 border-t border-[#072914] text-[9px] font-mono flex justify-between text-[#A3E3AB] mt-2">
+                <p className="text-[9px] text-[#111827]/70 mt-1">Spring Boot Java 17</p>
+                <div className="pt-1.5 border-t border-[#CBD5E1] text-[9px] font-mono flex justify-between text-[#111827]/60 mt-2">
                   <span>Port:</span>
-                  <span className="text-white font-bold">8080</span>
+                  <span className="text-[#111827] font-bold">8080</span>
                 </div>
               </div>
 
-              {/* Card 2: Canton */}
-              <div className="p-3 bg-[#082914] border border-[#072914] rounded-xl flex flex-col justify-between">
+              <div className="p-3 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-[11px] text-white flex items-center gap-1">⛓️ Canton Ledger</span>
-                  <span className="text-[8px] font-bold font-mono text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">
+                  <span className="font-extrabold text-[11px] text-[#111827] flex items-center gap-1">⛓️ Canton Ledger</span>
+                  <span className="text-[8px] font-bold font-mono text-white bg-[#00A865] px-1.5 py-0.5 rounded">
                     {readiness?.canton?.status || 'READY'} ✓
                   </span>
                 </div>
-                <p className="text-[9px] text-[#D1EAD0] mt-1">BFT Consensus Engine</p>
-                <div className="pt-1.5 border-t border-[#072914] text-[9px] font-mono flex justify-between text-[#A3E3AB] mt-2">
+                <p className="text-[9px] text-[#111827]/70 mt-1">BFT Consensus Engine</p>
+                <div className="pt-1.5 border-t border-[#CBD5E1] text-[9px] font-mono flex justify-between text-[#111827]/60 mt-2">
                   <span>Domain:</span>
-                  <span className="text-white font-bold">Alpha-v1</span>
+                  <span className="text-[#111827] font-bold">Alpha-v1</span>
                 </div>
               </div>
 
-              {/* Card 3: ML Model */}
-              <div className="p-3 bg-[#082914] border border-[#072914] rounded-xl flex flex-col justify-between">
+              <div className="p-3 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-[11px] text-white flex items-center gap-1">🧠 ML Engine</span>
-                  <span className="text-[8px] font-bold font-mono text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">
+                  <span className="font-extrabold text-[11px] text-[#111827] flex items-center gap-1">🧠 ML Engine</span>
+                  <span className="text-[8px] font-bold font-mono text-white bg-[#00A865] px-1.5 py-0.5 rounded">
                     ACTIVE ✓
                   </span>
                 </div>
-                <p className="text-[9px] text-[#D1EAD0] mt-1">Isolation Forest 8D</p>
-                <div className="pt-1.5 border-t border-[#072914] text-[9px] font-mono flex justify-between text-[#A3E3AB] mt-2">
+                <p className="text-[9px] text-[#111827]/70 mt-1">Isolation Forest 8D</p>
+                <div className="pt-1.5 border-t border-[#CBD5E1] text-[9px] font-mono flex justify-between text-[#111827]/60 mt-2">
                   <span>Vector:</span>
-                  <span className="text-white font-bold">8D Model</span>
+                  <span className="text-[#111827] font-bold">8D Model</span>
                 </div>
               </div>
 
-              {/* Card 4: MongoDB */}
-              <div className="p-3 bg-[#082914] border border-[#072914] rounded-xl flex flex-col justify-between">
+              <div className="p-3 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-[11px] text-white flex items-center gap-1">🗄️ MongoDB</span>
-                  <span className="text-[8px] font-bold font-mono text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">
+                  <span className="font-extrabold text-[11px] text-[#111827] flex items-center gap-1">🗄️ MongoDB</span>
+                  <span className="text-[8px] font-bold font-mono text-white bg-[#00A865] px-1.5 py-0.5 rounded">
                     {readiness?.mongo || 'UP'} ✓
                   </span>
                 </div>
-                <p className="text-[9px] text-[#D1EAD0] mt-1">Persistent Ledger DB</p>
-                <div className="pt-1.5 border-t border-[#072914] text-[9px] font-mono flex justify-between text-[#A3E3AB] mt-2">
+                <p className="text-[9px] text-[#111827]/70 mt-1">Persistent Ledger DB</p>
+                <div className="pt-1.5 border-t border-[#CBD5E1] text-[9px] font-mono flex justify-between text-[#111827]/60 mt-2">
                   <span>Port:</span>
-                  <span className="text-white font-bold">27017</span>
+                  <span className="text-[#111827] font-bold">27017</span>
                 </div>
               </div>
 
-              {/* Card 5: NVIDIA NIM */}
-              <div className="p-3 bg-[#082914] border border-[#072914] rounded-xl flex flex-col justify-between">
+              <div className="p-3 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-[11px] text-white flex items-center gap-1">🤖 NVIDIA NIM</span>
-                  <span className="text-[8px] font-bold font-mono text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">
+                  <span className="font-extrabold text-[11px] text-[#111827] flex items-center gap-1">🤖 NVIDIA NIM</span>
+                  <span className="text-[8px] font-bold font-mono text-white bg-[#00A865] px-1.5 py-0.5 rounded">
                     {chatStatus?.status || 'UP'} ✓
                   </span>
                 </div>
-                <p className="text-[9px] text-[#D1EAD0] mt-1">Nemotron AI Assistant</p>
-                <div className="pt-1.5 border-t border-[#072914] text-[9px] font-mono flex justify-between text-[#A3E3AB] mt-2">
+                <p className="text-[9px] text-[#111827]/70 mt-1">Nemotron AI Assistant</p>
+                <div className="pt-1.5 border-t border-[#CBD5E1] text-[9px] font-mono flex justify-between text-[#111827]/60 mt-2">
                   <span>RAG:</span>
-                  <span className="text-white font-bold">Active</span>
+                  <span className="text-[#111827] font-bold">Active</span>
                 </div>
               </div>
 
-              {/* Card 6: Bank Gateways */}
-              <div className="p-3 bg-[#082914] border border-[#072914] rounded-xl flex flex-col justify-between">
+              <div className="p-3 bg-[#ECEEEF] border border-[#CBD5E1] rounded-xl flex flex-col justify-between">
                 <div className="flex items-center justify-between">
-                  <span className="font-extrabold text-[11px] text-white flex items-center gap-1">🌐 Gateways</span>
-                  <span className="text-[8px] font-bold font-mono text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">
+                  <span className="font-extrabold text-[11px] text-[#111827] flex items-center gap-1">🌐 Gateways</span>
+                  <span className="text-[8px] font-bold font-mono text-white bg-[#00A865] px-1.5 py-0.5 rounded">
                     3 / 3 OK ✓
                   </span>
                 </div>
-                <p className="text-[9px] text-[#D1EAD0] mt-1">Bank JSON API Routers</p>
-                <div className="pt-1.5 border-t border-[#072914] text-[9px] font-mono flex justify-between text-[#A3E3AB] mt-2">
+                <p className="text-[9px] text-[#111827]/70 mt-1">Bank JSON API Routers</p>
+                <div className="pt-1.5 border-t border-[#CBD5E1] text-[9px] font-mono flex justify-between text-[#111827]/60 mt-2">
                   <span>Routing:</span>
-                  <span className="text-white font-bold">BankA/B/C</span>
+                  <span className="text-[#111827] font-bold">BankA/B/C</span>
                 </div>
               </div>
             </div>

@@ -18,14 +18,7 @@
 }
 
 @layer components {
-  /* Lloyds Technology Centre PPT Card & Component Styling */
-  .card-forest {
-    background-color: #0B3820;
-    color: #E2F7E8;
-    border: 1px solid #072914;
-    border-radius: 1rem;
-  }
-
+  /* Lloyds Technology Centre Crisp Card & Component Styling */
   .card-emerald {
     background-color: #00A865;
     color: #031D0E;
@@ -49,7 +42,7 @@
 
   .btn-emerald {
     background-color: #00A865;
-    color: #031D0E;
+    color: #FFFFFF;
     font-weight: 800;
     border-radius: 0.75rem;
     padding: 0.6rem 1.25rem;
@@ -60,21 +53,6 @@
     background-color: #008f53;
     transform: translateY(-1px);
     box-shadow: 0 4px 12px rgba(0, 168, 101, 0.25);
-  }
-
-  .btn-forest {
-    background-color: #0B3820;
-    color: #E2F7E8;
-    font-weight: 700;
-    border: 1px solid #072914;
-    border-radius: 0.75rem;
-    padding: 0.6rem 1.25rem;
-    transition: all 0.2s ease-in-out;
-  }
-
-  .btn-forest:hover {
-    background-color: #0d4428;
-    color: #ffffff;
   }
 }
 
