@@ -1,0 +1,493 @@
+================================================================================
+          FRAUDSHIELD COMPREHENSIVE AUDIT LOGS FOR ALL TRANSACTION LEVELS
+================================================================================
+Timestamp: 2026-07-29 12:24:39
+Target URL: https://infringement-favorite-fusion-carnival.trycloudflare.com
+
+================================================================================
+[1] API
+================================================================================
+
+--------------------------------------------------------------------------------
+1.1 LEVEL 1: LOW RISK AUTO-APPROVE TRANSACTION (£35)
+--------------------------------------------------------------------------------
+API Endpoint:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/txn/initiate
+  STATUS CODE: 200
+  PURPOSE: Initiate low-risk payment from Alice (U001) to Bob (U002) for instant auto-clearance.
+
+--------------------------------------------------------------------------------
+1.2 LEVEL 2: MEDIUM RISK CUSTOMER CONSENT TRANSACTION (£2,200)
+--------------------------------------------------------------------------------
+Step 1 - Payment Initiation API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/txn/initiate
+  STATUS CODE: 200
+  PURPOSE: Initiate medium-risk payment from Bob (U002) to Carlos (U003).
+
+Step 2 - Customer Consent Choice API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/admin/txn/TXN-b5221b3f-b5ed-4dd7-935f-25f94230e1fa/consent
+  STATUS CODE: 200
+  PURPOSE: Exercise Canton ConsentAgreement choice for customer 2FA clearance.
+
+--------------------------------------------------------------------------------
+1.3 LEVEL 3: HIGH RISK BANK MULTI-SIG COMPLIANCE HOLD TRANSACTION (£9,800)
+--------------------------------------------------------------------------------
+Step 1 - High Risk Initiate API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/txn/initiate
+  STATUS CODE: 200
+  PURPOSE: Initiate high-risk payment from Frank (U006) to Grace (U007) triggering compliance hold.
+
+Step 2 - User Consent Choice API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/admin/txn/TXN-6bfcf57e-2b82-481a-a032-187cc2398e0d/consent
+  STATUS CODE: 200
+
+Step 3 - Admin Multi-Sig Approval API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/admin/txn/TXN-6bfcf57e-2b82-481a-a032-187cc2398e0d/decide
+  STATUS CODE: 200
+  PURPOSE: Exercise Canton GrantMultiSigClearance choice releasing compliance hold.
+
+--------------------------------------------------------------------------------
+1.4 LEVEL 4: INTERBANK ESCROW HOLD & ATOMIC SETTLEMENT TRANSACTION (£3,500)
+--------------------------------------------------------------------------------
+Step 1 - Escrow Initiate API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/txn/initiate
+  STATUS CODE: 200
+  PURPOSE: Initiate payment with escrowOptIn=true locking funds in DAML EscrowAgreement.
+
+Step 2 - User Consent Choice API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/admin/txn/TXN-c18e1464-af69-4e7a-b2f1-c8c713f6c9e5/consent
+  STATUS CODE: 200
+
+Step 3 - Admin Escrow Release & Atomic Settlement API:
+  METHOD: POST
+  URL: https://infringement-favorite-fusion-carnival.trycloudflare.com/api/admin/txn/TXN-c18e1464-af69-4e7a-b2f1-c8c713f6c9e5/decide
+  STATUS CODE: 200
+  PURPOSE: Exercise Canton CommitAtomicSettlement choice releasing escrow and committing settlement.
+
+================================================================================
+[2] JSON
+================================================================================
+
+--------------------------------------------------------------------------------
+2.1 LEVEL 1: LOW RISK AUTO-APPROVE (£35) PAYLOADS
+--------------------------------------------------------------------------------
+REQUEST JSON:
+{
+  "fromUserId": "U001",
+  "toUserId": "U002",
+  "amount": 35.0,
+  "description": "Level 1 Audit Test - Auto Approve",
+  "escrowOptIn": false
+}
+
+RESPONSE JSON:
+{
+  "txnId": "TXN-a573d552-3a6e-4ac6-b18b-b9bc297c3a23",
+  "nonce": "4794e7f8e44753983d9e4b31d6cb25ac",
+  "fromUserId": "U001",
+  "toUserId": "U002",
+  "amount": 35.0,
+  "status": "APPROVED",
+  "routingDecision": "AUTO_APPROVE",
+  "riskScore": 33,
+  "riskBreakdown": [
+    {
+      "rule": "VELOCITY",
+      "points": 25,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 8,
+      "reason": "High velocity cluster (5 txns in 10m window) detected by ML"
+    }
+  ],
+  "beneficiaryTrustTier": "NONE",
+  "beneficiaryTrustDiscount": 0,
+  "message": "Transaction scored and accepted into mempool",
+  "createdAt": "2026-07-29T06:54:22.157023344Z",
+  "escrowOptIn": false
+}
+
+--------------------------------------------------------------------------------
+2.2 LEVEL 2: MEDIUM RISK CUSTOMER CONSENT (£2,200) PAYLOADS
+--------------------------------------------------------------------------------
+INITIATE REQUEST JSON:
+{
+  "fromUserId": "U002",
+  "toUserId": "U003",
+  "amount": 2200.0,
+  "description": "Level 2 Audit Test - Customer Consent",
+  "escrowOptIn": false
+}
+
+INITIATE RESPONSE JSON:
+{
+  "txnId": "TXN-b5221b3f-b5ed-4dd7-935f-25f94230e1fa",
+  "nonce": "834f5538658c853ea2c2ca9c19c3050a",
+  "fromUserId": "U002",
+  "toUserId": "U003",
+  "amount": 2200.0,
+  "status": "PENDING_USER_APPROVAL",
+  "routingDecision": "CONSENT_REQUIRED",
+  "riskScore": 41,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "VELOCITY",
+      "points": 15,
+      "reason": "3+ transactions from this account in the last 10 minutes"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 11,
+      "reason": "Unusual multi-dimensional pattern with unverified payee; High velocity cluster (4 txns in 10m window) detected by ML"
+    }
+  ],
+  "beneficiaryTrustTier": "NONE",
+  "beneficiaryTrustDiscount": 0,
+  "message": "Transaction scored and accepted into mempool",
+  "createdAt": "2026-07-29T06:54:24.848572012Z",
+  "escrowOptIn": false
+}
+
+CUSTOMER CONSENT REQUEST JSON:
+{
+  "approved": true,
+  "userId": "U002"
+}
+
+CUSTOMER CONSENT RESPONSE JSON:
+{
+  "status": "PENDING_ADMIN",
+  "message": "User consent granted. Transaction moved to admin review queue.",
+  "txnId": "TXN-b5221b3f-b5ed-4dd7-935f-25f94230e1fa"
+}
+
+--------------------------------------------------------------------------------
+2.3 LEVEL 3: HIGH RISK MULTI-SIG COMPLIANCE HOLD (£9,800) PAYLOADS
+--------------------------------------------------------------------------------
+INITIATE REQUEST JSON:
+{
+  "fromUserId": "U006",
+  "toUserId": "U007",
+  "amount": 9800.0,
+  "description": "Level 3 Audit Test - Multi-Sig Compliance Hold",
+  "escrowOptIn": false
+}
+
+INITIATE RESPONSE JSON:
+{
+  "txnId": "TXN-6bfcf57e-2b82-481a-a032-187cc2398e0d",
+  "nonce": "12ba89c9a8df2b5d5ca7dbce680c0c66",
+  "fromUserId": "U006",
+  "toUserId": "U007",
+  "amount": 9800.0,
+  "status": "APPROVED",
+  "routingDecision": "AUTO_APPROVE",
+  "riskScore": 26,
+  "riskBreakdown": [
+    {
+      "rule": "NEW_PAYEE",
+      "points": 15,
+      "reason": "Recipient is not in the sender's trusted payee list"
+    },
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 11,
+      "reason": "Unusual multi-dimensional pattern with unverified payee"
+    }
+  ],
+  "beneficiaryTrustTier": "NONE",
+  "beneficiaryTrustDiscount": 0,
+  "message": "Transaction scored and accepted into mempool",
+  "createdAt": "2026-07-29T06:54:29.407649320Z",
+  "escrowOptIn": false
+}
+
+ADMIN APPROVAL REQUEST JSON:
+{
+  "approved": true
+}
+
+ADMIN APPROVAL RESPONSE JSON:
+{
+  "status": "APPROVED",
+  "message": "Admin approved. Canton hold is released and escrow is settled when present before final commitment.",
+  "txnId": "TXN-6bfcf57e-2b82-481a-a032-187cc2398e0d"
+}
+
+--------------------------------------------------------------------------------
+2.4 LEVEL 4: INTERBANK ESCROW HOLD & SETTLEMENT (£3,500) PAYLOADS
+--------------------------------------------------------------------------------
+INITIATE REQUEST JSON:
+{
+  "fromUserId": "U005",
+  "toUserId": "U006",
+  "amount": 3500.0,
+  "description": "Level 4 Audit Test - Escrow Hold & Settlement",
+  "escrowOptIn": true
+}
+
+INITIATE RESPONSE JSON:
+{
+  "txnId": "TXN-c18e1464-af69-4e7a-b2f1-c8c713f6c9e5",
+  "nonce": "d6d6a6ce9f6fb4a7f171c4da60b75c64",
+  "fromUserId": "U005",
+  "toUserId": "U006",
+  "amount": 3500.0,
+  "status": "ESCROW_ACTIVE",
+  "routingDecision": "AUTO_APPROVE",
+  "riskScore": 6,
+  "riskBreakdown": [
+    {
+      "rule": "ISOLATION_FOREST",
+      "points": 6,
+      "reason": "Multi-dimensional feature vector isolated far from normal historical cluster"
+    }
+  ],
+  "beneficiaryTrustTier": "NONE",
+  "beneficiaryTrustDiscount": 0,
+  "message": "Transaction scored and accepted into mempool",
+  "createdAt": "2026-07-29T06:54:35.069975022Z",
+  "escrowOptIn": true
+}
+
+ESCROW SETTLEMENT REQUEST JSON:
+{
+  "approved": true
+}
+
+ESCROW SETTLEMENT RESPONSE JSON:
+{
+  "status": "APPROVED",
+  "message": "Admin approved. Canton hold is released and escrow is settled when present before final commitment.",
+  "txnId": "TXN-c18e1464-af69-4e7a-b2f1-c8c713f6c9e5"
+}
+
+================================================================================
+[3] LOGS
+================================================================================
+
+3.1 Spring Boot Core Backend Container Logs (fraudshield-backend):
+--------------------------------------------------------------------------------
+2026-07-29T05:57:32.169Z DEBUG 1 --- [fraudshield] [nio-8080-exec-1] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 bankId=BankA hash=5376ba41
+2026-07-29T05:57:32.170Z  INFO 1 --- [fraudshield] [nio-8080-exec-7] c.f.canton.CantonCommandService          : [Canton] Hold created txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 holdRef=#hold-9f5534c8 expiresAt=2026-07-29T06:57:32.080605798Z
+2026-07-29T05:57:32.204Z  INFO 1 --- [fraudshield] [nio-8080-exec-1] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 : ADMIN_HOLD_CREATED -> ADMIN_HOLD_CREATED (contractRef=#hold-9f5534c8)
+2026-07-29T05:57:32.209Z  INFO 1 --- [fraudshield] [nio-8080-exec-1] c.f.canton.CantonCommandService          : [Canton] Hold created txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 holdRef=#hold-9f5534c8 expiresAt=2026-07-29T06:57:32.081093847Z
+2026-07-29T05:57:32.245Z  WARN 1 --- [fraudshield] [nio-8080-exec-7] c.f.canton.CantonCommandService          : [Canton] Real DAML approval submission failed for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 (400 Bad Request: "{"errors":["FAILED_PRECONDITION: NOT_CONNECTED_TO_ANY_DOMAIN(9,2d008df3): This participant is not connected to any domain."],"ledgerApiError":{"code":9,"details":[{"errorCodeId":"NOT_CONNECTED_TO_ANY_DOMAIN","metadata":{"participant":"banka","tid":"2d008df33b95d2eb0b0d64f5a6c57aae","category":"9","definite_answer":"false"},"type":"ErrorInfoDetail"},{"correlationId":"2d008df33b95d2eb0b0d64f5a6c57aae","type":"RequestInfoDetail"}],"message":"NOT_CONNECTED_TO_ANY_DOMAIN(9,2d008df3): This participant is not connected to any domain."},"status":400}"). Falling back to simulation.
+2026-07-29T05:57:32.278Z DEBUG 1 --- [fraudshield] [nio-8080-exec-7] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted approval projection txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 status=PENDING_BANK_APPROVAL
+2026-07-29T05:57:32.283Z  WARN 1 --- [fraudshield] [nio-8080-exec-1] c.f.canton.CantonCommandService          : [Canton] Real DAML approval submission failed for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 (400 Bad Request: "{"errors":["FAILED_PRECONDITION: NOT_CONNECTED_TO_ANY_DOMAIN(9,b8c9818f): This participant is not connected to any domain."],"ledgerApiError":{"code":9,"details":[{"errorCodeId":"NOT_CONNECTED_TO_ANY_DOMAIN","metadata":{"participant":"banka","tid":"b8c9818f5389c7825adca498537b58bf","category":"9","definite_answer":"false"},"type":"ErrorInfoDetail"},{"correlationId":"b8c9818f5389c7825adca498537b58bf","type":"RequestInfoDetail"}],"message":"NOT_CONNECTED_TO_ANY_DOMAIN(9,b8c9818f): This participant is not connected to any domain."},"status":400}"). Falling back to simulation.
+2026-07-29T05:57:32.299Z DEBUG 1 --- [fraudshield] [nio-8080-exec-7] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 bankId=BankA hash=ee78d37c
+2026-07-29T05:57:32.306Z DEBUG 1 --- [fraudshield] [nio-8080-exec-1] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted approval projection txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 status=PENDING_BANK_APPROVAL
+2026-07-29T05:57:32.323Z DEBUG 1 --- [fraudshield] [nio-8080-exec-1] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 bankId=BankA hash=f17997b1
+2026-07-29T05:57:32.325Z  INFO 1 --- [fraudshield] [nio-8080-exec-7] c.f.canton.CantonCommandService          : [Canton] Bank approval contract created txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 approvalRef=#approval-bank_approval-9f5534c8
+2026-07-29T05:57:32.331Z  INFO 1 --- [fraudshield] [nio-8080-exec-7] c.f.service.TransactionService           : [UserConsent] Txn TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 user consent DECLINED/TIMEOUT -> Escalated to PENDING_ADMIN
+2026-07-29T05:57:32.352Z  INFO 1 --- [fraudshield] [nio-8080-exec-1] c.f.canton.CantonCommandService          : [Canton] Bank approval contract created txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 approvalRef=#approval-bank_approval-9f5534c8
+2026-07-29T05:57:32.356Z  INFO 1 --- [fraudshield] [nio-8080-exec-1] c.f.service.TransactionService           : [UserConsent] Txn TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 user consent DECLINED/TIMEOUT -> Escalated to PENDING_ADMIN
+2026-07-29T05:57:35.053Z  INFO 1 --- [fraudshield] [nio-8080-exec-1] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=U001 reason=null
+2026-07-29T05:57:35.105Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=c5d60b5f-b15d-74bf-59c1-0203ca902bd9
+2026-07-29T05:57:35.142Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=fe883c90-5225-2f8d-e65c-803a9c2d6568
+2026-07-29T05:57:42.876Z  WARN 1 --- [fraudshield] [nio-8080-exec-3] c.f.canton.CantonCommandService          : [Canton] Real exerciseApproval failed for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 (400 Bad Request: "{"errors":["INVALID_FIELD(8,corr-app): The submitted command has a field with invalid value: Invalid field contract_id: cannot parse ContractId \"#approval-bank_approval-9f5534c8\""],"status":400}"). Continuing projection flow.
+2026-07-29T05:57:42.907Z  WARN 1 --- [fraudshield] [nio-8080-exec-3] c.f.canton.CantonCommandService          : [Canton] Real DAML settlement submission failed for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 (400 Bad Request: "{"errors":["JsonError: spray.json.DeserializationException: Can't read {\n  \"fromUserId\": \"ADMIN\",\n  \"operator\": \"BankA_Party\",\n  \"settlementId\": \"settle-TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82\",\n  \"txnId\": \"TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82\"\n} as DamlLfRecord b509fb3821f1c9dd84f6055eb7ceffed0617a8c55e8ac26286b1f797b57acbd3:FraudShield:SettlementAuthorization, missing field 'triggeredBy'"],"status":400}"). Falling back to simulation.
+2026-07-29T05:57:42.918Z DEBUG 1 --- [fraudshield] [nio-8080-exec-3] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted hold projection txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 status=HOLD_RELEASED
+2026-07-29T05:57:42.922Z DEBUG 1 --- [fraudshield] [nio-8080-exec-3] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted approval projection txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 status=APPROVED
+2026-07-29T05:57:42.937Z DEBUG 1 --- [fraudshield] [nio-8080-exec-3] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted settlement projection txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 status=SETTLED
+2026-07-29T05:57:42.944Z DEBUG 1 --- [fraudshield] [nio-8080-exec-3] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 bankId=Platform hash=876ad097
+2026-07-29T05:57:42.953Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 : ADMIN_HOLD_CREATED -> ADMIN_APPROVAL_GRANTED (contractRef=null)
+2026-07-29T05:57:42.961Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 : ADMIN_APPROVAL_GRANTED -> HOLDS_RELEASED (contractRef=null)
+2026-07-29T05:57:42.973Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 : HOLDS_RELEASED -> SETTLEMENT_COMPLETED (contractRef=#settlement-9f5534c8)
+2026-07-29T05:57:42.989Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.canton.CantonCommandService          : [Canton] Approval exercised txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 by party=GlobalSynchronizer_Party
+2026-07-29T05:57:45.826Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=ADMIN reason=null
+2026-07-29T05:57:47.688Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-9f5534c8-3e9b-47c5-b18b-13a78e447b82 : SETTLEMENT_COMPLETED -> SETTLEMENT_COMPLETED (contractRef=#settlement-8e447b82)
+2026-07-29T05:57:47.692Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.s.SingleChainBlockBuilderService     : [Phase5] Block 30 committed with 2-of-3 consensus (signatures=[alpha, beta, gamma]) and 1 txns
+2026-07-29T05:57:49.285Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U001 sessionId=5f31fb2e-4e39-47e9-6c76-42bcf34014d9
+2026-07-29T05:57:49.346Z  INFO 1 --- [fraudshield] [nio-8080-exec-8] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U001 sessionId=6aed1e46-0078-191b-0cbd-82681807c197
+2026-07-29T06:01:31.688Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.service.IsolationForestService       : [IsolationForest] Scored txn amount=100.0 score=0.18655613218855013 points=0 anomaly=false
+2026-07-29T06:01:31.745Z  WARN 1 --- [fraudshield] [nio-8080-exec-9] c.f.canton.CantonCommandService          : [Canton] Real DAML settlement submission failed for txnId=TXN-daf30a33-113d-4a6f-bbce-540885eed3fb (400 Bad Request: "{"errors":["JsonError: spray.json.DeserializationException: Can't read {\n  \"fromUserId\": \"U001\",\n  \"operator\": \"BankA_Party\",\n  \"settlementId\": \"settle-TXN-daf30a33-113d-4a6f-bbce-540885eed3fb\",\n  \"txnId\": \"TXN-daf30a33-113d-4a6f-bbce-540885eed3fb\"\n} as DamlLfRecord b509fb3821f1c9dd84f6055eb7ceffed0617a8c55e8ac26286b1f797b57acbd3:FraudShield:SettlementAuthorization, missing field 'triggeredBy'"],"status":400}"). Falling back to simulation.
+2026-07-29T06:01:31.755Z DEBUG 1 --- [fraudshield] [nio-8080-exec-9] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted settlement projection txnId=TXN-daf30a33-113d-4a6f-bbce-540885eed3fb status=SETTLED
+2026-07-29T06:01:31.760Z DEBUG 1 --- [fraudshield] [nio-8080-exec-9] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-daf30a33-113d-4a6f-bbce-540885eed3fb bankId=BankA hash=dd7aee86
+2026-07-29T06:01:31.766Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-daf30a33-113d-4a6f-bbce-540885eed3fb : NONE -> TXN_CREATED (contractRef=null)
+2026-07-29T06:01:31.774Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-daf30a33-113d-4a6f-bbce-540885eed3fb : TXN_CREATED -> SETTLEMENT_COMPLETED (contractRef=#settlement-daf30a33)
+2026-07-29T06:01:31.776Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.canton.CantonCommandService          : [Canton] Low risk settlement contract created txnId=TXN-daf30a33-113d-4a6f-bbce-540885eed3fb settlementRef=#settlement-daf30a33
+2026-07-29T06:01:32.927Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-daf30a33-113d-4a6f-bbce-540885eed3fb : SETTLEMENT_COMPLETED -> SETTLEMENT_COMPLETED (contractRef=#settlement-85eed3fb)
+2026-07-29T06:01:32.932Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.s.SingleChainBlockBuilderService     : [Phase5] Block 31 committed with 2-of-3 consensus (signatures=[alpha, beta, gamma]) and 1 txns
+2026-07-29T06:03:22.005Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=U001 reason=null
+2026-07-29T06:03:24.871Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U004 sessionId=2f688b47-65ec-3ecd-5873-20473176f858
+2026-07-29T06:03:24.929Z  INFO 1 --- [fraudshield] [io-8080-exec-10] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U004 sessionId=dd1d88e2-268c-db5b-04ef-8e41e655845c
+2026-07-29T06:03:39.776Z  INFO 1 --- [fraudshield] [nio-8080-exec-8] c.f.service.IsolationForestService       : [IsolationForest] Scored txn amount=140000.0 score=0.6193770107601632 points=13 anomaly=true
+2026-07-29T06:03:39.928Z  WARN 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonCommandService          : [Canton] Real DAML hold submission failed for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b (400 Bad Request: "{"errors":["FAILED_PRECONDITION: NOT_CONNECTED_TO_ANY_DOMAIN(9,dfd7bcb2): This participant is not connected to any domain."],"ledgerApiError":{"code":9,"details":[{"errorCodeId":"NOT_CONNECTED_TO_ANY_DOMAIN","metadata":{"participant":"banka","tid":"dfd7bcb27c91c006345ccebbdb31ecd9","category":"9","definite_answer":"false"},"type":"ErrorInfoDetail"},{"correlationId":"dfd7bcb27c91c006345ccebbdb31ecd9","type":"RequestInfoDetail"}],"message":"NOT_CONNECTED_TO_ANY_DOMAIN(9,dfd7bcb2): This participant is not connected to any domain."},"status":400}"). Falling back to simulation.
+2026-07-29T06:03:39.949Z DEBUG 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted hold projection txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b status=HOLD_ACTIVE
+2026-07-29T06:03:39.960Z DEBUG 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b bankId=BankB hash=173f644f
+2026-07-29T06:03:39.990Z  INFO 1 --- [fraudshield] [nio-8080-exec-8] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b : NONE -> ADMIN_HOLD_CREATED (contractRef=#hold-b28ffa0f)
+2026-07-29T06:03:39.992Z  INFO 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonCommandService          : [Canton] Hold created txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b holdRef=#hold-b28ffa0f expiresAt=2026-07-29T07:03:39.928495752Z
+2026-07-29T06:03:40.040Z  WARN 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonCommandService          : [Canton] Real DAML approval submission failed for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b (400 Bad Request: "{"errors":["FAILED_PRECONDITION: NOT_CONNECTED_TO_ANY_DOMAIN(9,d58e3412): This participant is not connected to any domain."],"ledgerApiError":{"code":9,"details":[{"errorCodeId":"NOT_CONNECTED_TO_ANY_DOMAIN","metadata":{"participant":"banka","tid":"d58e341235694f70947d494d91f9a9ed","category":"9","definite_answer":"false"},"type":"ErrorInfoDetail"},{"correlationId":"d58e341235694f70947d494d91f9a9ed","type":"RequestInfoDetail"}],"message":"NOT_CONNECTED_TO_ANY_DOMAIN(9,d58e3412): This participant is not connected to any domain."},"status":400}"). Falling back to simulation.
+2026-07-29T06:03:40.046Z DEBUG 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted approval projection txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b status=PENDING_BANK_APPROVAL
+2026-07-29T06:03:40.050Z DEBUG 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b bankId=BankB hash=83344bae
+2026-07-29T06:03:40.057Z  INFO 1 --- [fraudshield] [nio-8080-exec-8] c.f.canton.CantonCommandService          : [Canton] Bank approval contract created txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b approvalRef=#approval-bank_approval-b28ffa0f
+2026-07-29T06:05:01.460Z  INFO 1 --- [fraudshield] [io-8080-exec-10] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=U004 reason=null
+2026-07-29T06:05:01.506Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=9bc40f0b-d551-0cc5-dcdf-ff9b47ad1a01
+2026-07-29T06:05:01.542Z  INFO 1 --- [fraudshield] [nio-8080-exec-5] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=98ee6c7e-7737-a69b-f891-764fedaafb8b
+2026-07-29T06:05:07.489Z  WARN 1 --- [fraudshield] [nio-8080-exec-6] c.f.canton.CantonCommandService          : [Canton] Real exerciseApproval failed for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b (400 Bad Request: "{"errors":["INVALID_FIELD(8,corr-app): The submitted command has a field with invalid value: Invalid field contract_id: cannot parse ContractId \"#approval-bank_approval-b28ffa0f\""],"status":400}"). Continuing projection flow.
+2026-07-29T06:05:07.506Z  WARN 1 --- [fraudshield] [nio-8080-exec-6] c.f.canton.CantonCommandService          : [Canton] Real DAML settlement submission failed for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b (400 Bad Request: "{"errors":["JsonError: spray.json.DeserializationException: Can't read {\n  \"fromUserId\": \"ADMIN\",\n  \"operator\": \"BankA_Party\",\n  \"settlementId\": \"settle-TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b\",\n  \"txnId\": \"TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b\"\n} as DamlLfRecord b509fb3821f1c9dd84f6055eb7ceffed0617a8c55e8ac26286b1f797b57acbd3:FraudShield:SettlementAuthorization, missing field 'triggeredBy'"],"status":400}"). Falling back to simulation.
+2026-07-29T06:05:07.512Z DEBUG 1 --- [fraudshield] [nio-8080-exec-6] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted hold projection txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b status=HOLD_RELEASED
+2026-07-29T06:05:07.515Z DEBUG 1 --- [fraudshield] [nio-8080-exec-6] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted approval projection txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b status=APPROVED
+2026-07-29T06:05:07.517Z DEBUG 1 --- [fraudshield] [nio-8080-exec-6] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted settlement projection txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b status=SETTLED
+2026-07-29T06:05:07.525Z DEBUG 1 --- [fraudshield] [nio-8080-exec-6] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b bankId=Platform hash=1350d5d8
+2026-07-29T06:05:07.529Z  INFO 1 --- [fraudshield] [nio-8080-exec-6] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b : ADMIN_HOLD_CREATED -> ADMIN_APPROVAL_GRANTED (contractRef=null)
+2026-07-29T06:05:07.533Z  INFO 1 --- [fraudshield] [nio-8080-exec-6] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b : ADMIN_APPROVAL_GRANTED -> HOLDS_RELEASED (contractRef=null)
+2026-07-29T06:05:07.541Z  INFO 1 --- [fraudshield] [nio-8080-exec-6] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b : HOLDS_RELEASED -> SETTLEMENT_COMPLETED (contractRef=#settlement-b28ffa0f)
+2026-07-29T06:05:07.545Z  INFO 1 --- [fraudshield] [nio-8080-exec-6] c.f.canton.CantonCommandService          : [Canton] Approval exercised txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b by party=GlobalSynchronizer_Party
+2026-07-29T06:05:08.111Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-b28ffa0f-5e89-4177-80b3-6b4e8c7a490b : SETTLEMENT_COMPLETED -> SETTLEMENT_COMPLETED (contractRef=#settlement-8c7a490b)
+2026-07-29T06:05:08.113Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.s.SingleChainBlockBuilderService     : [Phase5] Block 32 committed with 2-of-3 consensus (signatures=[alpha, beta, gamma]) and 1 txns
+2026-07-29T06:05:10.744Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=ADMIN reason=null
+2026-07-29T06:05:16.500Z  INFO 1 --- [fraudshield] [nio-8080-exec-5] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U004 sessionId=603936d9-42d5-8b6f-2f9f-90b75e6bc3a5
+2026-07-29T06:05:16.591Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U004 sessionId=719e0dd1-a7a8-f7e6-c9c3-a302b6412712
+2026-07-29T06:07:13.665Z  INFO 1 --- [fraudshield] [io-8080-exec-10] c.f.service.IsolationForestService       : [IsolationForest] Scored txn amount=8000.0 score=0.6262660619460823 points=14 anomaly=true
+2026-07-29T06:07:13.717Z  WARN 1 --- [fraudshield] [io-8080-exec-10] c.f.canton.CantonCommandService          : [Canton] Real DAML settlement submission failed for txnId=TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894 (400 Bad Request: "{"errors":["JsonError: spray.json.DeserializationException: Can't read {\n  \"fromUserId\": \"U004\",\n  \"operator\": \"BankA_Party\",\n  \"settlementId\": \"settle-TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894\",\n  \"txnId\": \"TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894\"\n} as DamlLfRecord b509fb3821f1c9dd84f6055eb7ceffed0617a8c55e8ac26286b1f797b57acbd3:FraudShield:SettlementAuthorization, missing field 'triggeredBy'"],"status":400}"). Falling back to simulation.
+2026-07-29T06:07:13.727Z DEBUG 1 --- [fraudshield] [io-8080-exec-10] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted settlement projection txnId=TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894 status=SETTLED
+2026-07-29T06:07:13.730Z DEBUG 1 --- [fraudshield] [io-8080-exec-10] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894 bankId=BankB hash=57617dfe
+2026-07-29T06:07:13.736Z  INFO 1 --- [fraudshield] [io-8080-exec-10] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894 : NONE -> TXN_CREATED (contractRef=null)
+2026-07-29T06:07:13.742Z  INFO 1 --- [fraudshield] [io-8080-exec-10] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894 : TXN_CREATED -> SETTLEMENT_COMPLETED (contractRef=#settlement-3fe86f69)
+2026-07-29T06:07:13.744Z  INFO 1 --- [fraudshield] [io-8080-exec-10] c.f.canton.CantonCommandService          : [Canton] Low risk settlement contract created txnId=TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894 settlementRef=#settlement-3fe86f69
+2026-07-29T06:07:18.230Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3fe86f69-f8bb-4930-ae35-9f6f3c320894 : SETTLEMENT_COMPLETED -> SETTLEMENT_COMPLETED (contractRef=#settlement-3c320894)
+2026-07-29T06:07:18.233Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.s.SingleChainBlockBuilderService     : [Phase5] Block 33 committed with 2-of-3 consensus (signatures=[alpha, beta, gamma]) and 1 txns
+2026-07-29T06:07:46.432Z  INFO 1 --- [fraudshield] [nio-8080-exec-5] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=U004 reason=null
+2026-07-29T06:07:48.519Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U003 sessionId=0eb9abae-9247-750d-77ca-97f08266acd9
+2026-07-29T06:07:48.568Z  INFO 1 --- [fraudshield] [nio-8080-exec-4] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U003 sessionId=5215f923-ef03-2478-87c3-de57ef30e0e4
+2026-07-29T06:09:05.186Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.IsolationForestService       : [IsolationForest] Scored txn amount=12000.0 score=0.3724949728372422 points=0 anomaly=false
+2026-07-29T06:09:05.242Z  WARN 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonCommandService          : [Canton] Real DAML settlement submission failed for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 (400 Bad Request: "{"errors":["JsonError: spray.json.DeserializationException: Can't read {\n  \"fromUserId\": \"U003\",\n  \"operator\": \"BankA_Party\",\n  \"settlementId\": \"settle-TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9\",\n  \"txnId\": \"TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9\"\n} as DamlLfRecord b509fb3821f1c9dd84f6055eb7ceffed0617a8c55e8ac26286b1f797b57acbd3:FraudShield:SettlementAuthorization, missing field 'triggeredBy'"],"status":400}"). Falling back to simulation.
+2026-07-29T06:09:05.250Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted settlement projection txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 status=SETTLED
+2026-07-29T06:09:05.259Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 bankId=BankB hash=315b392d
+2026-07-29T06:09:05.267Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : NONE -> TXN_CREATED (contractRef=null)
+2026-07-29T06:09:05.275Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : TXN_CREATED -> SETTLEMENT_COMPLETED (contractRef=#settlement-3c9b08a4)
+2026-07-29T06:09:05.278Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonCommandService          : [Canton] Low risk settlement contract created txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 settlementRef=#settlement-3c9b08a4
+2026-07-29T06:09:05.298Z  WARN 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonCommandService          : [Canton] Real DAML escrow submission failed for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 (400 Bad Request: "{"errors":["JsonError: spray.json.DeserializationException: Can't read {\n  \"amount\": 12000.0,\n  \"escrowId\": \"escrow-TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9\",\n  \"fromUserId\": \"U003\",\n  \"operator\": \"BankA_Party\",\n  \"status\": \"ACTIVE\",\n  \"txnId\": \"TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9\"\n} as DamlLfRecord b509fb3821f1c9dd84f6055eb7ceffed0617a8c55e8ac26286b1f797b57acbd3:FraudShield:EscrowAgreement, missing field 'payerUserId'"],"status":400}"). Falling back to simulation.
+2026-07-29T06:09:05.315Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted escrow projection txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 status=ESCROW_ACTIVE
+2026-07-29T06:09:05.322Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 bankId=BankB hash=bfc31b55
+2026-07-29T06:09:05.334Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : SETTLEMENT_COMPLETED -> ESCROW_HOLD_CREATED (contractRef=#escrow-3c9b08a4)
+2026-07-29T06:09:05.335Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonCommandService          : [Canton] Escrow contract created txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 escrowRef=#escrow-3c9b08a4
+2026-07-29T06:09:12.512Z  INFO 1 --- [fraudshield] [nio-8080-exec-3] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=U003 reason=null
+2026-07-29T06:09:12.565Z  INFO 1 --- [fraudshield] [nio-8080-exec-7] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=87dc84cb-70c3-81df-53fb-5cbf233e78b6
+2026-07-29T06:09:12.613Z  INFO 1 --- [fraudshield] [nio-8080-exec-5] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=b872c953-8d0f-a5cd-fa63-35f3ea2a43f7
+2026-07-29T06:09:22.274Z  WARN 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonCommandService          : [Canton] Real exerciseApproval failed for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 (400 Bad Request: "{"errors":["INVALID_FIELD(8,corr-app): The submitted command has a field with invalid value: Invalid field contract_id: cannot parse ContractId \"#escrow-3c9b08a4\""],"status":400}"). Continuing projection flow.
+2026-07-29T06:09:22.307Z  WARN 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonCommandService          : [Canton] Real DAML settlement submission failed for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 (400 Bad Request: "{"errors":["JsonError: spray.json.DeserializationException: Can't read {\n  \"fromUserId\": \"ADMIN\",\n  \"operator\": \"BankA_Party\",\n  \"settlementId\": \"settle-TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9\",\n  \"txnId\": \"TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9\"\n} as DamlLfRecord b509fb3821f1c9dd84f6055eb7ceffed0617a8c55e8ac26286b1f797b57acbd3:FraudShield:SettlementAuthorization, missing field 'triggeredBy'"],"status":400}"). Falling back to simulation.
+2026-07-29T06:09:22.315Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted hold projection txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 status=HOLD_RELEASED
+2026-07-29T06:09:22.321Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted approval projection txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 status=APPROVED
+2026-07-29T06:09:22.328Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted escrow projection txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 status=SETTLED
+2026-07-29T06:09:22.338Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Upserted settlement projection txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 status=SETTLED
+2026-07-29T06:09:22.347Z DEBUG 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonProjectionUpdater       : [Canton] Appended bank ledger copy txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 bankId=Platform hash=272334aa
+2026-07-29T06:09:22.354Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : ESCROW_HOLD_CREATED -> ADMIN_APPROVAL_GRANTED (contractRef=null)
+2026-07-29T06:09:22.361Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : ADMIN_APPROVAL_GRANTED -> HOLDS_RELEASED (contractRef=null)
+2026-07-29T06:09:22.367Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : HOLDS_RELEASED -> ESCROW_RELEASED (contractRef=#escrow-3c9b08a4)
+2026-07-29T06:09:22.376Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : ESCROW_RELEASED -> SETTLEMENT_COMPLETED (contractRef=#settlement-3c9b08a4)
+2026-07-29T06:09:22.380Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.canton.CantonCommandService          : [Canton] Approval exercised txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 by party=GlobalSynchronizer_Party
+2026-07-29T06:09:23.334Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.service.LedgerStateService           : [LedgerState] Recorded state transition for txnId=TXN-3c9b08a4-6356-4491-9d0f-595161a36ba9 : SETTLEMENT_COMPLETED -> SETTLEMENT_COMPLETED (contractRef=#settlement-61a36ba9)
+2026-07-29T06:09:23.335Z  INFO 1 --- [fraudshield] [   scheduling-1] c.f.s.SingleChainBlockBuilderService     : [Phase5] Block 34 committed with 2-of-3 consensus (signatures=[alpha, beta, gamma]) and 1 txns
+2026-07-29T06:09:24.848Z  INFO 1 --- [fraudshield] [nio-8080-exec-9] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=ADMIN reason=null
+2026-07-29T06:09:29.795Z  INFO 1 --- [fraudshield] [nio-8080-exec-1] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U004 sessionId=84d9a4b6-cca1-b958-5266-869895c3383a
+2026-07-29T06:09:29.846Z  INFO 1 --- [fraudshield] [nio-8080-exec-4] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=U004 sessionId=34ec731d-42f0-0275-1d4e-6e641ece823a
+2026-07-29T06:09:55.102Z  INFO 1 --- [fraudshield] [nio-8080-exec-7] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=U004 reason=null
+2026-07-29T06:09:55.149Z  INFO 1 --- [fraudshield] [nio-8080-exec-5] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=10c99cc1-587e-dcdb-7ac5-6d2c90d245b7
+2026-07-29T06:09:55.181Z  INFO 1 --- [fraudshield] [nio-8080-exec-1] c.f.w.FraudShieldWebSocketHandler        : WebSocket connected: userId=ADMIN sessionId=edfb4559-d2f5-677e-9d13-b2aca585837b
+2026-07-29T06:09:56.320Z  INFO 1 --- [fraudshield] [nio-8080-exec-2] c.f.w.FraudShieldWebSocketHandler        : WebSocket disconnected: userId=ADMIN reason=null
+
+
+3.2 Canton DAML Ledger DAR Deployment & Node Participant Logs:
+--------------------------------------------------------------------------------
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to banka via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankb via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to bankc via Canton Admin API
+Uploading /daml-dist/fraudshield-canton-contracts-1.0.0.dar to synchronizer via Canton Admin API
+DAR upload completed
+
+================================================================================
+END OF AUDIT LOG FILE
+================================================================================
