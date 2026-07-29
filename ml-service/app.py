@@ -52,9 +52,14 @@ def health():
 @app.route("/score", methods=["POST"])
 def score_transaction():
     try:
-        data = request.get_json()
+        data = request.get_json(silent=True)
         if not data:
-            return jsonify({"error": "Missing JSON payload"}), 400
+            return jsonify({
+                "evaluated": False,
+                "points": 0,
+                "error": "Missing or empty JSON payload",
+                "reasons": ["Payload is required for Isolation Forest scoring"]
+            }), 400
 
         result = model_instance.predict_anomaly(data)
         
