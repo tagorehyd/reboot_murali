@@ -43,6 +43,8 @@ export default function UserPortal({ userId }) {
   const [successMessage, setSuccessMessage] = useState('');
   const [saveToast, setSaveToast] = useState(false);
   const [transactionResponse, setTransactionResponse] = useState(null);
+  const [transferPrompt, setTransferPrompt] = useState(null);
+  const [cancelAlert, setCancelAlert] = useState(null);
   const [pendingTransactions, setPendingTransactions] = useState([]);
   const [pendingFilterMode, setPendingFilterMode] = useState('ALL');
   const [pendingLayout, setPendingLayout] = useState('GRID');
@@ -68,14 +70,27 @@ export default function UserPortal({ userId }) {
   const [consentPrompt, setConsentPrompt] = useState(null); // { txnId, amount, toUserId, riskScore, countdown }
   const [selectedWorkflowTxn, setSelectedWorkflowTxn] = useState(null); // Selected transaction for Git DAML workflow modal
 
-  const handleConsentResponse = async (txnId, approved) => {
+  const handleConsentResponse = async (txnId, approved, isTimeout = false, amount = '0', toUserId = 'Recipient') => {
     setConsentPrompt(null);
     try {
-      await axios.post(`/api/txn/${txnId}/user-consent`, { approved });
       if (approved) {
+        await axios.post(`/api/txn/${txnId}/user-consent`, { approved: true });
         setSuccessMessage('✅ Consent verified! Payment settled directly on Canton ledger.');
       } else {
-        setSuccessMessage('🔒 Consent declined or timed out. Transaction escalated to Bank Admin review.');
+        if (isTimeout) {
+          // If the 15 seconds timer expired, cancel and reject transaction completely
+          await axios.post(`/api/admin/txn/${txnId}/consent`, { approved: false, userId });
+          setCancelAlert({
+            txnId: txnId,
+            amount: amount,
+            toUserId: toUserId
+          });
+          setError("❌ Transaction cancelled due to user confirmation inactivity.");
+        } else {
+          // Standard manual decline
+          await axios.post(`/api/txn/${txnId}/user-consent`, { approved: false });
+          setSuccessMessage('🔒 Consent declined. Transaction escalated to Bank Admin review.');
+        }
       }
       loadBalance();
       loadActivity();
@@ -90,7 +105,7 @@ export default function UserPortal({ userId }) {
       setConsentPrompt((prev) => {
         if (!prev) return null;
         if (prev.countdown <= 1) {
-          handleConsentResponse(prev.txnId, false);
+          handleConsentResponse(prev.txnId, false, true, prev.amount, prev.toUserId);
           return null;
         }
         return { ...prev, countdown: prev.countdown - 1 };
@@ -453,9 +468,18 @@ export default function UserPortal({ userId }) {
     setTransactionResponse(null);
     try {
       const response = await axios.post('/api/txn/initiate', payload);
-      setTransactionResponse(response.data);
       setAmount('');
       setRecipientId('');
+      
+      const isHold = ['HOLD_ACTIVE', 'PENDING_BANK_APPROVAL'].includes(response.data.status);
+      setTransferPrompt({
+        status: response.data.status,
+        txnId: response.data.txnId,
+        amount: response.data.amount || payload.amount,
+        toUserId: response.data.toUserId || payload.toUserId,
+        isHold: isHold,
+      });
+
       if (['PENDING_USER_CONSENT', 'PENDING_CONSENT', 'PENDING_USER_APPROVAL'].includes(response.data.status)) {
         setConsentPrompt({
           txnId: response.data.txnId,
@@ -573,7 +597,7 @@ export default function UserPortal({ userId }) {
     const distance = touchStart - touchEnd;
     const isLeftSwipe = distance > 50;
     const isRightSwipe = distance < -50;
-    if (isLeftSwipe && currentSlide < 4) setCurrentSlide(currentSlide + 1);
+    if (isLeftSwipe && currentSlide < 3) setCurrentSlide(currentSlide + 1);
     if (isRightSwipe && currentSlide > 0) setCurrentSlide(currentSlide - 1);
   };
 
@@ -843,10 +867,9 @@ export default function UserPortal({ userId }) {
       <div className="flex bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         {[
           { index: 0, emoji: '📤', label: 'Send Money', icon: 'send' },
-          { index: 1, emoji: '⏳', label: 'Pending Consents', icon: 'pending' },
-          { index: 2, emoji: '📚', label: 'Payment History', icon: 'history' },
-          { index: 3, emoji: '⚙️', label: 'Set Limit & Usage', icon: 'limits' },
-          { index: 4, emoji: '🛡️', label: 'Custom Rules', icon: 'rules' }
+          { index: 1, emoji: '📚', label: 'Payment History', icon: 'history' },
+          { index: 2, emoji: '⚙️', label: 'Set Limit & Usage', icon: 'limits' },
+          { index: 3, emoji: '🛡️', label: 'Custom Rules', icon: 'rules' }
         ].map((tab) => (
           <button
             key={tab.index}
@@ -1196,328 +1219,12 @@ export default function UserPortal({ userId }) {
                   </div>
                 )}
 
-                {transactionResponse && (
-                  <div className="min-h-full w-full p-2 md:p-4 flex items-center justify-center">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full items-start">
-                      
-                      {/* Left Column: Core Transaction Info */}
-                      <div className="space-y-4">
-                        {/* Confirmation Header */}
-                        <div className="text-center">
-                          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-full flex items-center justify-center mb-3 shadow-sm">
-                            <span className="text-2xl text-white">✓</span>
-                          </div>
-                          <h2 className="text-lg font-black text-slate-900 dark:text-slate-100">Payment Sent</h2>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-medium">Your transfer is being processed</p>
-                        </div>
 
-                        {/* Amount Display */}
-                        <div className="bg-gradient-to-br from-teal-50 to-cyan-50 dark:from-teal-950/30 dark:to-cyan-950/30 rounded-2xl p-5 text-center border border-teal-200 dark:border-teal-800/50 shadow-sm">
-                          <p className="text-[10px] text-slate-600 dark:text-slate-400 uppercase tracking-widest font-bold mb-1.5">Amount Sent</p>
-                          <p className="text-3xl md:text-4xl font-black text-teal-700 dark:text-teal-400">£{transactionResponse.amount}</p>
-                        </div>
-
-                        {/* Details Card */}
-                        <div className="bg-white dark:bg-slate-900/80 rounded-xl border border-slate-200 dark:border-slate-700 p-4 space-y-3 shadow-sm">
-                          <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">Recipient</p>
-                            <p className="font-bold text-slate-900 dark:text-slate-100 text-xs">{transactionResponse.toUserId}</p>
-                          </div>
-                          <div className="flex justify-between items-center pb-3 border-b border-slate-100 dark:border-slate-800">
-                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">Transaction ID</p>
-                            <p className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">{transactionResponse.txnId.substring(0, 16)}...</p>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider text-[10px]">Status</p>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded border ${
-                              transactionResponse.status === 'APPROVED' || transactionResponse.status === 'SETTLED' ? 'bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/30 dark:text-emerald-400 dark:border-emerald-800' :
-                              transactionResponse.status === 'PENDING_ADMIN' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800' :
-                              transactionResponse.status === 'PENDING_CONSENT' ? 'bg-orange-50 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800' :
-                              transactionResponse.status === 'HOLD_ACTIVE' ? 'bg-red-50 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800' :
-                              transactionResponse.status === 'PENDING_BANK_APPROVAL' ? 'bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-900/30 dark:text-amber-400 dark:border-amber-800' :
-                              transactionResponse.status === 'PENDING_USER_APPROVAL' ? 'bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800' :
-                              transactionResponse.status === 'ESCROW_ACTIVE' ? 'bg-violet-50 text-violet-700 border-violet-200 dark:bg-violet-900/30 dark:text-violet-400 dark:border-violet-800' :
-                              'bg-slate-50 text-slate-700 border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700'
-                            }`}>
-                              {getStatusIcon(transactionResponse.status)} {transactionResponse.status}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Action Button */}
-                        <button
-                          onClick={() => {
-                            setTransactionResponse(null);
-                            setAmount('');
-                            setRecipientId('');
-                            loadActivity();
-                          }}
-                          className="w-full px-4 py-2.5 bg-gradient-to-r from-teal-600 to-cyan-600 text-white text-sm font-bold rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-all shadow-sm active:scale-[0.98]"
-                        >
-                          Send Another Payment
-                        </button>
-                      </div>
-
-                      {/* Right Column: Security, Risk, & Canton Integration */}
-                      <div className="space-y-4">
-                        {/* Canton Hold Notice */}
-                        {(transactionResponse.status === 'HOLD_ACTIVE' || transactionResponse.status === 'PENDING_BANK_APPROVAL') && (
-                          <div className="rounded-xl border border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/20 px-4 py-3 shadow-sm">
-                            <div className="flex items-start gap-3">
-                              <span className="text-xl mt-0.5">🔒</span>
-                              <div>
-                                <p className="text-sm font-bold text-red-900 dark:text-red-400">Canton Hold Active</p>
-                                <p className="text-[10px] font-semibold text-red-700 dark:text-red-300 mt-0.5 leading-relaxed">
-                                  A HoldRequest contract has been created on the Canton ledger. The hold expires in 60 minutes.
-                                  A bank approver must approve before expiry, or the transaction will be automatically rejected.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Canton User Approval Notice */}
-                        {transactionResponse.status === 'PENDING_USER_APPROVAL' && (
-                          <div className="rounded-xl border border-blue-200 dark:border-blue-800/50 bg-blue-50 dark:bg-blue-900/20 px-4 py-3 shadow-sm">
-                            <div className="flex items-start gap-3">
-                              <span className="text-xl mt-0.5">👤</span>
-                              <div>
-                                <p className="text-sm font-bold text-blue-900 dark:text-blue-400">Canton User Approval Required</p>
-                                <p className="text-[10px] font-semibold text-blue-700 dark:text-blue-300 mt-0.5 leading-relaxed">
-                                  A user-approval contract has been created on Canton. You have 15 minutes to approve.
-                                  The transaction will automatically expire if no action is taken.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-
-                        {/* Consent Panel */}
-                        {transactionResponse.status === 'PENDING_CONSENT' && (
-                          <div className="shadow-sm rounded-xl overflow-hidden border border-orange-200 dark:border-orange-800/50">
-                            <ConsentPanel
-                              txnId={transactionResponse.txnId}
-                              transaction={transactionResponse}
-                              onApprove={(consentResult) => {
-                                if (consentResult?.status === 'PENDING_ADMIN') {
-                                  setAdminReviewNotice({
-                                    txnId: consentResult.txnId || transactionResponse.txnId,
-                                  });
-                                } else {
-                                  setSuccessMessage('✅ Consent approved! Transaction sent to admin review.');
-                                }
-                                setTransactionResponse(null);
-                                loadActivity();
-                              }}
-                              onReject={() => {
-                                setError('❌ You rejected this transaction.');
-                                setTransactionResponse(null);
-                                loadActivity();
-                              }}
-                            />
-                          </div>
-                        )}
-
-                        {/* Risk Breakdown */}
-                        <RiskBreakdownCard
-                          riskScore={transactionResponse.riskScore}
-                          riskBreakdown={transactionResponse.riskBreakdown || []}
-                          beneficiaryTrustTier={transactionResponse.beneficiaryTrustTier}
-                          beneficiaryTrustDiscount={transactionResponse.beneficiaryTrustDiscount}
-                        />
-
-                        {/* Canton Escrow Service Badge */}
-                        {transactionResponse.escrowOptIn && (
-                          <div className="rounded-xl border border-violet-200 dark:border-violet-800/50 bg-violet-50 dark:bg-violet-900/20 px-4 py-3 shadow-sm">
-                            <div className="flex items-start gap-3">
-                              <span className="text-xl mt-0.5">🔏</span>
-                              <div>
-                                <p className="text-sm font-bold text-violet-900 dark:text-violet-400">Canton Escrow Service Active</p>
-                                <p className="text-[10px] font-semibold text-violet-700 dark:text-violet-300 mt-0.5 leading-relaxed">
-                                  An EscrowAgreement contract has been created on the Canton ledger for this transaction.
-                                  Escrow runs alongside your risk controls and does not replace hold or approval requirements.
-                                </p>
-                              </div>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
             </div>
           </div>
 
-          {/* SLIDE 1: Pending Activity */}
-          <div className="min-w-full h-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 animate-in fade-in duration-500 p-6">
-            <div className="flex-1 flex bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex-col">
-              <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div className="flex items-center gap-3">
-                    <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100">🕒 Pending Events</h3>
-                    <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-lg">
-                      <button
-                        onClick={() => setPendingLayout('GRID')}
-                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors ${pendingLayout === 'GRID' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
-                      >
-                        Grid
-                      </button>
-                      <button
-                        onClick={() => setPendingLayout('TABLE')}
-                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors ${pendingLayout === 'TABLE' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
-                      >
-                        Table
-                      </button>
-                    </div>
-                    <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-lg">
-                      <button
-                        onClick={() => setPendingFilterMode('ALL')}
-                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors ${pendingFilterMode === 'ALL' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
-                      >
-                        All
-                      </button>
-                      <button
-                        onClick={() => setPendingFilterMode('STANDARD')}
-                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors ${pendingFilterMode === 'STANDARD' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
-                      >
-                        Standard
-                      </button>
-                      <button
-                        onClick={() => setPendingFilterMode('ESCROW')}
-                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors flex items-center gap-1 ${pendingFilterMode === 'ESCROW' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
-                      >
-                        <span className="text-[10px]">🔏</span> Escrow
-                      </button>
-                    </div>
-                  </div>
-                  <span className="text-lg px-4 py-1.5 rounded-full bg-amber-200 text-amber-700 font-bold">{pendingTransactions.length}</span>
-                </div>
-              </div>
-              {pendingLayout === 'GRID' ? (
-                <div className="overflow-y-auto flex-1 p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-stretch content-start">
-                  {pendingTransactions.filter(txn => {
-                    if (pendingFilterMode === 'ALL') return true;
-                    const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
-                    return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
-                  }).length === 0 ? (
-                    <div className="col-span-full">
-                      <p className="text-sm text-slate-500 dark:text-slate-500 text-center py-12">No pending items found matching filter</p>
-                    </div>
-                  ) : (
-                    pendingTransactions.filter(txn => {
-                      if (pendingFilterMode === 'ALL') return true;
-                      const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
-                      return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
-                    }).map((txn) => (
-                      <div key={txn.id || txn.txnId} className={`border rounded-xl p-3 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
-                        txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? 'bg-purple-50/80 border-purple-300 dark:bg-purple-900/30 dark:border-purple-700/60 shadow-[0_0_15px_rgba(168,85,247,0.1)] dark:shadow-[0_0_15px_rgba(168,85,247,0.2)]' :
-                        txn.status === 'HOLD_ACTIVE' ? 'bg-red-50/80 border-red-300 dark:bg-red-900/30 dark:border-red-700/60' :
-                        txn.status === 'PENDING_BANK_APPROVAL' ? 'bg-orange-50/80 border-orange-300 dark:bg-orange-900/30 dark:border-orange-700/60' :
-                        txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'bg-blue-50/80 border-blue-300 dark:bg-blue-900/30 dark:border-blue-700/60' :
-                        'bg-slate-50 border-slate-200 dark:bg-slate-800/50 dark:border-slate-700'
-                      }`}>
-                        <div className="flex items-center justify-between mb-2">
-                          <p className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
-                            txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? 'text-purple-700 dark:text-purple-400' :
-                            txn.status === 'HOLD_ACTIVE' ? 'text-red-700 dark:text-red-400' :
-                            txn.status === 'PENDING_BANK_APPROVAL' ? 'text-orange-700 dark:text-orange-400' :
-                            txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'text-blue-700 dark:text-blue-400' :
-                            'text-slate-600 dark:text-slate-400'
-                          }`}>
-                            {txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? (
-                              <>🔏 Escrow &middot; {
-                                txn.status === 'PENDING_BANK_APPROVAL' ? 'Admin Approval' :
-                                txn.status === 'HOLD_ACTIVE' ? 'Admin Hold' :
-                                txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'Needs Consent' :
-                                'Active'
-                              }</>
-                            ) :
-                             txn.status === 'HOLD_ACTIVE' ? '🔒 Admin Hold' :
-                             txn.status === 'PENDING_BANK_APPROVAL' ? '⏳ Admin Approval' :
-                             (txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT') ? '👤 Needs Consent' :
-                             `${getStatusIcon(txn.status)} ${txn.status}`}
-                          </p>
-                          <p className="text-xl font-black text-slate-800 dark:text-slate-100">£{txn.amount}</p>
-                        </div>
-                        <p className="font-mono text-[10px] text-slate-500 dark:text-slate-400 break-all bg-white/50 dark:bg-slate-950/30 px-2 py-1 rounded mb-3">{(txn.id || txn.txnId)}</p>
-                        <div className="mt-auto">
-                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
-                            <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">From</p>
-                              <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{getUserById(txn.fromUserId)?.displayName || txn.fromUserName || txn.fromUserId}</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">To</p>
-                              <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{getUserById(txn.toUserId)?.displayName || txn.toUserName || txn.toUserId}</p>
-                            </div>
-                          </div>
-                          {txn.escrowOptIn && (
-                            <div className="mt-2.5 pt-2 border-t border-purple-200/60 dark:border-purple-700/30 flex items-center gap-1">
-                              <p className="text-[10px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-widest">🔏 Escrow service active</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    ))
-                  )}
-                </div>
-              ) : (
-                <div className="overflow-y-auto flex-1">
-                  <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
-                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
-                      <tr>
-                        <th className="px-4 py-3 font-semibold">Txn ID</th>
-                        <th className="px-4 py-3 font-semibold">From</th>
-                        <th className="px-4 py-3 font-semibold">To</th>
-                        <th className="px-4 py-3 font-semibold">Amount</th>
-                        <th className="px-4 py-3 font-semibold">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {pendingTransactions.filter(txn => {
-                        if (pendingFilterMode === 'ALL') return true;
-                        const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
-                        return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
-                      }).length === 0 ? (
-                        <tr><td colSpan="5" className="text-center py-12 text-slate-500">No pending items found matching filter</td></tr>
-                      ) : (
-                        pendingTransactions.filter(txn => {
-                          if (pendingFilterMode === 'ALL') return true;
-                          const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
-                          return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
-                        }).map((txn) => (
-                          <tr key={txn.id || txn.txnId} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
-                            <td className="px-4 py-3 font-mono text-[11px] break-all max-w-[200px]">{(txn.id || txn.txnId)}</td>
-                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">{getUserById(txn.fromUserId)?.displayName || txn.fromUserName || txn.fromUserId}</td>
-                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">{getUserById(txn.toUserId)?.displayName || txn.toUserName || txn.toUserId}</td>
-                            <td className="px-4 py-3 font-black text-slate-900 dark:text-slate-100">£{txn.amount}</td>
-                            <td className="px-4 py-3">
-                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded font-bold text-[10px] uppercase tracking-widest ${
-                                txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800' :
-                                txn.status === 'HOLD_ACTIVE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800' :
-                                txn.status === 'PENDING_BANK_APPROVAL' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800' :
-                                txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800' :
-                                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
-                              }`}>
-                                {txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? (
-                                  <>🔏 Escrow &middot; {txn.status === 'PENDING_BANK_APPROVAL' ? 'Admin' : txn.status === 'HOLD_ACTIVE' ? 'Hold' : txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'Consent' : 'Active'}</>
-                                ) :
-                                 txn.status === 'HOLD_ACTIVE' ? '🔒 Admin Hold' :
-                                 txn.status === 'PENDING_BANK_APPROVAL' ? '⏳ Admin Approval' :
-                                 (txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT') ? '👤 Needs Consent' :
-                                 `${getStatusIcon(txn.status)} ${txn.status}`}
-                              </span>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
+
 
           {/* SLIDE 2: Transaction History */}
           <div className="min-w-full h-full flex flex-col bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-950 animate-in fade-in duration-500 p-6">
@@ -1588,7 +1295,7 @@ export default function UserPortal({ userId }) {
                             <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
                               item.status === 'COMMITTED' ? 'bg-emerald-100 text-emerald-700'
                               : item.status === 'APPROVED' ? 'bg-blue-100 text-blue-700'
-                              : 'bg-slate-100 text-slate-700 dark:text-slate-300'
+                              : 'bg-slate-100 text-slate-700 dark:bg-slate-300'
                             }`}>
                               {item.status}
                             </span>
@@ -1934,20 +1641,13 @@ export default function UserPortal({ userId }) {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-2">
+            <div className="pt-2">
               <button
                 type="button"
                 onClick={() => handleConsentResponse(consentPrompt.txnId, true)}
-                className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer"
+                className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-bold py-2.5 px-3 rounded-xl shadow-lg transition-all text-xs flex items-center justify-center gap-1.5 cursor-pointer"
               >
                 <span>✅</span> Confirm & Settle Now
-              </button>
-              <button
-                type="button"
-                onClick={() => handleConsentResponse(consentPrompt.txnId, false)}
-                className="flex-1 bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-semibold py-2.5 px-3 rounded-xl transition-all text-xs cursor-pointer"
-              >
-                Require Admin Review
               </button>
             </div>
           </div>
@@ -1960,6 +1660,116 @@ export default function UserPortal({ userId }) {
           txn={selectedWorkflowTxn}
           onClose={() => setSelectedWorkflowTxn(null)}
         />
+      )}
+
+      {/* Sleek Overlay Prompt Modal for Payment Confirmation / Canton Hold Alerts */}
+      {transferPrompt && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-fadeIn">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-2xl p-6 text-center space-y-5 transform transition-transform duration-300 scale-100">
+            {transferPrompt.isHold ? (
+              <>
+                <div className="mx-auto w-14 h-14 bg-gradient-to-br from-amber-500 to-red-500 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/10 animate-pulse">
+                  <span className="text-2xl text-white">🔒</span>
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight font-heading">
+                    High-Value Compliance Review
+                  </h3>
+                  <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest font-mono">
+                    Canton Ledger Hold Active
+                  </p>
+                </div>
+                <div className="bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl p-4 border border-amber-200/40 dark:border-amber-900/20 text-left space-y-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                  <p>
+                    Your transfer of <strong className="text-slate-900 dark:text-white">£{Number(transferPrompt.amount).toLocaleString()}</strong> to <strong className="text-slate-900 dark:text-white">{getUserById(transferPrompt.toUserId)?.displayName || transferPrompt.toUserId}</strong> is a high-value transaction.
+                  </p>
+                  <p className="text-amber-800 dark:text-amber-400">
+                    ⚠️ It is currently being monitored & reviewed by compliance administrators on the Canton ledger. Funds are safely locked in smart ledger escrow pending approval.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mx-auto w-14 h-14 bg-gradient-to-br from-emerald-400 to-teal-600 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/10">
+                  <span className="text-2xl text-white">✓</span>
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight font-heading">
+                    Payment Sent Successfully
+                  </h3>
+                  <p className="text-[10px] font-black text-emerald-600 dark:text-emerald-400 uppercase tracking-widest font-mono">
+                    Transaction Auto-Approved
+                  </p>
+                </div>
+                <div className="bg-emerald-50/50 dark:bg-emerald-950/10 rounded-2xl p-4 border border-emerald-200/40 dark:border-emerald-900/20 text-left space-y-2 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+                  <p>
+                    Your transfer of <strong className="text-slate-900 dark:text-white">£{Number(transferPrompt.amount).toLocaleString()}</strong> to <strong className="text-slate-900 dark:text-white">{getUserById(transferPrompt.toUserId)?.displayName || transferPrompt.toUserId}</strong> has been processed successfully.
+                  </p>
+                  <p className="text-emerald-700 dark:text-emerald-400">
+                    ✅ This payment met all safety parameters and has been committed to the ledger mempool.
+                  </p>
+                </div>
+              </>
+            )}
+
+            <div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200/50 dark:border-slate-800 flex justify-between items-center">
+              <span>Recipient: {transferPrompt.toUserId}</span>
+              <span>Txn ID: {transferPrompt.txnId.substring(0, 16)}...</span>
+            </div>
+
+            <button
+              onClick={() => setTransferPrompt(null)}
+              className={`w-full py-2.5 text-xs font-black rounded-xl transition-all cursor-pointer shadow-sm hover:shadow-md ${
+                transferPrompt.isHold
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white'
+                  : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+              }`}
+            >
+              Dismiss Notification
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Sleek Red Color Dialog for Timeout Cancellation Alert */}
+      {cancelAlert && (
+        <div className="fixed inset-0 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-fadeIn">
+          <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-3xl border-2 border-red-500/40 dark:border-red-500/20 shadow-2xl p-6 text-center space-y-5 transform transition-all scale-100 animate-in zoom-in-95 duration-200">
+            <div className="mx-auto w-14 h-14 bg-gradient-to-br from-red-500 to-rose-600 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/20 animate-bounce">
+              <span className="text-2xl text-white">⚠️</span>
+            </div>
+
+            <div className="space-y-1.5">
+              <h3 className="text-lg font-black text-red-600 dark:text-red-400 tracking-tight font-heading">
+                Transaction Cancelled
+              </h3>
+              <p className="text-[10px] font-black text-slate-500 dark:text-slate-400 uppercase tracking-widest font-mono">
+                Secure Inactivity Timeout
+              </p>
+            </div>
+
+            <div className="bg-red-50/50 dark:bg-red-950/10 rounded-2xl p-4.5 border border-red-100 dark:border-red-950/30 text-left space-y-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
+              <p>
+                Your transfer of <strong className="text-slate-900 dark:text-white">£{Number(cancelAlert.amount).toLocaleString()}</strong> to <strong className="text-slate-900 dark:text-white">{getUserById(cancelAlert.toUserId)?.displayName || cancelAlert.toUserId}</strong> was cancelled.
+              </p>
+              <p className="text-red-700 dark:text-red-400 font-bold">
+                🔒 No confirmation activity was detected within the 15-second secure window. Funds have been returned safely to your usable balance.
+              </p>
+            </div>
+
+            <div className="text-[9px] text-slate-400 dark:text-slate-500 font-mono bg-slate-50 dark:bg-slate-950 p-2.5 rounded-lg border border-slate-200/50 dark:border-slate-800 flex justify-between items-center">
+              <span>Recipient: {cancelAlert.toUserId}</span>
+              <span>Txn ID: {cancelAlert.txnId.substring(0, 16)}...</span>
+            </div>
+
+            <button
+              onClick={() => setCancelAlert(null)}
+              className="w-full py-2.5 bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-500 hover:to-rose-500 text-white text-xs font-black rounded-xl transition-all cursor-pointer shadow-md hover:shadow-lg active:scale-[0.98]"
+            >
+              Understood, Return to Portal
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

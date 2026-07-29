@@ -185,6 +185,33 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
   const [activeTab, setActiveTab] = useState('BOTH'); // 'FLOW' | 'RADAR' | 'BOTH'
   const [isCantonModalOpen, setIsCantonModalOpen] = useState(false);
 
+  // Sub-tab navigation inside User History
+  const [activeSubTab, setActiveSubTab] = useState('FLOW'); // 'FLOW' | 'PENDING'
+  const [pendingLayout, setPendingLayout] = useState('GRID'); // 'GRID' | 'TABLE'
+  const [pendingFilterMode, setPendingFilterMode] = useState('ALL'); // 'ALL' | 'STANDARD' | 'ESCROW'
+  const [pendingTransactions, setPendingTransactions] = useState([]);
+
+  const getUserById = (id) => {
+    return DEMO_USERS.find(u => u.id === id) || { name: id, displayName: id };
+  };
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'APPROVED': return '✅';
+      case 'PENDING_ADMIN': return '⏳';
+      case 'PENDING_CONSENT': return '🔐';
+      case 'REJECTED': return '❌';
+      case 'COMMITTED': return '✓';
+      case 'HOLD_ACTIVE': return '🔒';
+      case 'PENDING_USER_APPROVAL': return '👤';
+      case 'PENDING_BANK_APPROVAL': return '🏦';
+      case 'ESCROW_ACTIVE': return '🔏';
+      case 'SETTLED': return '✅';
+      case 'EXPIRED': return '⌛';
+      default: return '•';
+    }
+  };
+
   // Direction & Amount/Risk Tier Filters
   const [dirFilter, setDirFilter] = useState('ALL'); // 'ALL' | 'OUT' | 'IN'
   const [amountFilter, setAmountFilter] = useState('ALL'); // 'ALL' | 'LOW' (< 1000) | 'MEDIUM' (1000 - 5000) | 'HIGH' (> 5000)
@@ -208,10 +235,28 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
     if (!isSilent) setIsLoading(true);
     try {
       if (activeUser === 'ALL') {
-        // Fetch all blocks and extract all transactions
-        const blocksRes = await axios.get('/api/chain/Alpha/blocks');
+        // Fetch all blocks and extract all transactions in parallel with active pending mempool queue
+        const [blocksRes, pendingRes] = await Promise.all([
+          axios.get('/api/chain/Alpha/blocks').catch(() => ({ data: [] })),
+          axios.get('/api/admin/queue').catch(() => ({ data: [] })),
+        ]);
         const blocks = blocksRes.data || [];
+        const pendingQueue = pendingRes.data || [];
         const allTxns = [];
+
+        // 1. Add active pending transactions first
+        pendingQueue.forEach(t => {
+          allTxns.push({
+            txnId: t.id || t.txnId,
+            fromUserId: t.fromUserId,
+            toUserId: t.toUserId,
+            amount: t.amount,
+            status: t.status || 'PENDING_CONSENT',
+            direction: 'OUT'
+          });
+        });
+
+        // 2. Add committed block transactions
         blocks.forEach(b => {
           if (b.transactions && b.transactions.length > 0) {
             b.transactions.forEach(t => {
@@ -228,6 +273,10 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
           }
         });
         setHistoryItems(allTxns);
+        setPendingTransactions(pendingQueue.map(t => ({
+          ...t,
+          txnId: t.id || t.txnId,
+        })));
         setSelectedTxn(prev => prev || (allTxns.length > 0 ? allTxns[0] : null));
       } else {
         // Fetch specific user's history and pending transactions in parallel
@@ -257,6 +306,7 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
 
         const combined = Array.from(combinedMap.values());
         setHistoryItems(combined);
+        setPendingTransactions(pendingList);
         setSelectedTxn(prev => {
           if (!prev) return combined.length > 0 ? combined[0] : null;
           const matched = combined.find(c => (c.txnId || c.id) === (prev.txnId || prev.id));
@@ -456,8 +506,39 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
           <p className="text-xs text-slate-400">Transactions submitted by this user will appear here with DAML contract lifecycle workflows.</p>
         </div>
       ) : (
-        /* DEDICATED DAML CONTRACT & CONSENT LIFECYCLE FLOW */
-        <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start min-h-0 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden space-y-4">
+          {/* Sub-Page Navigation Tabs */}
+          <div className="flex bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-1 shadow-xs flex-shrink-0">
+            <button
+              onClick={() => setActiveSubTab('FLOW')}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-black tracking-tight uppercase flex items-center justify-center gap-2 transition-all cursor-pointer ${
+                activeSubTab === 'FLOW'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <span>🌿 Interactive DAML Workflow Center</span>
+            </button>
+            <button
+              onClick={() => setActiveSubTab('PENDING')}
+              className={`flex-1 py-2 px-3 rounded-lg text-xs font-black tracking-tight uppercase flex items-center justify-center gap-2 transition-all cursor-pointer relative ${
+                activeSubTab === 'PENDING'
+                  ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-md'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
+              }`}
+            >
+              <span>⏳ Active Pending Consents & Holds</span>
+              {pendingTransactions.length > 0 && (
+                <span className="bg-rose-500 text-white text-[10px] font-bold px-1.5 py-0.5 rounded-full shadow-md animate-pulse">
+                  {pendingTransactions.length}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {activeSubTab === 'FLOW' ? (
+            /* DEDICATED DAML CONTRACT & CONSENT LIFECYCLE FLOW */
+            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-5 items-start min-h-0 overflow-hidden">
           {/* Left Column: User Transaction List Selector & Filters */}
           <div className="lg:col-span-4 flex flex-col h-full min-h-0 space-y-2">
             <div className="flex items-center justify-between flex-shrink-0">
@@ -660,6 +741,178 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
               </div>
             )}
           </div>
+        </div>
+      ) : (
+            /* ACTIVE PENDING CONSENTS & HOLDS SLIDE PORTED */
+            <div className="flex-1 flex bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden flex-col min-h-0">
+              <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700 bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/30 flex-shrink-0">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <h3 className="text-sm font-black text-slate-800 dark:text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                      <span>🕒</span> Active Holds & Pending Consents
+                    </h3>
+                    <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-lg">
+                      <button
+                        onClick={() => setPendingLayout('GRID')}
+                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors cursor-pointer ${pendingLayout === 'GRID' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                      >
+                        Grid
+                      </button>
+                      <button
+                        onClick={() => setPendingLayout('TABLE')}
+                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors cursor-pointer ${pendingLayout === 'TABLE' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                      >
+                        Table
+                      </button>
+                    </div>
+                    <div className="flex bg-slate-200/50 dark:bg-slate-800/50 p-1 rounded-lg">
+                      <button
+                        onClick={() => setPendingFilterMode('ALL')}
+                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors cursor-pointer ${pendingFilterMode === 'ALL' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                      >
+                        All
+                      </button>
+                      <button
+                        onClick={() => setPendingFilterMode('STANDARD')}
+                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors cursor-pointer ${pendingFilterMode === 'STANDARD' ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                      >
+                        Standard
+                      </button>
+                      <button
+                        onClick={() => setPendingFilterMode('ESCROW')}
+                        className={`px-3 py-1 text-[11px] font-bold rounded-md transition-colors cursor-pointer flex items-center gap-1 ${pendingFilterMode === 'ESCROW' ? 'bg-white dark:bg-slate-700 text-purple-700 dark:text-purple-400 shadow-sm' : 'text-slate-500 dark:text-slate-400 hover:text-slate-700'}`}
+                      >
+                        <span className="text-[10px]">🔏</span> Escrow
+                      </button>
+                    </div>
+                  </div>
+                  <span className="text-xs px-3 py-1 rounded-full bg-amber-200 dark:bg-amber-950 text-amber-800 dark:text-amber-300 font-extrabold shadow-inner">{pendingTransactions.length} Pending</span>
+                </div>
+              </div>
+              {pendingLayout === 'GRID' ? (
+                <div className="overflow-y-auto flex-1 p-4 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 items-stretch content-start">
+                  {pendingTransactions.filter(txn => {
+                    if (pendingFilterMode === 'ALL') return true;
+                    const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
+                    return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
+                  }).length === 0 ? (
+                    <div className="col-span-full">
+                      <p className="text-sm text-slate-500 dark:text-slate-500 text-center py-12">No pending items found matching filter</p>
+                    </div>
+                  ) : (
+                    pendingTransactions.filter(txn => {
+                      if (pendingFilterMode === 'ALL') return true;
+                      const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
+                      return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
+                    }).map((txn) => (
+                      <div key={txn.id || txn.txnId} className={`border rounded-2xl p-4 hover:-translate-y-0.5 hover:shadow-md transition-all duration-200 flex flex-col h-full ${
+                        txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? 'bg-purple-50/80 border-purple-300 dark:bg-purple-950/20 dark:border-purple-900/40 shadow-[0_0_15px_rgba(168,85,247,0.1)]' :
+                        txn.status === 'HOLD_ACTIVE' ? 'bg-red-50/80 border-red-300 dark:bg-red-950/20 dark:border-red-900/40' :
+                        txn.status === 'PENDING_BANK_APPROVAL' ? 'bg-orange-50/80 border-orange-300 dark:bg-orange-950/20 dark:border-orange-900/40' :
+                        txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'bg-blue-50/80 border-blue-300 dark:bg-blue-950/20 dark:border-blue-900/40' :
+                        'bg-slate-50 border-slate-200 dark:bg-slate-800/40 dark:border-slate-800'
+                      }`}>
+                        <div className="flex items-center justify-between mb-2">
+                          <p className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 ${
+                            txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? 'text-purple-700 dark:text-purple-400' :
+                            txn.status === 'HOLD_ACTIVE' ? 'text-red-700 dark:text-red-400' :
+                            txn.status === 'PENDING_BANK_APPROVAL' ? 'text-orange-700 dark:text-orange-400' :
+                            txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'text-blue-700 dark:text-blue-400' :
+                            'text-slate-600 dark:text-slate-400'
+                          }`}>
+                            {txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? (
+                              <>🔏 Escrow &middot; {
+                                txn.status === 'PENDING_BANK_APPROVAL' ? 'Admin Approval' :
+                                txn.status === 'HOLD_ACTIVE' ? 'Admin Hold' :
+                                txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'Needs Consent' :
+                                'Active'
+                              }</>
+                            ) :
+                             txn.status === 'HOLD_ACTIVE' ? '🔒 Admin Hold' :
+                             txn.status === 'PENDING_BANK_APPROVAL' ? '⏳ Admin Approval' :
+                             (txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT') ? '👤 Needs Consent' :
+                             `${getStatusIcon(txn.status)} ${txn.status}`}
+                          </p>
+                          <p className="text-lg font-black text-slate-800 dark:text-slate-100">£{Number(txn.amount).toLocaleString()}</p>
+                        </div>
+                        <p className="font-mono text-[9px] text-slate-500 dark:text-slate-400 break-all bg-white/50 dark:bg-slate-950/40 px-2 py-1 rounded mb-3">ID: {txn.id || txn.txnId}</p>
+                        <div className="mt-auto">
+                          <div className="grid grid-cols-2 gap-2 pt-2 border-t border-slate-200 dark:border-slate-700">
+                            <div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">From</p>
+                              <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{getUserById(txn.fromUserId)?.name || txn.fromUserId}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">To</p>
+                              <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{getUserById(txn.toUserId)?.name || txn.toUserId}</p>
+                            </div>
+                          </div>
+                          {txn.escrowOptIn && (
+                            <div className="mt-2.5 pt-2 border-t border-purple-200/60 dark:border-purple-700/30 flex items-center gap-1">
+                              <p className="text-[9px] font-bold text-purple-700 dark:text-purple-400 uppercase tracking-widest">🔏 Escrow service active</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              ) : (
+                <div className="overflow-y-auto flex-1">
+                  <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
+                    <thead className="bg-slate-50 dark:bg-slate-800/50 text-xs uppercase text-slate-500 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-10">
+                      <tr>
+                        <th className="px-4 py-3 font-semibold">Txn ID</th>
+                        <th className="px-4 py-3 font-semibold">From</th>
+                        <th className="px-4 py-3 font-semibold">To</th>
+                        <th className="px-4 py-3 font-semibold">Amount</th>
+                        <th className="px-4 py-3 font-semibold">Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {pendingTransactions.filter(txn => {
+                        if (pendingFilterMode === 'ALL') return true;
+                        const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
+                        return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
+                      }).length === 0 ? (
+                        <tr><td colSpan="5" className="text-center py-12 text-slate-500">No pending items found matching filter</td></tr>
+                      ) : (
+                        pendingTransactions.filter(txn => {
+                          if (pendingFilterMode === 'ALL') return true;
+                          const isEscrow = Boolean(txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE');
+                          return pendingFilterMode === 'ESCROW' ? isEscrow : !isEscrow;
+                        }).map((txn) => (
+                          <tr key={txn.id || txn.txnId} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+                            <td className="px-4 py-3 font-mono text-[10px] break-all max-w-[200px]">{txn.id || txn.txnId}</td>
+                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">{getUserById(txn.fromUserId)?.name || txn.fromUserId}</td>
+                            <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">{getUserById(txn.toUserId)?.name || txn.toUserId}</td>
+                            <td className="px-4 py-3 font-black text-slate-900 dark:text-slate-100">£{Number(txn.amount).toLocaleString()}</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded font-bold text-[9px] uppercase tracking-widest ${
+                                txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400 border border-purple-200 dark:border-purple-800' :
+                                txn.status === 'HOLD_ACTIVE' ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400 border border-red-200 dark:border-red-800' :
+                                txn.status === 'PENDING_BANK_APPROVAL' ? 'bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 border border-orange-200 dark:border-orange-800' :
+                                txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800' :
+                                'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                              }`}>
+                                {txn.escrowOptIn || txn.status === 'ESCROW_ACTIVE' ? (
+                                  <>🔏 Escrow &middot; {txn.status === 'PENDING_BANK_APPROVAL' ? 'Admin' : txn.status === 'HOLD_ACTIVE' ? 'Hold' : txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT' ? 'Consent' : 'Active'}</>
+                                ) :
+                                 txn.status === 'HOLD_ACTIVE' ? '🔒 Admin Hold' :
+                                 txn.status === 'PENDING_BANK_APPROVAL' ? '⏳ Admin Approval' :
+                                 (txn.status === 'PENDING_USER_APPROVAL' || txn.status === 'PENDING_CONSENT') ? '👤 Needs Consent' :
+                                 `${getStatusIcon(txn.status)} ${txn.status}`}
+                              </span>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 

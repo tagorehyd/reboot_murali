@@ -80,13 +80,14 @@ export default function Layout({ children, currentView, onNavigate }) {
       title: 'Users',
       items: [
         { id: 'users', icon: '💳', label: 'Users', view: 'users' },
-        { id: 'history', icon: '📜', label: 'User History', view: 'user-history' },
       ]
     },
     {
       title: 'Admin',
       items: [
-        { id: 'admin', icon: '👮‍♂️', label: 'Admin Portal', view: 'admin' },
+        { id: 'active-users', icon: '👤', label: 'User Explorer', view: 'active-users-list' },
+        { id: 'admin', icon: '👮‍♂️', label: 'Admin Dashboard', view: 'admin' },
+        { id: 'history', icon: '📜', label: 'User History', view: 'user-history' },
       ]
     },
     {

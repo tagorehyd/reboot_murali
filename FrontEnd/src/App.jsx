@@ -230,7 +230,11 @@ export default function App() {
     }
 
     if (view === 'admin') {
-      return <AdminConsole onBalanceUpdate={fetchBalances} />;
+      return <AdminConsole onBalanceUpdate={fetchBalances} userBalances={userBalances} />;
+    }
+
+    if (view === 'active-users-list') {
+      return <AdminConsole onBalanceUpdate={fetchBalances} userBalances={userBalances} showOnlyUsers={true} />;
     }
 
     if (view === 'dashboard') {
