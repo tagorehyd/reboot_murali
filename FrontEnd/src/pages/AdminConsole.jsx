@@ -169,7 +169,7 @@ export default function AdminConsole() {
 
   if (isLoading && queueTransactions.length === 0) {
     return (
-      <div className="max-w-7xl mx-auto bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-200 p-8">
+      <div className="w-full bg-white dark:bg-slate-900 rounded-2xl shadow-xl ring-1 ring-slate-200 p-8">
         <div className="flex items-center justify-center h-64">
           <p className="text-slate-600 dark:text-slate-400 text-lg">⏳ Loading admin dashboard...</p>
         </div>

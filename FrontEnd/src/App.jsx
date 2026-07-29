@@ -81,7 +81,7 @@ export default function App() {
 
   const renderUserCardsScreen = () => {
     return (
-      <div className="max-w-6xl mx-auto space-y-6 select-none font-sans">
+      <div className="w-full space-y-6 select-none font-sans">
         <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-4">
           <div>
             <h1 className="text-3xl font-black text-[#111827] font-heading flex items-center gap-3">

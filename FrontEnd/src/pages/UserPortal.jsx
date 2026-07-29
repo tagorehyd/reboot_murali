@@ -888,7 +888,7 @@ export default function UserPortal({ userId }) {
             <div className="flex-1 flex bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 overflow-hidden">
               <div className="overflow-y-auto flex-1 p-5 space-y-4 w-full">
                 {!transactionResponse ? (
-                  <div className="max-w-6xl mx-auto space-y-4 h-full flex flex-col">
+                  <div className="w-full space-y-4 h-full flex flex-col">
                     {/* Beneficiary Zone */}
                     <div className="flex-1 min-h-0 grid grid-cols-1 xl:grid-cols-12 gap-4 items-stretch">
                       <div className="xl:col-span-7 flex flex-col gap-4 min-h-0">
@@ -1198,7 +1198,7 @@ export default function UserPortal({ userId }) {
 
                 {transactionResponse && (
                   <div className="min-h-full w-full p-2 md:p-4 flex items-center justify-center">
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full max-w-5xl mx-auto items-start">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 w-full items-start">
                       
                       {/* Left Column: Core Transaction Info */}
                       <div className="space-y-4">
