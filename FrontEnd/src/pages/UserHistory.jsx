@@ -610,6 +610,19 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
                         </span>
                         <span className="font-mono text-[10px] text-slate-400">{item.txnId || item.id}</span>
                       </div>
+
+                      <div className="pt-2 border-t border-slate-200/50 dark:border-slate-800/80">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTxn(item);
+                            setIsCantonModalOpen(true);
+                          }}
+                          className="w-full text-[10px] font-extrabold px-2 py-1 rounded-lg bg-indigo-50/80 dark:bg-slate-800 hover:bg-indigo-100 dark:hover:bg-slate-700 text-indigo-700 dark:text-indigo-300 border border-indigo-100/80 dark:border-slate-700/80 shadow-xs transition-all flex items-center justify-center gap-1 cursor-pointer"
+                        >
+                          <span>DAML Consent Trail ⛓️</span>
+                        </button>
+                      </div>
                     </div>
                   );
                 })}

@@ -1320,19 +1320,12 @@ export default function UserPortal({ userId }) {
                           </div>
                         </div>
 
-                        {/* Transaction ID & Workflow Action */}
-                        <div className="border-t border-slate-100 dark:border-slate-800 pt-2 mt-auto space-y-2">
+                        {/* Transaction ID */}
+                        <div className="border-t border-slate-100 dark:border-slate-800 pt-2 mt-auto">
                           <div>
                             <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Transaction ID</p>
                             <p className="font-mono text-[11px] text-slate-500 dark:text-slate-500 break-all">{item.txnId || item.id}</p>
                           </div>
-
-                          <button
-                            onClick={() => setSelectedWorkflowTxn(item)}
-                            className="w-full text-[11px] font-bold px-3 py-1.5 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-xs"
-                          >
-                            <span>DAML Consent Trail ⛓️</span>
-                          </button>
                         </div>
                       </div>
                     );
@@ -1349,12 +1342,11 @@ export default function UserPortal({ userId }) {
                         <th className="px-4 py-3 font-semibold">Counterparty</th>
                         <th className="px-4 py-3 font-semibold">Amount</th>
                         <th className="px-4 py-3 font-semibold">Status</th>
-                        <th className="px-4 py-3 font-semibold">DAML Workflow</th>
                       </tr>
                     </thead>
                     <tbody>
                       {recentHistory.length === 0 ? (
-                        <tr><td colSpan="6" className="text-center py-12 text-slate-500">No history yet</td></tr>
+                        <tr><td colSpan="5" className="text-center py-12 text-slate-500">No history yet</td></tr>
                       ) : (
                         recentHistory.map((item) => {
                           const counterpartyName = item.counterpartyName || item.counterparty;
@@ -1387,14 +1379,6 @@ export default function UserPortal({ userId }) {
                                 }`}>
                                   {item.status}
                                 </span>
-                              </td>
-                              <td className="px-4 py-3">
-                                <button
-                                  onClick={() => setSelectedWorkflowTxn(item)}
-                                  className="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800/80 transition-all flex items-center gap-1 cursor-pointer whitespace-nowrap shadow-xs"
-                                >
-                                  <span>Git Workflow 🌿</span>
-                                </button>
                               </td>
                             </tr>
                           );

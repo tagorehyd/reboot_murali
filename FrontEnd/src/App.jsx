@@ -277,56 +277,57 @@ export default function App() {
         {/* Main Single Viewport Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
           
-          {/* Left 5 Cols: Platform Overview & Ecosystem Navigation */}
+          {/* Left 5 Cols: Platform Overview & Immersive Ledger Stats */}
           <div className="lg:col-span-5 flex flex-col gap-3 min-h-0">
             {/* Canton Blockchain Feature Card */}
-            <div className="bg-white dark:bg-slate-900 border border-[#CBD5E1] dark:border-slate-800 rounded-2xl p-4 shadow-sm flex-1 flex flex-col justify-between min-h-0">
-              <div>
-                <h3 className="text-xs font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wider mb-2 flex items-center gap-2 font-heading">
-                  <span className="text-[#00A865] dark:text-emerald-400">⛓️</span> Canton DAML Ledger Integration
+            <div className="bg-white dark:bg-slate-900 border border-[#CBD5E1] dark:border-slate-800 rounded-2xl p-6 shadow-sm flex-1 flex flex-col justify-between min-h-0">
+              <div className="space-y-4">
+                <h3 className="text-sm font-black text-[#111827] dark:text-slate-100 uppercase tracking-wider flex items-center gap-2.5 font-heading">
+                  <span className="text-[#00A865] dark:text-emerald-400 text-lg">⛓️</span> Canton DAML Ledger Integration
                 </h3>
-                <p className="text-xs text-[#111827]/80 dark:text-slate-300 mb-3 leading-relaxed">
-                  Permanent, tamper-evident recording of interbank payments, consent choices, and escrow holds.
+                <p className="text-xs text-[#111827]/80 dark:text-slate-300 leading-relaxed">
+                  Permanent, tamper-evident recording of interbank payments, cryptographic consent choices, and automated escrow holdings. Integrates multiple-party verification nodes directly into the Lloyds banking infrastructure.
                 </p>
-                <ul className="space-y-2 text-xs text-[#111827] dark:text-slate-300">
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#00A865] dark:text-emerald-400 font-bold">✓</span>
-                    <span><strong>Consensus Validated:</strong> BFT node verification</span>
+                <div className="border-t border-[#CBD5E1]/60 dark:border-slate-800/80 my-4" />
+                <ul className="space-y-4 text-xs text-[#111827] dark:text-slate-300">
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-[#00A865] dark:text-emerald-400 font-bold text-sm leading-none mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white font-bold block mb-0.5">Consensus Validated</strong>
+                      <span className="text-[#111827]/70 dark:text-slate-400">Byzantine Fault Tolerant (BFT) node verification protocol.</span>
+                    </div>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#00A865] dark:text-emerald-400 font-bold">✓</span>
-                    <span><strong>Immutable Audit Trail:</strong> Signed DAML choices</span>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-[#00A865] dark:text-emerald-400 font-bold text-sm leading-none mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white font-bold block mb-0.5">Immutable Audit Trail</strong>
+                      <span className="text-[#111827]/70 dark:text-slate-400">Cryptographically signed DAML smart contract choices & histories.</span>
+                    </div>
                   </li>
-                  <li className="flex items-center gap-2">
-                    <span className="text-[#00A865] dark:text-emerald-400 font-bold">✓</span>
-                    <span><strong>Smart Contracts:</strong> Multi-sig risk approvals</span>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-[#00A865] dark:text-emerald-400 font-bold text-sm leading-none mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white font-bold block mb-0.5">Automated Escrow Rules</strong>
+                      <span className="text-[#111827]/70 dark:text-slate-400">Multi-signature approvals and smart contract safety gates.</span>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2.5">
+                    <span className="text-[#00A865] dark:text-emerald-400 font-bold text-sm leading-none mt-0.5">✓</span>
+                    <div>
+                      <strong className="text-slate-900 dark:text-white font-bold block mb-0.5">Cross-Border Settlement Routing</strong>
+                      <span className="text-[#111827]/70 dark:text-slate-400">Privacy-preserving sub-second atomic transactional committing.</span>
+                    </div>
                   </li>
                 </ul>
               </div>
-            </div>
 
-            {/* Navigation Quick Links */}
-            <div className="bg-white dark:bg-slate-900 border border-[#CBD5E1] dark:border-slate-800 rounded-2xl p-4 shadow-sm flex-1 flex flex-col justify-between min-h-0">
-              <h3 className="text-xs font-extrabold text-[#111827] dark:text-slate-100 uppercase tracking-wider mb-2 flex items-center gap-2 font-heading">
-                <span>🚀</span> Ecosystem Navigation
-              </h3>
-              <div className="grid grid-cols-2 gap-2 text.xs">
-                <button onClick={() => setView('users')} className="p-2.5 rounded-xl bg-[#ECEEEF] dark:bg-slate-800/80 border border-[#CBD5E1] dark:border-slate-700 text-left hover:border-[#00A865] dark:hover:border-emerald-500 transition-colors cursor-pointer">
-                  <span className="font-extrabold text-xs text-[#111827] dark:text-slate-100 block">💳 User Cards</span>
-                  <p className="text-[10px] text-[#111827]/70 dark:text-slate-400">7 Customer Profiles</p>
-                </button>
-                <button onClick={() => setView('admin')} className="p-2.5 rounded-xl bg-[#ECEEEF] dark:bg-slate-800/80 border border-[#CBD5E1] dark:border-slate-700 text-left hover:border-[#00A865] dark:hover:border-emerald-500 transition-colors cursor-pointer">
-                  <span className="font-extrabold text-xs text-[#111827] dark:text-slate-100 block">👮‍♂️ Admin Console</span>
-                  <p className="text-[10px] text-[#111827]/70 dark:text-slate-400">Review compliance holds</p>
-                </button>
-                <button onClick={() => setView('explorer')} className="p-2.5 rounded-xl bg-[#ECEEEF] dark:bg-slate-800/80 border border-[#CBD5E1] dark:border-slate-700 text-left hover:border-[#00A865] dark:hover:border-emerald-500 transition-colors cursor-pointer">
-                  <span className="font-extrabold text-xs text-[#111827] dark:text-slate-100 block">🔎 Chain Explorer</span>
-                  <p className="text-[10px] text-[#111827]/70 dark:text-slate-400">Block audit graph</p>
-                </button>
-                <button onClick={() => setView('suspicious')} className="p-2.5 rounded-xl bg-[#ECEEEF] dark:bg-slate-800/80 border border-[#CBD5E1] dark:border-slate-700 text-left hover:border-[#00A865] dark:hover:border-emerald-500 transition-colors cursor-pointer">
-                  <span className="font-extrabold text-xs text-[#111827] dark:text-slate-100 block">⚠️ Suspicious Txns</span>
-                  <p className="text-[10px] text-[#111827]/70 dark:text-slate-400">8D Isolation Forest flags</p>
-                </button>
+              {/* Ledger Node Details Monitor Status */}
+              <div className="mt-6 pt-4 border-t border-[#CBD5E1] dark:border-slate-800 flex items-center justify-between text-[10px] font-bold text-[#111827]/60 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/40 p-3 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#00A865] dark:bg-emerald-400 animate-pulse"></div>
+                  <span>Node: <strong className="font-mono text-slate-800 dark:text-white">lloyds-canton-node-01</strong></span>
+                </div>
+                <span>Status: <strong className="text-[#00A865] dark:text-emerald-400 uppercase">ACTIVE</strong></span>
               </div>
             </div>
           </div>
