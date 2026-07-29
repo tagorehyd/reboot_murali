@@ -157,12 +157,11 @@ export default function Layout({ children, currentView, onNavigate }) {
         </nav>
 
         {/* Footer */}
-        <div className="p-5 border-t border-[#CBD5E1] dark:border-slate-800 bg-[#ECEEEF]/60 dark:bg-slate-900/60">
+        <div className="p-4 border-t border-[#CBD5E1] dark:border-slate-800 bg-[#ECEEEF]/60 dark:bg-slate-900/60">
           <div className="flex items-center gap-2 text-xs text-[#00A865] font-mono font-bold">
             <span className="w-2 h-2 rounded-full bg-[#00A865] animate-pulse" />
-            <span>LTC PPT Design System</span>
+            <span>Tamper-Evident Canton Ledger</span>
           </div>
-          <p className="text-[10px] text-[#111827]/70 dark:text-slate-400 mt-1 font-sans">Tamper-Evident Canton Ledger</p>
         </div>
       </aside>
 
@@ -178,7 +177,7 @@ export default function Layout({ children, currentView, onNavigate }) {
               <Menu size={22} />
             </button>
             <span className="text-xs font-bold text-[#111827] dark:text-slate-100 font-heading uppercase tracking-wider hidden sm:inline-block">
-              Lloyds Technology Centre & PPT Slide Aesthetics
+              FraudShield — Decentralized Fraud Defense Platform
             </span>
           </div>
           <div className="flex items-center gap-4">

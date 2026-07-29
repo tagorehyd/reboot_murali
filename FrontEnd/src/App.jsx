@@ -10,13 +10,13 @@ import SystemDashboard from './pages/SystemDashboard'
 import UserHistory from './pages/UserHistory'
 
 const DEMO_USERS = [
-  { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-[#00A865] to-teal-600' },
-  { id: 'U002', name: 'Bob Taylor', bank: 'Nova Finance', color: 'from-[#A3E3AB] to-[#00A865]' },
-  { id: 'U003', name: 'Carlos Rivera', bank: 'Prime Banking', color: 'from-[#00A865] to-emerald-700' },
-  { id: 'U004', name: 'Diana Prince', bank: 'Apex Trust', color: 'from-[#A3E3AB] to-teal-500' },
-  { id: 'U005', name: 'Eve Chen', bank: 'Quantum Pay', color: 'from-[#00A865] to-teal-800' },
-  { id: 'U006', name: 'Frank Okafor', bank: 'Gold Standard', color: 'from-[#A3E3AB] to-emerald-600' },
-  { id: 'U007', name: 'Grace Okonkwo', bank: 'Liberty Banking', color: 'from-[#00A865] to-emerald-800' },
+  { id: 'U001', name: 'Alice Walker', bank: 'Stellar Bank', color: 'from-blue-500 to-indigo-600' },
+  { id: 'U002', name: 'Bob Taylor', bank: 'Nova Finance', color: 'from-emerald-500 to-teal-600' },
+  { id: 'U003', name: 'Carlos Rivera', bank: 'Prime Banking', color: 'from-amber-500 to-orange-600' },
+  { id: 'U004', name: 'Diana Prince', bank: 'Apex Trust', color: 'from-rose-500 to-pink-600' },
+  { id: 'U005', name: 'Eve Chen', bank: 'Quantum Pay', color: 'from-purple-500 to-violet-600' },
+  { id: 'U006', name: 'Frank Okafor', bank: 'Gold Standard', color: 'from-cyan-500 to-blue-600' },
+  { id: 'U007', name: 'Grace Okonkwo', bank: 'Liberty Banking', color: 'from-fuchsia-500 to-rose-600' },
 ]
 
 export default function App() {
@@ -95,7 +95,7 @@ export default function App() {
           <div className="flex items-center bg-white p-1 rounded-xl gap-1 border border-[#CBD5E1]">
             <button
               onClick={() => setAccountViewMode('grid')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 accountViewMode === 'grid'
                   ? 'bg-[#00A865] text-white shadow-sm'
                   : 'text-[#111827] hover:text-[#00A865]'
@@ -105,7 +105,7 @@ export default function App() {
             </button>
             <button
               onClick={() => setAccountViewMode('table')}
-              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
+              className={`px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
                 accountViewMode === 'table'
                   ? 'bg-[#00A865] text-white shadow-sm'
                   : 'text-[#111827] hover:text-[#00A865]'
@@ -127,12 +127,12 @@ export default function App() {
                     setSelectedUser(user.id);
                     setView('user-portal');
                   }}
-                  className="group text-left transition-all transform hover:-translate-y-1 hover:shadow-2xl focus:outline-none"
+                  className="group text-left transition-all transform hover:-translate-y-1 hover:shadow-2xl focus:outline-none cursor-pointer"
                 >
                   <div className="bg-white border border-[#CBD5E1] rounded-2xl p-5 h-full flex flex-col justify-between shadow-sm group-hover:border-[#00A865] transition-all">
                     <div>
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="w-14 h-14 rounded-2xl bg-[#00A865] text-white flex items-center justify-center font-black text-xl shadow-sm transform group-hover:rotate-6 transition-transform">
+                        <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${user.color} flex items-center justify-center text-white font-black text-xl shadow-md transform group-hover:rotate-6 transition-transform`}>
                           {user.name.charAt(0)}
                         </div>
                         <div>
@@ -188,7 +188,7 @@ export default function App() {
                     >
                       <td className="px-6 py-4">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl bg-[#00A865] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${user.color} flex items-center justify-center text-white font-bold text-lg shadow-sm`}>
                             {user.name.charAt(0)}
                           </div>
                           <div>
@@ -258,7 +258,7 @@ export default function App() {
             <span className="text-xl">⚡</span>
             <div>
               <h1 className="text-base sm:text-lg font-black tracking-tight text-[#111827] font-heading flex items-center gap-2">
-                Lloyds Technology Centre — Fraud Defense Platform
+                FraudShield — Decentralized Fraud Defense Platform
               </h1>
               <p className="text-[11px] text-[#111827]/70">
                 Tamper-evident interbank fraud prevention & Canton consensus-validated audit trail
