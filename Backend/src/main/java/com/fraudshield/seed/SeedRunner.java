@@ -43,6 +43,7 @@ public class SeedRunner implements ApplicationRunner {
         if (userRepository.count() > 0) {
             backfillCantonMappingsForExistingUsers();
             seedSecurityAuditDataIfEmpty();
+            seedGenesisBlocksIfMissing();
             log.info("[Seed] Data already present — skipping user seed.");
             return;
         }
@@ -54,6 +55,22 @@ public class SeedRunner implements ApplicationRunner {
         seedSystemLocks();
         seedSecurityAuditDataIfEmpty();
         log.info("[Seed] ✅ Seed complete.");
+    }
+
+    private void seedGenesisBlocksIfMissing() {
+        Block genesis = buildGenesisBlock();
+        if (chainAlpha.findByBlockNumber(0).isEmpty()) {
+            chainAlpha.save(toAlpha(genesis, "alpha"));
+            log.info("[Seed] Backfilled genesis block 0 to chainAlpha.");
+        }
+        if (chainBeta.findByBlockNumber(0).isEmpty()) {
+            chainBeta.save(toBeta(genesis, "beta"));
+            log.info("[Seed] Backfilled genesis block 0 to chainBeta.");
+        }
+        if (chainGamma.findByBlockNumber(0).isEmpty()) {
+            chainGamma.save(toGamma(genesis, "gamma"));
+            log.info("[Seed] Backfilled genesis block 0 to chainGamma.");
+        }
     }
 
 

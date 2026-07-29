@@ -403,20 +403,21 @@ public class NvidiaNimChatService {
             "Score range **40 to 69**.");
 
         addQ(40, "What action is taken for MEDIUM RISK transactions?",
-            List.of("medium risk action", "consent_required", "pending_user_approval"),
-            "`CONSENT_REQUIRED` — Held in `PENDING_USER_APPROVAL` for sender verification.");
+            List.of("medium risk action", "admin_review", "pending_admin"),
+            "`ADMIN_REVIEW` — Routed to `PENDING_ADMIN` review queue with Canton hold contract.");
 
         addQ(41, "What are the score boundaries for HIGH RISK tier?",
             List.of("high risk boundaries", "70-100", "high risk score"),
             "Score range **70 to 100**.");
 
         addQ(42, "What action is taken for HIGH RISK transactions?",
-            List.of("high risk action", "bank_hold", "pending_bank_approval"),
-            "`BANK_HOLD` — Placed in `PENDING_BANK_APPROVAL` with Canton `HoldRequest` smart contract.");
+            List.of("high risk action", "consent_required", "pending_consent"),
+            "`CONSENT_REQUIRED` — Requires 15-second sender consent confirmation, escalating to bank admin.");
 
-        addQ(43, "How does the LARGE_AMOUNT fraud rule work (+20 pts)?",
-            List.of("large_amount", "+20", "10000"),
-            "Triggers +20 risk points when transfer amount $> \\text{£}10,000$.");
+        addQ(43, "How does the LARGE_AMOUNT fraud rule work (+20 / +35 pts)?",
+            List.of("large_amount", "+20", "25000", "+35", "100000"),
+            "Triggers +20 risk points when transfer amount $> \\text{£}25,000$, and +35 risk points when $> \\text{£}100,000$.");
+
 
         addQ(44, "How does the NEW_PAYEE fraud rule work (+15 pts)?",
             List.of("new_payee", "+15", "trusted payee"),
