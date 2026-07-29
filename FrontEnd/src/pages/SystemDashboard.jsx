@@ -6,20 +6,20 @@ import {
 } from 'recharts';
 
 const BANK_COLORS = {
-  'Stellar Bank': '#0ea5e9',
-  'Nova Finance': '#3b82f6',
-  'Prime Banking': '#8b5cf6',
-  'Apex Trust': '#06b6d4',
-  'Quantum Pay': '#ec4899',
-  'Gold Standard': '#f59e0b',
-  'Liberty Banking': '#ef4444',
+  'Stellar Bank': '#00A865',
+  'Nova Finance': '#A3E3AB',
+  'Prime Banking': '#0B3820',
+  'Apex Trust': '#00A865',
+  'Quantum Pay': '#A3E3AB',
+  'Gold Standard': '#0B3820',
+  'Liberty Banking': '#00A865',
 };
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 p-2.5 rounded-xl shadow-xl font-mono text-xs z-50 text-slate-800 dark:text-slate-200">
-        <p className="text-slate-500 dark:text-slate-400 mb-1 font-bold">{label}</p>
+      <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] p-2.5 rounded-xl shadow-xl font-mono text-xs z-50">
+        <p className="text-[#A3E3AB] mb-1 font-bold">{label}</p>
         {payload.map((entry, index) => (
           <p key={index} style={{ color: entry.color }} className="font-bold">
             {entry.name}: {typeof entry.value === 'number' ? entry.value.toLocaleString() : entry.value}
@@ -45,9 +45,9 @@ export default function SystemDashboard() {
 
   const [institutionData, setInstitutionData] = useState([]);
   const [riskData, setRiskData] = useState([
-    { name: 'Low Risk (< £1k)', value: 50, color: '#a855f7', percent: '50%' },
-    { name: 'Medium Risk (£1k-£5k)', value: 30, color: '#06b6d4', percent: '30%' },
-    { name: 'High Risk (> £5k)', value: 20, color: '#f97316', percent: '20%' },
+    { name: 'Low Risk (< £1k)', value: 50, color: '#A3E3AB', percent: '50%' },
+    { name: 'Medium Risk (£1k-£5k)', value: 30, color: '#00A865', percent: '30%' },
+    { name: 'High Risk (> £5k)', value: 20, color: '#0B3820', percent: '20%' },
   ]);
   const [timeSeriesData, setTimeSeriesData] = useState([]);
 
@@ -134,7 +134,7 @@ export default function SystemDashboard() {
       const formattedInstData = Object.keys(instVolumeMap).map(bankName => ({
         name: bankName,
         volume: Math.round(instVolumeMap[bankName]),
-        color: BANK_COLORS[bankName] || '#0ea5e9'
+        color: BANK_COLORS[bankName] || '#00A865'
       }));
 
       setInstitutionData(formattedInstData);
@@ -160,9 +160,9 @@ export default function SystemDashboard() {
 
       const totalCalculated = (lowCount + medCount + highCount) || 1;
       setRiskData([
-        { name: 'Low Risk (< £1k)', value: lowCount || 50, color: '#a855f7', percent: `${Math.round(((lowCount || 50) / totalCalculated) * 100)}%` },
-        { name: 'Medium Risk (£1k-£5k)', value: medCount || 30, color: '#06b6d4', percent: `${Math.round(((medCount || 30) / totalCalculated) * 100)}%` },
-        { name: 'High Risk (> £5k)', value: highCount || 20, color: '#f97316', percent: `${Math.round(((highCount || 20) / totalCalculated) * 100)}%` },
+        { name: 'Low Risk (< £1k)', value: lowCount || 50, color: '#A3E3AB', percent: `${Math.round(((lowCount || 50) / totalCalculated) * 100)}%` },
+        { name: 'Medium Risk (£1k-£5k)', value: medCount || 30, color: '#00A865', percent: `${Math.round(((medCount || 30) / totalCalculated) * 100)}%` },
+        { name: 'High Risk (> £5k)', value: highCount || 20, color: '#0B3820', percent: `${Math.round(((highCount || 20) / totalCalculated) * 100)}%` },
       ]);
 
       // Construct Hourly Time Series Data
@@ -199,129 +199,124 @@ export default function SystemDashboard() {
   }, []);
 
   return (
-    <div className="h-full flex flex-col overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-200 p-3 sm:p-4 gap-3 font-sans select-none">
+    <div className="h-full flex flex-col overflow-hidden bg-[#ECEEEF] text-[#111827] p-3 sm:p-4 gap-3 font-sans select-none">
       {/* Compact Header Bar */}
-      <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2 flex-shrink-0">
+      <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-2 flex-shrink-0">
         <div className="flex items-center gap-2">
           <span className="text-xl">⚡</span>
           <div>
-            <h1 className="text-base sm:text-lg font-black tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-              Real-Time Canton Network Insights
+            <h1 className="text-base sm:text-lg font-black tracking-tight text-[#111827] font-heading flex items-center gap-2">
+              Real-Time Canton Network Insights — Lloyds Tech Centre
             </h1>
-            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+            <p className="text-[11px] text-[#111827]/70">
               Live telemetrics, interbank throughput, Isolation Forest risk tiers, and Canton ledger audit stats.
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 bg-emerald-50 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 px-3 py-1 rounded-full shadow-xs">
-          <div className="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></div>
-          <span className="text-[10px] font-bold text-emerald-700 dark:text-emerald-300 uppercase tracking-wider font-mono">Canton Ledger Active</span>
+        <div className="flex items-center gap-2 bg-[#A3E3AB] text-[#082914] px-3 py-1 rounded-full shadow-xs">
+          <div className="w-2 h-2 rounded-full bg-[#00A865] animate-ping"></div>
+          <span className="text-[10px] font-extrabold uppercase tracking-wider font-mono">Canton Ledger Active</span>
         </div>
       </div>
 
-      {/* Row 1: KPI Stats + Canton Validator Matrix in a Single Compact Row */}
+      {/* Row 1: KPI Stats + Canton Validator Matrix */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-shrink-0">
-        {/* Left 5 Cols: 4 KPI Summary Stat Badges (2x2 Grid) */}
+        {/* Left 5 Cols: 4 KPI Summary Stat Badges (Forest Green Cards) */}
         <div className="lg:col-span-5 grid grid-cols-2 gap-2">
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 shadow-xs flex flex-col justify-between">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Total Ledger Txns</p>
-            <p className="text-2xl font-black text-cyan-600 dark:text-cyan-400 my-0.5">{stats.totalTxns}</p>
-            <p className="text-[9px] text-slate-500 font-mono">Committed + Mempool</p>
+          <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+            <p className="text-[10px] font-extrabold text-[#A3E3AB] uppercase tracking-wider">Total Ledger Txns</p>
+            <p className="text-2xl font-black text-[#E2F7E8] my-0.5">{stats.totalTxns}</p>
+            <p className="text-[9px] text-[#D1EAD0] font-mono">Committed + Mempool</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 shadow-xs flex flex-col justify-between">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Settled Volume</p>
-            <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 my-0.5">£{stats.totalVolumeGBP.toLocaleString()}</p>
-            <p className="text-[9px] text-slate-500 font-mono">Gross Interbank Volume</p>
+          <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+            <p className="text-[10px] font-extrabold text-[#A3E3AB] uppercase tracking-wider">Settled Volume</p>
+            <p className="text-2xl font-black text-[#A3E3AB] my-0.5">£{stats.totalVolumeGBP.toLocaleString()}</p>
+            <p className="text-[9px] text-[#D1EAD0] font-mono">Gross Interbank Volume</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 shadow-xs flex flex-col justify-between">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Committed Blocks</p>
-            <p className="text-2xl font-black text-purple-600 dark:text-purple-400 my-0.5">{stats.blockCount}</p>
-            <p className="text-[9px] text-slate-500 font-mono">Synchronizer Hash Blocks</p>
+          <div className="bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+            <p className="text-[10px] font-extrabold text-[#A3E3AB] uppercase tracking-wider">Committed Blocks</p>
+            <p className="text-2xl font-black text-[#E2F7E8] my-0.5">{stats.blockCount}</p>
+            <p className="text-[9px] text-[#D1EAD0] font-mono">Synchronizer Hash Blocks</p>
           </div>
 
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 shadow-xs flex flex-col justify-between">
-            <p className="text-[10px] font-bold text-slate-400 dark:text-slate-400 uppercase tracking-wider">Audit Flags</p>
-            <p className="text-2xl font-black text-rose-600 dark:text-rose-400 my-0.5">{stats.highRiskCount}</p>
-            <p className="text-[9px] text-slate-500 font-mono">Tampers & ML Outliers</p>
+          <div className="bg-[#00A865] text-[#031D0E] border border-[#00A865] rounded-2xl p-3 shadow-sm flex flex-col justify-between">
+            <p className="text-[10px] font-black uppercase tracking-wider">Audit Flags</p>
+            <p className="text-2xl font-black my-0.5">{stats.highRiskCount}</p>
+            <p className="text-[9px] font-mono font-bold">Tampers & ML Outliers</p>
           </div>
         </div>
 
-        {/* Right 7 Cols: Canton Distributed Synchronizer & Validator Matrix (Frosted Glass Green Aura) */}
-        <div className="lg:col-span-7 bg-white dark:bg-slate-900 border-2 border-emerald-500/40 rounded-xl p-3 shadow-[0_0_15px_rgba(16,185,129,0.12)] flex flex-col justify-between gap-2">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5">
+        {/* Right 7 Cols: Canton Synchronizer & Validator Matrix */}
+        <div className="lg:col-span-7 bg-[#0B3820] text-[#E2F7E8] border border-[#072914] rounded-2xl p-3 shadow-md flex flex-col justify-between gap-2">
+          <div className="flex items-center justify-between border-b border-[#072914] pb-1.5">
             <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
+              <span className="w-2 h-2 rounded-full bg-[#00A865] animate-pulse"></span>
+              <span className="text-xs font-black uppercase tracking-wider text-white font-heading">
                 Canton Distributed Synchronizer & Validator Matrix
               </span>
             </div>
-            <span className="text-[9px] font-mono font-bold bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 px-2 py-0.5 rounded-full border border-emerald-300 dark:border-emerald-700">
+            <span className="text-[9px] font-mono font-extrabold bg-[#A3E3AB] text-[#082914] px-2 py-0.5 rounded-full">
               Alpha-Interbank-v1
             </span>
           </div>
 
           {/* 5 Node Pills */}
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-2 font-mono text-xs">
-            {/* Node 1: Bank A */}
-            <div className="p-2 bg-emerald-50/60 dark:bg-slate-950 border border-emerald-300 dark:border-emerald-500/50 rounded-lg space-y-1 shadow-[0_0_10px_rgba(16,185,129,0.12)]">
+            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">BankA.Node</span>
-                <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-400">✓ 18ms</span>
+                <span className="font-extrabold text-[11px] text-white truncate">BankA.Node</span>
+                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">18ms</span>
               </div>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400">DAML Active</p>
+              <p className="text-[9px] text-[#D1EAD0]">DAML Active</p>
             </div>
 
-            {/* Node 2: Bank B */}
-            <div className="p-2 bg-emerald-50/60 dark:bg-slate-950 border border-emerald-300 dark:border-emerald-500/50 rounded-lg space-y-1 shadow-[0_0_10px_rgba(16,185,129,0.12)]">
+            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">BankB.Node</span>
-                <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-400">✓ 22ms</span>
+                <span className="font-extrabold text-[11px] text-white truncate">BankB.Node</span>
+                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">22ms</span>
               </div>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400">DAML Active</p>
+              <p className="text-[9px] text-[#D1EAD0]">DAML Active</p>
             </div>
 
-            {/* Node 3: Bank C */}
-            <div className="p-2 bg-emerald-50/60 dark:bg-slate-950 border border-emerald-300 dark:border-emerald-500/50 rounded-lg space-y-1 shadow-[0_0_10px_rgba(16,185,129,0.12)]">
+            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">BankC.Node</span>
-                <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-400">✓ 16ms</span>
+                <span className="font-extrabold text-[11px] text-white truncate">BankC.Node</span>
+                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">16ms</span>
               </div>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400">DAML Active</p>
+              <p className="text-[9px] text-[#D1EAD0]">DAML Active</p>
             </div>
 
-            {/* Node 4: Regulator */}
-            <div className="p-2 bg-emerald-50/60 dark:bg-slate-950 border border-emerald-300 dark:border-emerald-500/50 rounded-lg space-y-1 shadow-[0_0_10px_rgba(16,185,129,0.12)]">
+            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">Regulator</span>
-                <span className="text-[8px] font-bold text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950 px-1.5 py-0.5 rounded border border-emerald-400">✓ 14ms</span>
+                <span className="font-extrabold text-[11px] text-white truncate">Regulator</span>
+                <span className="text-[8px] font-bold text-[#082914] bg-[#A3E3AB] px-1.5 py-0.5 rounded">14ms</span>
               </div>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400">Observer</p>
+              <p className="text-[9px] text-[#D1EAD0]">Observer</p>
             </div>
 
-            {/* Node 5: Mediator */}
-            <div className="p-2 bg-emerald-50/60 dark:bg-slate-950 border border-emerald-300 dark:border-emerald-500/50 rounded-lg space-y-1 shadow-[0_0_10px_rgba(16,185,129,0.12)]">
+            <div className="p-2 bg-[#082914] border border-[#072914] rounded-xl space-y-1">
               <div className="flex items-center justify-between">
-                <span className="font-extrabold text-[11px] text-slate-900 dark:text-white truncate">Mediator.01</span>
-                <span className="text-[8px] font-bold text-cyan-700 dark:text-cyan-300 bg-cyan-100 dark:bg-cyan-950 px-1.5 py-0.5 rounded border border-cyan-400">1250 TPS</span>
+                <span className="font-extrabold text-[11px] text-white truncate">Mediator.01</span>
+                <span className="text-[8px] font-bold text-[#031D0E] bg-[#00A865] px-1.5 py-0.5 rounded">1250 TPS</span>
               </div>
-              <p className="text-[9px] text-slate-500 dark:text-slate-400">BFT Sequencer</p>
+              <p className="text-[9px] text-[#D1EAD0]">BFT Sequencer</p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Row 2: Charts Row (Throughput Chart + Volume Bar Chart + Risk Donut Widget Matching Reference Image) */}
+      {/* Row 2: Charts Row */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 flex-1 min-h-0">
         {/* 4 Cols: Live Throughput Chart */}
-        <div className="lg:col-span-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs flex flex-col min-h-0">
+        <div className="lg:col-span-4 bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-xs flex flex-col min-h-0">
           <div className="flex items-center justify-between mb-1.5">
-            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-cyan-500"></span>
+            <h3 className="text-xs font-bold text-[#111827] uppercase tracking-wider font-heading flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-[#00A865]"></span>
               Throughput & Flag Rate
             </h3>
-            <span className="text-[9px] font-mono text-cyan-700 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800">
+            <span className="text-[9px] font-mono font-bold text-[#082914] bg-[#A3E3AB] px-2 py-0.5 rounded-full">
               Live
             </span>
           </div>
@@ -330,38 +325,38 @@ export default function SystemDashboard() {
               <AreaChart data={timeSeriesData} margin={{ top: 5, right: 5, left: -25, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#0ea5e9" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#0ea5e9" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#00A865" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#00A865" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorFlagged" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4}/>
-                    <stop offset="95%" stopColor="#f59e0b" stopOpacity={0}/>
+                    <stop offset="5%" stopColor="#0B3820" stopOpacity={0.4}/>
+                    <stop offset="95%" stopColor="#0B3820" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800" vertical={false} />
-                <XAxis dataKey="time" stroke="#64748b" fontSize={9} tickMargin={5} />
-                <YAxis stroke="#64748b" fontSize={9} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" vertical={false} />
+                <XAxis dataKey="time" stroke="#111827" fontSize={9} tickMargin={5} />
+                <YAxis stroke="#111827" fontSize={9} />
                 <Tooltip content={<CustomTooltip />} />
-                <Area type="monotone" dataKey="total" name="Total Txns" stroke="#0ea5e9" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
-                <Area type="monotone" dataKey="flagged" name="AI Flagged" stroke="#f59e0b" strokeWidth={1.5} fillOpacity={1} fill="url(#colorFlagged)" />
+                <Area type="monotone" dataKey="total" name="Total Txns" stroke="#00A865" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" />
+                <Area type="monotone" dataKey="flagged" name="AI Flagged" stroke="#0B3820" strokeWidth={1.5} fillOpacity={1} fill="url(#colorFlagged)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
         {/* 3 Cols: Interbank Volume Bar Chart */}
-        <div className="lg:col-span-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs flex flex-col min-h-0">
-          <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider mb-1.5 flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <div className="lg:col-span-3 bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-xs flex flex-col min-h-0">
+          <h3 className="text-xs font-bold text-[#111827] uppercase tracking-wider font-heading mb-1.5 flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-[#0B3820]"></span>
             Volume Transferred
           </h3>
           <div className="flex-1 w-full min-h-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={institutionData} layout="vertical" margin={{ top: 0, right: 10, left: 10, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#cbd5e1" className="dark:stroke-slate-800" horizontal={false} />
-                <XAxis type="number" stroke="#64748b" fontSize={9} hide />
-                <YAxis dataKey="name" type="category" stroke="#64748b" fontSize={9} axisLine={false} tickLine={false} width={75} />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(148, 163, 184, 0.1)' }} />
+                <CartesianGrid strokeDasharray="3 3" stroke="#CBD5E1" horizontal={false} />
+                <XAxis type="number" stroke="#111827" fontSize={9} hide />
+                <YAxis dataKey="name" type="category" stroke="#111827" fontSize={9} axisLine={false} tickLine={false} width={75} />
+                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(11, 56, 32, 0.05)' }} />
                 <Bar dataKey="volume" name="Volume (£ GBP)" radius={[0, 4, 4, 0]}>
                   {institutionData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
@@ -372,20 +367,20 @@ export default function SystemDashboard() {
           </div>
         </div>
 
-        {/* 5 Cols: Risk Tier Distribution Donut Widget Matching User Reference Image */}
-        <div className="lg:col-span-5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs flex flex-col justify-between min-h-0">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-1.5">
-            <h3 className="text-xs font-bold text-slate-800 dark:text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-purple-500 animate-pulse"></span>
+        {/* 5 Cols: Risk Tier Distribution Donut Widget */}
+        <div className="lg:col-span-5 bg-white border border-[#CBD5E1] rounded-2xl p-3 shadow-xs flex flex-col justify-between min-h-0">
+          <div className="flex items-center justify-between border-b border-[#CBD5E1] pb-1.5 mb-1.5">
+            <h3 className="text-xs font-bold text-[#111827] uppercase tracking-wider font-heading flex items-center gap-1.5">
+              <span className="w-2.5 h-2.5 rounded-full bg-[#00A865] animate-pulse"></span>
               3-Tier Risk Distribution Analysis
             </h3>
-            <span className="font-mono text-[10px] font-extrabold text-cyan-600 dark:text-cyan-400 bg-cyan-50 dark:bg-cyan-950 px-2 py-0.5 rounded border border-cyan-200 dark:border-cyan-800">
+            <span className="font-mono text-[10px] font-extrabold text-[#082914] bg-[#A3E3AB] px-2 py-0.5 rounded-full">
               £{stats.totalVolumeGBP.toLocaleString()}
             </span>
           </div>
 
           <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-3 items-center min-h-0">
-            {/* Left: Donut Chart with Center Metric Counter Overlay */}
+            {/* Left: Donut Chart */}
             <div className="relative flex items-center justify-center h-full min-h-[120px]">
               <ResponsiveContainer width="100%" height="100%">
                 <PieChart>
@@ -399,9 +394,9 @@ export default function SystemDashboard() {
                     dataKey="value"
                     stroke="none"
                   >
-                    <Cell fill="#a855f7" />
-                    <Cell fill="#06b6d4" />
-                    <Cell fill="#f97316" />
+                    <Cell fill="#A3E3AB" />
+                    <Cell fill="#00A865" />
+                    <Cell fill="#0B3820" />
                   </Pie>
                   <Tooltip content={<CustomTooltip />} />
                 </PieChart>
@@ -409,63 +404,48 @@ export default function SystemDashboard() {
 
               {/* Center Counter Overlay */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <span className="text-lg font-black text-slate-900 dark:text-white leading-none font-mono">
+                <span className="text-lg font-black text-[#111827] leading-none font-mono">
                   {stats.totalTxns || 7439}
                 </span>
-                <span className="text-[8px] font-bold uppercase text-slate-400 font-mono tracking-tighter mt-0.5">
+                <span className="text-[8px] font-bold uppercase text-[#111827]/60 font-mono tracking-tighter mt-0.5">
                   EVALUATED
                 </span>
               </div>
             </div>
 
-            {/* Right: Detailed Sparkline Legend Rows */}
+            {/* Right: Detailed Legend Rows */}
             <div className="space-y-1.5 text-xs">
-              {/* Row 1: Low Risk (Purple) */}
-              <div className="flex items-center justify-between p-1.5 rounded-lg bg-purple-50/60 dark:bg-purple-950/30 border border-purple-200 dark:border-purple-800/50">
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-[#ECEEEF] border border-[#CBD5E1]">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-purple-500"></span>
-                    <span className="font-extrabold text-[11px] text-slate-900 dark:text-white">Low Risk</span>
-                    <span className="text-[9px] font-mono text-purple-600 dark:text-purple-300 font-bold">{riskData[0]?.percent || '50%'}</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#A3E3AB]"></span>
+                    <span className="font-extrabold text-[11px] text-[#111827]">Low Risk</span>
+                    <span className="text-[9px] font-mono text-[#0B3820] font-bold">{riskData[0]?.percent || '50%'}</span>
                   </div>
-                  <p className="text-[9px] text-slate-500 dark:text-slate-400">Instant Auto-Approval</p>
+                  <p className="text-[9px] text-[#111827]/70">Instant Auto-Approval</p>
                 </div>
-                {/* Sparkline Vector */}
-                <svg width="36" height="16" viewBox="0 0 36 16" fill="none" className="text-purple-500">
-                  <path d="M2 12 L10 6 L18 10 L26 3 L34 8" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
               </div>
 
-              {/* Row 2: Medium Risk (Cyan) */}
-              <div className="flex items-center justify-between p-1.5 rounded-lg bg-cyan-50/60 dark:bg-cyan-950/30 border border-cyan-200 dark:border-cyan-800/50">
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-[#ECEEEF] border border-[#CBD5E1]">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-cyan-500"></span>
-                    <span className="font-extrabold text-[11px] text-slate-900 dark:text-white">Medium Risk</span>
-                    <span className="text-[9px] font-mono text-cyan-600 dark:text-cyan-300 font-bold">{riskData[1]?.percent || '30%'}</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#00A865]"></span>
+                    <span className="font-extrabold text-[11px] text-[#111827]">Medium Risk</span>
+                    <span className="text-[9px] font-mono text-[#0B3820] font-bold">{riskData[1]?.percent || '30%'}</span>
                   </div>
-                  <p className="text-[9px] text-slate-500 dark:text-slate-400">Customer Consent Required</p>
+                  <p className="text-[9px] text-[#111827]/70">Customer Consent Required</p>
                 </div>
-                {/* Sparkline Vector */}
-                <svg width="36" height="16" viewBox="0 0 36 16" fill="none" className="text-cyan-500">
-                  <path d="M2 10 L10 14 L18 5 L26 9 L34 2" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
               </div>
 
-              {/* Row 3: High Risk (Orange/Rose) */}
-              <div className="flex items-center justify-between p-1.5 rounded-lg bg-orange-50/60 dark:bg-orange-950/30 border border-orange-200 dark:border-orange-800/50">
+              <div className="flex items-center justify-between p-1.5 rounded-xl bg-[#0B3820] text-[#E2F7E8] border border-[#072914]">
                 <div className="space-y-0.5">
                   <div className="flex items-center gap-1.5">
-                    <span className="w-2.5 h-2.5 rounded-full bg-orange-500"></span>
-                    <span className="font-extrabold text-[11px] text-slate-900 dark:text-white">High Risk</span>
-                    <span className="text-[9px] font-mono text-orange-600 dark:text-orange-300 font-bold">{riskData[2]?.percent || '20%'}</span>
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#00A865]"></span>
+                    <span className="font-extrabold text-[11px] text-white">High Risk</span>
+                    <span className="text-[9px] font-mono text-[#A3E3AB] font-bold">{riskData[2]?.percent || '20%'}</span>
                   </div>
-                  <p className="text-[9px] text-slate-500 dark:text-slate-400">Bank Multi-Sig Hold</p>
+                  <p className="text-[9px] text-[#D1EAD0]">Bank Multi-Sig Hold</p>
                 </div>
-                {/* Sparkline Vector */}
-                <svg width="36" height="16" viewBox="0 0 36 16" fill="none" className="text-orange-500">
-                  <path d="M2 4 L10 11 L18 3 L26 13 L34 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-                </svg>
               </div>
             </div>
           </div>

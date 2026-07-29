@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -7,33 +6,75 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 antialiased transition-colors duration-200;
-    font-family: 'Inter', 'Segoe UI', sans-serif;
+    background-color: #ECEEEF;
+    color: #111827;
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    @apply antialiased transition-colors duration-200;
   }
   
-  html.dark body {
-    font-family: 'Outfit', 'Segoe UI', sans-serif;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', 'Plus Jakarta Sans', sans-serif;
   }
 }
 
 @layer components {
-  .card {
-    @apply bg-gray-900 border border-gray-800 rounded-xl p-5;
+  /* Lloyds Technology Centre PPT Card & Component Styling */
+  .card-forest {
+    background-color: #0B3820;
+    color: #E2F7E8;
+    border: 1px solid #072914;
+    border-radius: 1rem;
   }
-  .btn-primary {
-    @apply bg-brand-600 hover:bg-brand-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors;
+
+  .card-emerald {
+    background-color: #00A865;
+    color: #031D0E;
+    border-radius: 1rem;
   }
-  .btn-danger {
-    @apply bg-danger-500 hover:bg-danger-700 text-white font-semibold px-4 py-2 rounded-lg transition-colors;
+
+  .card-canvas {
+    background-color: #FFFFFF;
+    color: #111827;
+    border: 1px solid #CBD5E1;
+    border-radius: 1rem;
   }
-  .badge-success {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-success-50 text-success-700;
+
+  .badge-mint {
+    background-color: #A3E3AB;
+    color: #082914;
+    font-weight: 700;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
   }
-  .badge-warning {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-warning-50 text-warning-700;
+
+  .btn-emerald {
+    background-color: #00A865;
+    color: #031D0E;
+    font-weight: 800;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    transition: all 0.2s ease-in-out;
   }
-  .badge-danger {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-danger-50 text-danger-700;
+
+  .btn-emerald:hover {
+    background-color: #008f53;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 168, 101, 0.25);
+  }
+
+  .btn-forest {
+    background-color: #0B3820;
+    color: #E2F7E8;
+    font-weight: 700;
+    border: 1px solid #072914;
+    border-radius: 0.75rem;
+    padding: 0.6rem 1.25rem;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .btn-forest:hover {
+    background-color: #0d4428;
+    color: #ffffff;
   }
 }
 
@@ -46,9 +87,7 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
-  }
-  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    @apply bg-slate-400 dark:bg-slate-600;
+    background-color: #CBD5E1;
+    border-radius: 9999px;
   }
 }
