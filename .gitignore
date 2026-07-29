@@ -3,6 +3,7 @@ node_modules/
 dist/
 build/
 .npm/
+.vite/
 
 # Java / Maven
 target/
@@ -21,6 +22,11 @@ venv/
 .venv/
 env/
 
+# Daml & Canton
+.daml/
+daml-dist/
+*.dar
+
 # IDEs and OS
 .idea/
 .vscode/
@@ -33,6 +39,7 @@ Thumbs.db
 # Logs and testing
 logs/
 *.log
+console.log
 playwright-report/
 test-results/
 coverage/

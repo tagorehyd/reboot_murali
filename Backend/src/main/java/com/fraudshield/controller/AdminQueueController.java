@@ -12,6 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fraudshield.repository.UserRepository;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 @Slf4j
 @RestController
@@ -22,6 +25,12 @@ public class AdminQueueController {
     private MempoolRepository mempoolRepository;
 
     @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
     private CantonCommandService cantonCommandService;
 
     /**
@@ -29,7 +38,7 @@ public class AdminQueueController {
      * Includes Canton-driven statuses: HOLD_ACTIVE, PENDING_BANK_APPROVAL, PENDING_USER_APPROVAL, ESCROW_ACTIVE.
      */
     @GetMapping("/queue")
-    public ResponseEntity<List<MempoolTransaction>> getAdminQueue() {
+    public ResponseEntity<List<Map<String, Object>>> getAdminQueue() {
         List<String> pendingStatuses = List.of(
                 "PENDING_ADMIN", "PENDING_CONSENT",
                 "HOLD_ACTIVE", "PENDING_BANK_APPROVAL", "PENDING_USER_APPROVAL",
@@ -40,7 +49,20 @@ public class AdminQueueController {
             queue.addAll(mempoolRepository.findByStatus(s));
         }
         queue.sort((a, b) -> a.getCreatedAt().compareTo(b.getCreatedAt()));
-        return ResponseEntity.ok(queue);
+        
+        List<Map<String, Object>> responseList = new java.util.ArrayList<>();
+        for (MempoolTransaction txn : queue) {
+            Map<String, Object> map = objectMapper.convertValue(txn, new TypeReference<Map<String, Object>>() {});
+            userRepository.findById(txn.getFromUserId()).ifPresent(user -> {
+                map.put("fromUserDisplayName", user.getDisplayName());
+            });
+            userRepository.findById(txn.getToUserId()).ifPresent(user -> {
+                map.put("toUserDisplayName", user.getDisplayName());
+            });
+            responseList.add(map);
+        }
+        
+        return ResponseEntity.ok(responseList);
     }
 
     /**

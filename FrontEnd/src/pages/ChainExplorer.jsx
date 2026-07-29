@@ -149,18 +149,23 @@ export default function ChainExplorer() {
     }
   };
 
+  const [cantonTxnDetails, setCantonTxnDetails] = useState(null);
+
   // Run Ledger Integrity Check & Verification
   const handleVerifyLedger = async () => {
     if (!tamperTxnId) return;
     setIsVerifying(true);
     setVerificationResult(null);
+    setCantonTxnDetails(null);
     try {
-      const [verifyRes, historyRes] = await Promise.all([
+      const [verifyRes, historyRes, cantonRes] = await Promise.all([
         axios.post(`/api/chain/verify/${tamperTxnId}`),
         axios.get(`/api/chain/ledger-states/${tamperTxnId}`),
+        axios.get(`/api/chain/txn/${tamperTxnId}/canton-details`).catch(() => null),
       ]);
       setVerificationResult(verifyRes.data);
       setLedgerStateHistory(historyRes.data || []);
+      if (cantonRes) setCantonTxnDetails(cantonRes.data);
       loadExplorerData();
     } catch (err) {
       setError('Failed to verify ledger integrity.');
@@ -169,18 +174,44 @@ export default function ChainExplorer() {
     }
   };
 
+  const handleRefresh = async () => {
+    try {
+      await axios.post('/api/chain/reset-tamper');
+    } catch (err) {
+      console.warn('Tamper reset warning', err);
+    }
+    setTamperStatusNotice(null);
+    setVerificationResult(null);
+    setCantonTxnDetails(null);
+    setLedgerStateHistory([]);
+    loadExplorerData();
+  };
+
+  if (selectedBlock) {
+    return (
+      <BlockDetailsModal
+        block={selectedBlock}
+        chainName={selectedChain}
+        onClose={handleCloseModal}
+      />
+    );
+  }
+
   return (
-    <div className="mx-auto w-full max-w-7xl bg-white dark:bg-slate-900 rounded-2xl p-3 sm:p-4 lg:p-5 shadow-xl ring-1 ring-slate-200 space-y-6">
+    <div className="w-full bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-6 lg:p-8 shadow-xl ring-1 ring-slate-200 dark:ring-slate-800 space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-slate-100">🔎 Chain Explorer & Ledger Verification</h1>
           <p className="text-sm text-slate-500 dark:text-slate-400 mt-0.5">Consensus-validated audit trail across Canton ledger, Alpha, Beta, and Gamma.</p>
         </div>
         <button
-          onClick={loadExplorerData}
-          className="w-full rounded-lg bg-slate-800 px-3 py-1.5 text-sm font-bold text-white transition-colors hover:bg-slate-700 sm:w-auto"
+          onClick={handleRefresh}
+          className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold px-4 py-2 rounded-xl shadow-lg hover:shadow-cyan-500/25 active:scale-95 transition-all text-xs sm:text-sm cursor-pointer"
         >
-          Refresh
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <span>Reset & Refresh Ledger</span>
         </button>
       </div>
 
@@ -283,6 +314,79 @@ export default function ChainExplorer() {
           </div>
         )}
 
+        {/* Canton DAML Smart Contracts & Consents Inspector Card */}
+        {cantonTxnDetails && (
+          <div className="bg-slate-800 border border-slate-700 rounded-xl p-4 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-700 pb-2">
+              <div className="flex items-center gap-2">
+                <span className="text-lg">📜</span>
+                <h3 className="text-sm font-bold text-slate-100">Canton DAML Contracts & Consents Inspector</h3>
+              </div>
+              <span className="text-[10px] font-mono font-bold bg-cyan-950 text-cyan-300 border border-cyan-800 px-2 py-0.5 rounded">
+                TX: {cantonTxnDetails.txnId}
+              </span>
+            </div>
+
+            {/* Bank Participant Nodes */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Originating Node</span>
+                <p className="font-bold text-cyan-400">{cantonTxnDetails.originatingBank} ({cantonTxnDetails.originatingParticipant})</p>
+              </div>
+              <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-700">
+                <span className="text-[10px] uppercase font-bold text-slate-400 block mb-0.5">Validator Node</span>
+                <p className="font-bold text-emerald-400">{cantonTxnDetails.validatorBank} ({cantonTxnDetails.validatorParticipant})</p>
+              </div>
+            </div>
+
+            {/* DAML Smart Contracts */}
+            <div>
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                DAML Contracts Executed ({cantonTxnDetails.damlContracts?.length || 0})
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {cantonTxnDetails.damlContracts?.map((contract, cIdx) => (
+                  <div key={cIdx} className="bg-slate-900/90 p-2.5 rounded-lg border border-slate-700 text-xs space-y-1">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono font-bold text-indigo-400">{contract.templateName}</span>
+                      <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-indigo-950 text-indigo-300 border border-indigo-800">
+                        {contract.status}
+                      </span>
+                    </div>
+                    <p className="font-mono text-[10px] text-slate-400 break-all">
+                      <span className="font-bold text-slate-500">Ref:</span> {contract.contractRef}
+                    </p>
+                    <p className="text-[10px] text-slate-300">{contract.description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Consents Breakdown */}
+            <div>
+              <p className="text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                Canton Network Consents & Sign-Off Status
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
+                {cantonTxnDetails.consents?.map((consent, csIdx) => (
+                  <div key={csIdx} className={`p-2 rounded-lg border text-xs ${
+                    consent.granted
+                      ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300'
+                      : 'bg-slate-900 border-slate-700 text-slate-400'
+                  }`}>
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="font-bold text-[11px]">{consent.label}</span>
+                      <span>{consent.granted ? '✓' : '⏳'}</span>
+                    </div>
+                    <p className="text-[10px] font-mono text-slate-400">Party: {consent.party}</p>
+                    <p className="text-[10px] mt-1">{consent.details}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Chronological Ledger State History Timeline */}
         {ledgerStateHistory.length > 0 && (
           <div className="pt-3 border-t border-slate-800 space-y-2">
@@ -337,15 +441,6 @@ export default function ChainExplorer() {
           <ChainColumn title="Beta" blocks={betaBlocks} onSelectBlock={handleSelectBlock} />
           <ChainColumn title="Gamma" blocks={gammaBlocks} onSelectBlock={handleSelectBlock} />
         </div>
-      )}
-
-      {/* Block Details Modal */}
-      {selectedBlock && (
-        <BlockDetailsModal
-          block={selectedBlock}
-          chainName={selectedChain}
-          onClose={handleCloseModal}
-        />
       )}
     </div>
   );

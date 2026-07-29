@@ -1,5 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Moon, Sun } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
+import NvidiaNimChatbot from './NvidiaNimChatbot';
+
+// Ultra-premium Day/Night Theme Toggle Switch matching user reference image exactly
+function DayNightThemeToggleSwitch({ isDark, onToggle }) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`relative w-20 h-10 rounded-full p-1 transition-all duration-500 cursor-pointer shadow-inner border border-slate-300/40 dark:border-slate-700/60 overflow-hidden focus:outline-none ${
+        isDark
+          ? 'bg-gradient-to-r from-indigo-700 via-purple-700 to-slate-900 shadow-[inset_0_2px_4px_rgba(0,0,0,0.5)]'
+          : 'bg-gradient-to-r from-rose-400 via-pink-400 to-amber-300 shadow-[inset_0_2px_4px_rgba(0,0,0,0.2)]'
+      }`}
+      aria-label="Toggle Light and Dark Mode"
+    >
+      {/* Background Icons Layer */}
+      <div className="absolute inset-0 flex items-center justify-between px-2.5 pointer-events-none select-none">
+        {/* Left Side: Crescent Moon & Sparkle Stars (Visible in Dark Mode) */}
+        <div className={`flex items-center gap-0.5 transition-opacity duration-300 ${isDark ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+            <path d="M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z" fill="#fde047" />
+            <path d="M19 5l.5 1.5L21 7l-1.5.5L19 9l-.5-1.5L17 7l1.5-.5z" fill="#ffffff" />
+            <path d="M12 18l.3.9L13 19l-.9.3L12 20l-.3-.9L11 19l.9-.3z" fill="#ffffff" />
+          </svg>
+        </div>
+
+        {/* Right Side: Sun & Fluffy White Cloud (Visible in Light Mode) */}
+        <div className={`flex items-center transition-opacity duration-300 ${!isDark ? 'opacity-100 scale-100' : 'opacity-0 scale-75'}`}>
+          <svg width="26" height="18" viewBox="0 0 32 24" fill="none">
+            {/* Bright Yellow Sun */}
+            <circle cx="20" cy="9" r="6" fill="#facc15" />
+            <path d="M20 1v2M20 15v2M12 9h2M26 9h2M14.34 3.34l1.42 1.42M24.24 13.24l1.42 1.42M14.34 14.66l1.42-1.42M24.24 4.76l1.42-1.42" stroke="#facc15" strokeWidth="1.5" strokeLinecap="round" />
+            {/* Soft White Cloud */}
+            <path d="M8 18h13a4 4 0 00.5-7.97A5 5 0 0013.5 6.1a4.5 4.5 0 00-5.5 4.2A3.5 3.5 0 008 18z" fill="#ffffff" />
+          </svg>
+        </div>
+      </div>
+
+      {/* Floating 3D Sliding Circular Knob */}
+      <div
+        className={`w-8 h-8 rounded-full bg-gradient-to-b from-white via-slate-50 to-slate-200 shadow-md transform transition-transform duration-500 ease-out flex items-center justify-center border border-white/80 ${
+          isDark ? 'translate-x-10 shadow-[0_2px_8px_rgba(0,0,0,0.6)]' : 'translate-x-0 shadow-[0_2px_6px_rgba(0,0,0,0.3)]'
+        }`}
+      >
+        <div className="w-6 h-6 rounded-full bg-gradient-to-br from-white/90 to-slate-100/50" />
+      </div>
+    </button>
+  );
+}
 
 export default function Layout({ children, currentView, onNavigate }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -22,33 +71,52 @@ export default function Layout({ children, currentView, onNavigate }) {
     }
   }, [isDarkMode]);
 
-  const navItems = [
-    { id: 'home', icon: '🏠', label: 'Home', view: 'home' },
-    { id: 'portal', icon: '💳', label: 'User Portal', view: 'user-select' },
-    { id: 'admin', icon: '👮‍♂️', label: 'Admin Console', view: 'admin' },
-    { id: 'explorer', icon: '🔎', label: 'Chain Explorer', view: 'explorer' },
-    { id: 'suspicious', icon: '⚠️', label: 'Suspicious Txns', view: 'suspicious' },
+  const navSections = [
+    {
+      title: '',
+      items: [
+        { id: 'home', icon: '🏠', label: 'Home', view: 'home' },
+        { id: 'dashboard', icon: '📊', label: 'Dashboard', view: 'dashboard' },
+      ]
+    },
+    {
+      title: 'Users',
+      items: [
+        { id: 'users', icon: '💳', label: 'Users', view: 'users' },
+        { id: 'history', icon: '📜', label: 'User History', view: 'user-history' },
+      ]
+    },
+    {
+      title: 'Admin',
+      items: [
+        { id: 'admin', icon: '👮‍♂️', label: 'Admin Portal', view: 'admin' },
+      ]
+    },
+    {
+      title: 'Analytics',
+      items: [
+        { id: 'explorer', icon: '🔎', label: 'Chain Explorer', view: 'explorer' },
+        { id: 'suspicious', icon: '⚠️', label: 'Suspicious Txns', view: 'suspicious' },
+      ]
+    }
   ];
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-950 text-slate-100 transition-colors duration-200 font-sans selection:bg-emerald-500 selection:text-white">
+    <div className="flex h-screen overflow-hidden bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
       {/* Left Sidebar Navigation */}
       <aside className={`
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full hidden lg:flex lg:w-0 lg:overflow-hidden'} 
-        w-64 bg-slate-900/90 backdrop-blur-xl border-r border-slate-800/80 shadow-2xl flex flex-col transition-all duration-300 z-50 fixed lg:relative h-full
+        w-64 bg-slate-900 dark:bg-slate-900 shadow-2xl flex flex-col transition-all duration-300 z-50 fixed lg:relative h-full
       `}>
-        {/* Logo */}
-        <div className="p-6 border-b border-slate-800/80 flex justify-between items-center bg-slate-950/40">
+        {/* Brand Header */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 via-teal-500 to-cyan-600 flex items-center justify-center font-mono font-black text-lg text-white shadow-lg shadow-emerald-500/20 border border-emerald-400/30">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-black text-base shadow-lg shadow-cyan-500/20">
               FS
             </div>
             <div>
-              <h1 className="text-lg font-black text-white tracking-tight flex items-center gap-1.5">
-                <span>FraudShield</span>
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-              </h1>
-              <p className="text-[10px] text-emerald-400/90 font-mono uppercase tracking-widest font-bold">Tamper-Evident Ledger</p>
+              <h2 className="font-black text-white text-base leading-tight tracking-tight">FraudShield</h2>
+              <p className="text-xs text-slate-400">Tamper-Evident</p>
             </div>
           </div>
           <button className="lg:hidden text-slate-400 hover:text-white" onClick={() => setIsSidebarOpen(false)}>
@@ -57,80 +125,73 @@ export default function Layout({ children, currentView, onNavigate }) {
         </div>
 
         {/* Navigation Items */}
-        <nav className="flex-1 px-3 py-6 space-y-2 overflow-y-auto">
-          {navItems.map((item) => {
-            const isActive = currentView === item.view;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  onNavigate(item.view);
-                  if (window.innerWidth < 1024) setIsSidebarOpen(false);
-                }}
-                className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl font-bold transition-all text-sm ${
-                  isActive
-                    ? 'bg-gradient-to-r from-emerald-500/20 via-teal-500/10 to-transparent text-emerald-300 border border-emerald-500/40 shadow-[0_0_15px_rgba(16,185,129,0.15)]'
-                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200 border border-transparent'
-                }`}
-              >
-                <span className="text-xl">{item.icon}</span>
-                <span className="tracking-wide">{item.label}</span>
-              </button>
-            );
-          })}
+        <nav className="flex-1 px-3 py-6 space-y-6 overflow-y-auto">
+          {navSections.map((section, idx) => (
+            <div key={idx} className={section.title === '' ? '-mt-4' : ''}>
+              {section.title && (
+                <h3 className="px-4 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                  {section.title}
+                </h3>
+              )}
+              <div className="space-y-1">
+                {section.items.map((item) => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onNavigate(item.view);
+                      if (window.innerWidth < 1024) setIsSidebarOpen(false);
+                    }}
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                      currentView === item.view || (item.view === 'users' && currentView === 'user-portal')
+                        ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/30'
+                        : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
+                    }`}
+                  >
+                    <span className="text-xl">{item.icon}</span>
+                    <span className="font-semibold">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
         </nav>
 
-        {/* Sidebar Footer */}
-        <div className="p-5 border-t border-slate-800/80 bg-slate-950/40">
-          <div className="flex items-center gap-2 text-xs text-slate-400 font-mono">
-            <span className="w-2 h-2 rounded-full bg-emerald-400" />
-            <span>Isolation Forest ML Active</span>
-          </div>
-          <p className="text-[10px] text-slate-500 font-mono mt-1">Canton Network Connected</p>
+        {/* Footer */}
+        <div className="p-6 border-t border-slate-800">
+          <p className="text-xs text-slate-400 text-center">Phase 12 — Frontend Core</p>
+          <p className="text-xs text-slate-500 text-center mt-1">Portal & Explorer</p>
         </div>
       </aside>
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
         {/* Top Navbar */}
-        <header className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-xl shadow-md z-40">
-          <div className="flex items-center gap-3">
+        <header className="h-16 flex items-center justify-between px-4 sm:px-6 lg:px-8 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm z-40 transition-colors duration-200">
+          <div className="flex items-center">
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="text-slate-400 hover:text-white focus:outline-none p-1.5 rounded-lg hover:bg-slate-800 transition-colors"
+              className="text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none"
             >
-              <Menu size={22} />
+              <Menu size={24} />
             </button>
-            <span className="hidden sm:inline-block text-xs font-mono font-semibold text-slate-400 uppercase tracking-widest">
-              Live Demo Environment
-            </span>
           </div>
-
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setIsDarkMode(!isDarkMode)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800/80 border border-slate-800 transition-all flex items-center gap-2 text-xs font-mono"
-            >
-              {isDarkMode ? <Sun size={18} className="text-amber-400" /> : <Moon size={18} className="text-cyan-400" />}
-              <span className="hidden md:inline">{isDarkMode ? 'Dark Glass' : 'Light Mode'}</span>
-            </button>
+            {/* Animated Day/Night Theme Toggle Switch */}
+            <DayNightThemeToggleSwitch
+              isDark={isDarkMode}
+              onToggle={() => setIsDarkMode(!isDarkMode)}
+            />
           </div>
         </header>
 
-        <main className={`flex-1 flex flex-col ${currentView === 'user-portal' ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-          <div className={`flex-1 flex flex-col min-h-0 ${currentView === 'user-portal' ? '' : 'p-4 sm:p-6 lg:p-8'}`}>
-            {children}
-          </div>
+        {/* Dynamic Page Content Viewport */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+          {children}
         </main>
-      </div>
 
-      {/* Mobile Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
+        {/* Cute Floating Vector AI Assistant Chatbot */}
+        <NvidiaNimChatbot />
+      </div>
     </div>
   );
 }

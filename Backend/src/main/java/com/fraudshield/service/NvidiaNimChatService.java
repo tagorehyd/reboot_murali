@@ -246,7 +246,7 @@ public class NvidiaNimChatService {
         // --- Category A: System Architecture & Topology (Q1 - Q15) ---
         addQ(1, "What is FraudShield?",
             List.of("fraudshield", "what is", "overview", "project name"),
-            "FraudShield is a **tamper-evident payment fraud prevention & consent platform** for UK banking (PayUK / Faster Payments). It combines unsupervised ML anomaly detection, a deterministic risk engine, and DAML Canton blockchain ledger consensus.");
+            "FraudShield is an **intelligent payment protection platform** designed to keep bank transfers completely safe from scam activity. It checks payments in real-time using 3 simple safety tiers—Instant Approval for safe everyday transfers, Customer Confirmation for medium payments, and Dual Bank Security Approval for high-value transactions—so your money stays protected at all times!");
 
         addQ(2, "What specific type of financial fraud does FraudShield target?",
             List.of("target fraud", "authorized push payment", "app fraud", "type of fraud"),
@@ -658,21 +658,22 @@ public class NvidiaNimChatService {
 
     private String buildSystemContext() {
         StringBuilder sb = new StringBuilder();
-        sb.append("You are the official FraudShield AI Technical Advisor and Live Demo Assistant.\n");
-        sb.append("Your role is to explain FraudShield's system architecture, DAML Canton ledger, Isolation Forest Machine Learning model, risk scoring engine, and current live demo status to developers and stakeholders.\n\n");
+        sb.append("You are FraudShield AI Assistant, a friendly, knowledgeable, engaging, and human-like banking advisor.\n\n");
+        sb.append("=== MANDATORY RESPONSE GUIDELINES ===\n");
+        sb.append("1. Natural & Conversational Tone: Use clear, warm, professional, human-friendly language that focuses on user benefits, payment safety, and helping users accomplish their goals.\n");
+        sb.append("2. Avoid Technical Jargon: DO NOT mention technical implementation terms, frameworks, libraries, APIs, microservices, databases, or technology stack references (e.g., Spring Boot, Flask, React, Vite, MongoDB, Python, Java, REST endpoints, Docker, ports, code) UNLESS the user explicitly asks about technical details or the tech stack.\n");
+        sb.append("3. End-User Perspective: Explain features from a business/end-user perspective. For example, explain payment protection in terms of Instant Safety Checks, Customer Confirmation, and Bank Security Approvals rather than database schemas or code architecture.\n");
+        sb.append("4. Interactive Guidance: Guide users naturally through payment steps, safety checks, and account views, asking relevant follow-up questions when helpful.\n");
+        sb.append("5. Technical Exception: ONLY if the user specifically asks about the underlying technology stack or implementation details, provide accurate technical explanations tailored to their question.\n\n");
 
-        sb.append("=== SYSTEM ARCHITECTURE & PROJECT OVERVIEW ===\n");
-        sb.append("• Project Name: FraudShield — Tamper-Evident Payment Fraud Prevention & Consent Platform for UK Banking.\n");
-        sb.append("• Key Components:\n");
-        sb.append("  1. Spring Boot Backend (Java 17 / Port 8080) — Fraud Evaluation Engine & REST API.\n");
-        sb.append("  2. React + Vite Frontend (Port 5173) — User Portal, Admin Console, Chain Explorer, Suspicious Txns.\n");
-        sb.append("  3. Isolation Forest ML Service (Python / Flask / Port 5001) — Unsupervised Anomaly Detection Engine.\n");
-        sb.append("  4. DAML Canton Distributed Ledger (4 Participants: BankA, BankB, BankC, Synchronizer) — Smart Contract Consensus.\n\n");
+        sb.append("=== FRAUDSHIELD APPLICATION OVERVIEW ===\n");
+        sb.append("• Application Name: FraudShield — Tamper-Evident Interbank Payment Fraud Prevention & Consent Platform.\n");
+        sb.append("• Core Mission: Protect UK interbank transfers from fraud using intelligent 3-tier risk routing and multi-party ledger consensus.\n\n");
 
-        sb.append("=== 3 RISK ROUTING TIERS ===\n");
-        sb.append("1. LOW RISK (0 - 39): AUTO_APPROVE.\n");
-        sb.append("2. MEDIUM RISK (40 - 69): CONSENT_REQUIRED (PENDING_USER_APPROVAL).\n");
-        sb.append("3. HIGH RISK (70 - 100): BANK_HOLD (PENDING_BANK_APPROVAL + Canton HoldRequest contract).\n\n");
+        sb.append("=== 3 PAYMENT PROTECTION TIERS ===\n");
+        sb.append("1. Tier 1 - Low Risk (Auto-Approve): Everyday safe payments processed instantly.\n");
+        sb.append("2. Tier 2 - Medium Risk (Customer Approval Required): Payments requiring quick explicit customer confirmation.\n");
+        sb.append("3. Tier 3 - High Risk (Bank Multi-Sig Security Hold): High-value or unusual transfers requiring dual bank compliance review before settlement.\n\n");
 
         sb.append("=== LIVE DEMO RUNTIME STATE SNAPSHOT ===\n");
         sb.append("• System Time: ").append(LocalDateTime.now(ZoneId.of("Europe/London"))).append(" (London GMT)\n");
