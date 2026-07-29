@@ -82,7 +82,7 @@ export default function Layout({ children, currentView, onNavigate }) {
     {
       title: 'Users',
       items: [
-        { id: 'portal', icon: '💳', label: 'Users', view: 'user-select' },
+        { id: 'users', icon: '💳', label: 'Users', view: 'users' },
         { id: 'history', icon: '📜', label: 'User History', view: 'user-history' },
       ]
     },
@@ -108,14 +108,14 @@ export default function Layout({ children, currentView, onNavigate }) {
         ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full hidden lg:flex lg:w-0 lg:overflow-hidden'} 
         w-64 bg-slate-900 dark:bg-slate-900 shadow-2xl flex flex-col transition-all duration-300 z-50 fixed lg:relative h-full
       `}>
-        {/* Logo */}
-        <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+        {/* Brand Header */}
+        <div className="h-16 flex items-center justify-between px-6 border-b border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-blue-600 flex items-center justify-center font-mono font-bold text-lg text-white">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center text-white font-black text-base shadow-lg shadow-cyan-500/20">
               FS
             </div>
             <div>
-              <h1 className="text-lg font-black text-white tracking-tight">FraudShield</h1>
+              <h2 className="font-black text-white text-base leading-tight tracking-tight">FraudShield</h2>
               <p className="text-xs text-slate-400">Tamper-Evident</p>
             </div>
           </div>
@@ -141,10 +141,11 @@ export default function Layout({ children, currentView, onNavigate }) {
                       onNavigate(item.view);
                       if (window.innerWidth < 1024) setIsSidebarOpen(false);
                     }}
-                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${currentView === item.view
+                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all ${
+                      currentView === item.view || (item.view === 'users' && currentView === 'user-portal')
                         ? 'bg-gradient-to-r from-cyan-500/20 to-blue-600/20 text-cyan-400 border border-cyan-500/30'
                         : 'text-slate-400 hover:bg-slate-800 hover:text-slate-200'
-                      }`}
+                    }`}
                   >
                     <span className="text-xl">{item.icon}</span>
                     <span className="font-semibold">{item.label}</span>
@@ -183,23 +184,14 @@ export default function Layout({ children, currentView, onNavigate }) {
           </div>
         </header>
 
-        <main className={`flex-1 flex flex-col ${(currentView === 'user-portal' || currentView === 'user-history') ? 'overflow-hidden' : 'overflow-y-auto'}`}>
-          <div className={`flex-1 flex flex-col min-h-0 ${(currentView === 'user-portal' || currentView === 'user-history') ? 'p-3 sm:p-4' : 'p-4 sm:p-6 lg:p-8'}`}>
-            {children}
-          </div>
+        {/* Dynamic Page Content Viewport */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 bg-slate-50 dark:bg-slate-950 transition-colors duration-200">
+          {children}
         </main>
+
+        {/* Cute Floating Vector AI Assistant Chatbot */}
+        <NvidiaNimChatbot />
       </div>
-
-      {/* Mobile Overlay */}
-      {isSidebarOpen && (
-        <div
-          className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-40 lg:hidden"
-          onClick={() => setIsSidebarOpen(false)}
-        />
-      )}
-
-      {/* NVIDIA NIM Floating AI Advisor Chatbot Widget */}
-      <NvidiaNimChatbot />
     </div>
   );
 }
