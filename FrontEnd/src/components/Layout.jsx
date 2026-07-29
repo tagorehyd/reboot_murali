@@ -107,12 +107,9 @@ export default function Layout({ children, currentView, onNavigate }) {
       `}>
         {/* Brand Header */}
         <div className="h-16 flex items-center justify-between px-6 border-b border-[#CBD5E1] dark:border-slate-800">
-          <div className="flex items-center gap-2.5">
-            <img src="/lloyds-horse.svg" alt="Lloyds Horse Logo" className="w-8 h-8 object-contain" />
-            <div>
-              <h2 className="font-black text-[#111827] dark:text-white text-base leading-tight tracking-tight font-heading">FraudShield</h2>
-              <p className="text-[10px] text-[#00A865] font-extrabold">Lloyds Tech Centre</p>
-            </div>
+          <div>
+            <h2 className="font-black text-[#111827] dark:text-white text-lg leading-tight tracking-tight font-heading">FraudShield</h2>
+            <p className="text-[10px] text-[#00A865] font-extrabold">Lloyds Tech Centre</p>
           </div>
           <button className="lg:hidden text-[#111827]/60 hover:text-[#111827]" onClick={() => setIsSidebarOpen(false)}>
             <X size={24} />
