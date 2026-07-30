@@ -12,9 +12,12 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fraudshield.model.TxnHistory;
+import com.fraudshield.repository.TxnHistoryRepository;
 import com.fraudshield.repository.UserRepository;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
+import java.time.Instant;
 
 @Slf4j
 @RestController
@@ -26,6 +29,9 @@ public class AdminQueueController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private TxnHistoryRepository txnHistoryRepository;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -97,17 +103,25 @@ public class AdminQueueController {
                 "message", "User consent granted. Transaction moved to admin review queue."
             ));
         } else {
-            try {
-                cantonCommandService.exerciseRejection(txnId, transaction.getFromUserId());
-            } catch (Exception e) {
-                log.warn("[Canton] Rejection exercise failed for txnId={}: {}", txnId, e.getMessage());
-            }
+            // NO Canton process for cancelled medium-risk transactions
             transaction.setStatus("REJECTED");
             transaction.setRoutingDecision("REJECTED_BY_USER");
             mempoolRepository.save(transaction);
+
+            // Immediately save to TxnHistory for User Payment History
+            TxnHistory hist = new TxnHistory();
+            hist.setTxnId(transaction.getId());
+            hist.setUserId(transaction.getFromUserId());
+            hist.setFromUserId(transaction.getFromUserId());
+            hist.setToUserId(transaction.getToUserId());
+            hist.setAmount(transaction.getAmount());
+            hist.setTimestamp(Instant.now());
+            hist.setStatus("REJECTED");
+            txnHistoryRepository.save(hist);
+
             return ResponseEntity.ok(Map.of(
                 "txnId", txnId, "status", "REJECTED",
-                "message", "User rejected this transaction."
+                "message", "User cancelled this transaction."
             ));
         }
     }

@@ -63,6 +63,8 @@ export default function AdminConsole({ onBalanceUpdate, userBalances, showOnlyUs
   const [viewMode, setViewMode] = useState('grid');
   const [filterMode, setFilterMode] = useState('ALL');
   const [toast, setToast] = useState(null);
+  const [auditRiskFilter, setAuditRiskFilter] = useState('ALL'); // ALL | LOW | MEDIUM | HIGH
+  const [auditTimeSort, setAuditTimeSort] = useState('NEWEST');   // NEWEST | OLDEST
 
   // Load admin queue on mount and when refreshKey changes
   useEffect(() => {
@@ -70,6 +72,38 @@ export default function AdminConsole({ onBalanceUpdate, userBalances, showOnlyUs
     loadCantonConfig();
     loadUsersDashboard();
   }, [refreshKey]);
+
+  // Auto-select the first transaction by default when entering Account Audit or changing filters
+  useEffect(() => {
+    if (expandedUserId && usersDashboardData) {
+      const activeUsers = usersDashboardData.filter(u => u && u.totalTransfers > 0);
+      const expandedUser = activeUsers.find(u => u.id === expandedUserId);
+      if (expandedUser && expandedUser.allTxns && expandedUser.allTxns.length > 0) {
+        let processed = [...expandedUser.allTxns];
+        if (auditRiskFilter === 'LOW') {
+          processed = processed.filter(t => (t.riskScore || 0) < 40);
+        } else if (auditRiskFilter === 'MEDIUM') {
+          processed = processed.filter(t => (t.riskScore || 0) >= 40 && (t.riskScore || 0) < 70);
+        } else if (auditRiskFilter === 'HIGH') {
+          processed = processed.filter(t => (t.riskScore || 0) >= 70);
+        }
+        processed.sort((a, b) => {
+          const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+          const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+          return auditTimeSort === 'OLDEST' ? timeA - timeB : timeB - timeA;
+        });
+
+        if (processed.length > 0) {
+          const firstTxnId = processed[0].txnId || processed[0].id || processed[0]._id;
+          if (!selectedTxnId || !processed.some(t => (t.txnId || t.id || t._id) === selectedTxnId)) {
+            setSelectedTxnId(firstTxnId);
+          }
+        } else {
+          setSelectedTxnId(null);
+        }
+      }
+    }
+  }, [expandedUserId, auditRiskFilter, auditTimeSort, usersDashboardData]);
 
   // Set up WebSocket for real-time updates
   useEffect(() => {
@@ -309,7 +343,7 @@ export default function AdminConsole({ onBalanceUpdate, userBalances, showOnlyUs
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 flex-1 min-h-0">
                 {/* Outgoing Transaction Cards list */}
                 <div className="bg-slate-50 dark:bg-slate-800/40 rounded-2xl border border-slate-200 dark:border-slate-700/60 p-5 flex flex-col min-h-0">
-                  <div className="mb-4 flex items-center justify-between">
+                  <div className="mb-3 flex items-center justify-between">
                     <div>
                       <h3 className="text-xs font-black text-[#00A865] dark:text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
                         <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
@@ -324,13 +358,75 @@ export default function AdminConsole({ onBalanceUpdate, userBalances, showOnlyUs
                     </span>
                   </div>
 
+                  {/* Filter & Sorting Bar */}
+                  <div className="mb-3 flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+                    <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1.5">Risk:</span>
+                      {['ALL', 'LOW', 'MEDIUM', 'HIGH'].map((level) => (
+                        <button
+                          key={level}
+                          onClick={() => setAuditRiskFilter(level)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                            auditRiskFilter === level
+                              ? level === 'HIGH' ? 'bg-red-500 text-white shadow-xs'
+                                : level === 'MEDIUM' ? 'bg-amber-500 text-white shadow-xs'
+                                : level === 'LOW' ? 'bg-emerald-500 text-white shadow-xs'
+                                : 'bg-indigo-600 text-white shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {level}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="flex items-center gap-1 bg-white dark:bg-slate-900 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+                      <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400 px-1.5">Sort:</span>
+                      {['NEWEST', 'OLDEST'].map((sort) => (
+                        <button
+                          key={sort}
+                          onClick={() => setAuditTimeSort(sort)}
+                          className={`px-2 py-0.5 rounded text-[10px] font-bold transition-all cursor-pointer ${
+                            auditTimeSort === sort
+                              ? 'bg-slate-800 dark:bg-slate-200 text-white dark:text-slate-900 shadow-xs'
+                              : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                          }`}
+                        >
+                          {sort === 'NEWEST' ? '⏱️ Newest' : '⏳ Oldest'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   <div className="space-y-2 overflow-y-auto pr-2 flex-1 min-h-0">
-                    {(!expandedUser.allTxns || expandedUser.allTxns.length === 0) ? (
-                      <div className="bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-slate-800 p-8 text-center my-auto">
-                        <p className="text-xs font-bold text-slate-600 dark:text-slate-400">No transactions registered.</p>
-                      </div>
-                    ) : (
-                      expandedUser.allTxns.map((txn) => {
+                    {(() => {
+                      let processed = [...(expandedUser.allTxns || [])];
+
+                      // Risk Filter
+                      if (auditRiskFilter === 'LOW') {
+                        processed = processed.filter(t => (t.riskScore || 0) < 40);
+                      } else if (auditRiskFilter === 'MEDIUM') {
+                        processed = processed.filter(t => (t.riskScore || 0) >= 40 && (t.riskScore || 0) < 70);
+                      } else if (auditRiskFilter === 'HIGH') {
+                        processed = processed.filter(t => (t.riskScore || 0) >= 70);
+                      }
+
+                      // Time Sorting
+                      processed.sort((a, b) => {
+                        const timeA = new Date(a.createdAt || a.timestamp || 0).getTime();
+                        const timeB = new Date(b.createdAt || b.timestamp || 0).getTime();
+                        return auditTimeSort === 'OLDEST' ? timeA - timeB : timeB - timeA;
+                      });
+
+                      if (processed.length === 0) {
+                        return (
+                          <div className="bg-white dark:bg-slate-900/60 rounded-xl border border-slate-200/50 dark:border-slate-800 p-8 text-center my-auto">
+                            <p className="text-xs font-bold text-slate-600 dark:text-slate-400">No transactions matching filter.</p>
+                          </div>
+                        );
+                      }
+
+                      return processed.map((txn) => {
                         const txId = txn.txnId || txn.id || txn._id;
                         const isSelected = selectedTxnId === txId;
                         const score = txn.riskScore || 0;
@@ -372,8 +468,8 @@ export default function AdminConsole({ onBalanceUpdate, userBalances, showOnlyUs
                             </div>
                           </div>
                         );
-                      })
-                    )}
+                      });
+                    })()}
                   </div>
                 </div>
 

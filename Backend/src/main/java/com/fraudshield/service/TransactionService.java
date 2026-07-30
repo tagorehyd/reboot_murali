@@ -242,7 +242,7 @@ public class TransactionService {
             mempoolRepository.save(txn);
             log.info("[UserConsent] Txn {} user consent APPROVED -> Settled", txnId);
         } else {
-            // User declined consent OR 15s timer expired -> Escalate to Bank Admin!
+            // User declined consent OR 15s timer expired -> Cancel transaction completely! NO Canton process triggered!
             ledgerStateService.recordState(
                     txn.getId(),
                     "USER_CONSENT_DECLINED",
@@ -254,16 +254,26 @@ public class TransactionService {
                     null,
                     null,
                     txn.getFromUserId(),
-                    "User consent declined or prompt timed out - escalated to Admin review",
+                    "User consent declined or prompt timed out - transaction cancelled",
                     null
             );
-            // Trigger Admin DAML contracts
-            cantonCommandService.createHoldContract(txn.getId(), txn.getFromUserId(), txn.getAmount());
-            cantonCommandService.createBankApprovalContract(txn.getId(), txn.getFromUserId());
 
-            txn.setStatus(STATUS_PENDING_ADMIN);
+            txn.setStatus(STATUS_REJECTED);
+            txn.setRoutingDecision("REJECTED_BY_USER");
             mempoolRepository.save(txn);
-            log.info("[UserConsent] Txn {} user consent DECLINED/TIMEOUT -> Escalated to PENDING_ADMIN", txnId);
+
+            // Immediately save to user payment history as REJECTED
+            TxnHistory hist = new TxnHistory();
+            hist.setTxnId(txn.getId());
+            hist.setUserId(txn.getFromUserId());
+            hist.setFromUserId(txn.getFromUserId());
+            hist.setToUserId(txn.getToUserId());
+            hist.setAmount(txn.getAmount());
+            hist.setTimestamp(Instant.now());
+            hist.setStatus(STATUS_REJECTED);
+            txnHistoryRepository.save(hist);
+
+            log.info("[UserConsent] Txn {} user consent DECLINED/TIMEOUT -> Cancelled & set to REJECTED in Payment History (No Canton Process)", txnId);
         }
 
         return txn;

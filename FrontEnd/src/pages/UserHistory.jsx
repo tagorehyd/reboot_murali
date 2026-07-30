@@ -595,12 +595,18 @@ export default function UserHistory({ selectedUserId, onSelectUser }) {
                     >
                       <div className="flex items-center justify-between">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                          isOut ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                          (item.status === 'REJECTED' || item.status === 'CANCELLED')
+                            ? 'bg-rose-100 text-rose-700 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                            : isOut ? 'bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-300' : 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
                         }`}>
-                          {isOut ? '📤 Payment Out' : '📥 Payment In'}
+                          {(item.status === 'REJECTED' || item.status === 'CANCELLED') ? '❌ Cancelled' : isOut ? '📤 Payment Out' : '📥 Payment In'}
                         </span>
-                        <span className={`text-xs font-black ${isOut ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                          {isOut ? '-' : '+'}£{Number(item.amount).toLocaleString()}
+                        <span className={`text-xs font-black ${
+                          (item.status === 'REJECTED' || item.status === 'CANCELLED')
+                            ? 'text-rose-600 dark:text-rose-400 line-through'
+                            : isOut ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'
+                        }`}>
+                          {(item.status === 'REJECTED' || item.status === 'CANCELLED') ? '❌ ' : isOut ? '-' : '+'}£{Number(item.amount).toLocaleString()}
                         </span>
                       </div>
 

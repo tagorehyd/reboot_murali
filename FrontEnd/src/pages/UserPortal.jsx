@@ -71,19 +71,29 @@ export default function UserPortal({ userId }) {
   const [selectedWorkflowTxn, setSelectedWorkflowTxn] = useState(null); // Selected transaction for Git DAML workflow modal
 
   const handleConsentResponse = async (txnId, approved, isTimeout = false, amount = '0', toUserId = 'Recipient') => {
+    const promptDetails = consentPrompt;
     setConsentPrompt(null);
     try {
       if (approved) {
         await axios.post(`/api/txn/${txnId}/user-consent`, { approved: true });
         setSuccessMessage('✅ Consent verified! Payment settled directly on Canton ledger.');
+        if (promptDetails) {
+          setTransferPrompt({
+            status: 'APPROVED',
+            txnId: txnId,
+            amount: promptDetails.amount,
+            toUserId: promptDetails.toUserId,
+            isHold: false,
+          });
+        }
       } else {
         if (isTimeout) {
           // If the 15 seconds timer expired, cancel and reject transaction completely
           await axios.post(`/api/admin/txn/${txnId}/consent`, { approved: false, userId });
           setCancelAlert({
             txnId: txnId,
-            amount: amount,
-            toUserId: toUserId
+            amount: promptDetails ? promptDetails.amount : amount,
+            toUserId: promptDetails ? promptDetails.toUserId : toUserId
           });
           setError("❌ Transaction cancelled due to user confirmation inactivity.");
         } else {
@@ -471,16 +481,9 @@ export default function UserPortal({ userId }) {
       setAmount('');
       setRecipientId('');
       
-      const isHold = ['HOLD_ACTIVE', 'PENDING_BANK_APPROVAL'].includes(response.data.status);
-      setTransferPrompt({
-        status: response.data.status,
-        txnId: response.data.txnId,
-        amount: response.data.amount || payload.amount,
-        toUserId: response.data.toUserId || payload.toUserId,
-        isHold: isHold,
-      });
+      const isMediumRisk = ['PENDING_USER_CONSENT', 'PENDING_CONSENT', 'PENDING_USER_APPROVAL', 'CONSENT_REQUIRED'].includes(response.data.status) || response.data.routingDecision === 'CONSENT_REQUIRED';
 
-      if (['PENDING_USER_CONSENT', 'PENDING_CONSENT', 'PENDING_USER_APPROVAL'].includes(response.data.status)) {
+      if (isMediumRisk) {
         setConsentPrompt({
           txnId: response.data.txnId,
           amount: response.data.amount || payload.amount,
@@ -489,16 +492,27 @@ export default function UserPortal({ userId }) {
           countdown: 15,
         });
         setSuccessMessage('🔐 Medium-risk transaction flagged. 15-second confirmation prompt initiated.');
-      } else if (response.data.status === 'APPROVED' && response.data.routingDecision === 'AUTO_APPROVE') {
-        setSuccessMessage('✅ Transaction auto-approved and accepted into mempool!');
-      } else if (response.data.status === 'HOLD_ACTIVE') {
-        setSuccessMessage('🔒 High-risk transaction placed under Canton hold (60 min). Awaiting bank approval.');
-      } else if (response.data.status === 'PENDING_BANK_APPROVAL') {
-        setSuccessMessage('🏦 Transaction held. Awaiting bank approval via Canton contract.');
-      } else if (response.data.status === 'ESCROW_ACTIVE') {
-        setSuccessMessage('🔏 Transaction approved with Canton escrow service active.');
-      } else if (response.data.status === 'PENDING_ADMIN') {
-        setSuccessMessage('⏳ Transaction accepted. Our fraud team is reviewing your request.');
+      } else {
+        const isHold = ['HOLD_ACTIVE', 'PENDING_BANK_APPROVAL'].includes(response.data.status);
+        setTransferPrompt({
+          status: response.data.status,
+          txnId: response.data.txnId,
+          amount: response.data.amount || payload.amount,
+          toUserId: response.data.toUserId || payload.toUserId,
+          isHold: isHold,
+        });
+
+        if (response.data.status === 'APPROVED' && response.data.routingDecision === 'AUTO_APPROVE') {
+          setSuccessMessage('✅ Transaction auto-approved and accepted into mempool!');
+        } else if (response.data.status === 'HOLD_ACTIVE') {
+          setSuccessMessage('🔒 High-risk transaction placed under Canton hold (60 min). Awaiting bank approval.');
+        } else if (response.data.status === 'PENDING_BANK_APPROVAL') {
+          setSuccessMessage('🏦 Transaction held. Awaiting bank approval via Canton contract.');
+        } else if (response.data.status === 'ESCROW_ACTIVE') {
+          setSuccessMessage('🔏 Transaction approved with Canton escrow service active.');
+        } else if (response.data.status === 'PENDING_ADMIN') {
+          setSuccessMessage('⏳ Transaction accepted. Our fraud team is reviewing your request.');
+        }
       }
       loadBalance();
       loadActivity();
@@ -1263,75 +1277,92 @@ export default function UserPortal({ userId }) {
                     const receiverName = item.toUserName || receiverId;
                     const counterpartyName = item.counterpartyName || item.counterparty;
                     const rawDate = item.timestamp || item.createdAt;
-                    const dateObj = rawDate ? new Date(rawDate) : null;
-                    const dateStr = dateObj
-                      ? dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
-                      : null;
-                    const timeStr = dateObj
-                      ? dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
-                      : null;
+                      const dateObj = rawDate ? new Date(rawDate) : null;
+                      const dateStr = dateObj
+                        ? dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
+                        : null;
+                      const timeStr = dateObj
+                        ? dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+                        : null;
 
-                    return (
-                      <div key={item.id || item.txnId} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-indigo-50 transition-colors shadow-sm">
-                        {/* Header row */}
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
-                            <span className={`flex h-8 w-8 items-center justify-center rounded-full text-base ${
-                              item.direction === 'OUT' ? 'bg-red-100 text-red-600' : 'bg-emerald-100 text-emerald-600'
-                            }`}>
-                              {item.direction === 'OUT' ? '📤' : '📥'}
-                            </span>
-                            <div>
-                              <p className="text-xs font-bold text-slate-700 dark:text-slate-300">{item.direction === 'OUT' ? 'Payment Out' : 'Payment In'}</p>
-                              {dateStr && (
-                                <p className="text-[11px] text-slate-500 dark:text-slate-500">{dateStr}{timeStr ? ` · ${timeStr}` : ''}</p>
-                              )}
+                      const isRejected = item.status === 'REJECTED' || item.status === 'CANCELLED';
+                      const isDebited = !isRejected && item.direction === 'OUT';
+
+                      return (
+                        <div key={item.id || item.txnId} className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl p-4 hover:bg-indigo-50 dark:hover:bg-slate-800/60 transition-colors shadow-sm">
+                          {/* Header row */}
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <span className={`flex h-8 w-8 items-center justify-center rounded-full text-base ${
+                                isRejected
+                                  ? 'bg-rose-100 text-rose-600 dark:bg-rose-950/60 dark:text-rose-400'
+                                  : isDebited
+                                  ? 'bg-amber-100 text-amber-600 dark:bg-amber-950/60 dark:text-amber-400'
+                                  : 'bg-emerald-100 text-emerald-600 dark:bg-emerald-950/60 dark:text-emerald-400'
+                              }`}>
+                                {isRejected ? '🚫' : isDebited ? '📤' : '📥'}
+                              </span>
+                              <div>
+                                <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
+                                  {isRejected ? 'Payment Rejected' : isDebited ? 'Payment Debited' : 'Payment Credited'}
+                                </p>
+                                {dateStr && (
+                                  <p className="text-[11px] text-slate-500 dark:text-slate-500">{dateStr}{timeStr ? ` · ${timeStr}` : ''}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className={`text-lg font-extrabold ${
+                                isRejected
+                                  ? 'text-rose-600 dark:text-rose-400'
+                                  : isDebited
+                                  ? 'text-amber-600 dark:text-amber-400'
+                                  : 'text-emerald-600 dark:text-emerald-400'
+                              }`}>
+                                {isRejected ? '' : isDebited ? '-' : '+'}£{Number(item.amount).toLocaleString()}
+                              </p>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                                isRejected
+                                  ? 'bg-rose-100 text-rose-700 border border-rose-300 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800'
+                                  : item.status === 'COMMITTED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                                  : item.status === 'APPROVED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300'
+                                  : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                              }`}>
+                                {item.status}
+                              </span>
                             </div>
                           </div>
-                          <div className="text-right">
-                            <p className={`text-lg font-extrabold ${item.direction === 'OUT' ? 'text-red-600' : 'text-emerald-600'}`}>
-                              {item.direction === 'OUT' ? '-' : '+'}£{Number(item.amount).toLocaleString()}
-                            </p>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
-                              item.status === 'COMMITTED' ? 'bg-emerald-100 text-emerald-700'
-                              : item.status === 'APPROVED' ? 'bg-blue-100 text-blue-700'
-                              : 'bg-slate-100 text-slate-700 dark:bg-slate-300'
-                            }`}>
-                              {item.status}
-                            </span>
-                          </div>
-                        </div>
 
-                        {/* Counterparty */}
-                        <div className="mb-2 rounded-lg border border-indigo-100 bg-indigo-50 px-3 py-2">
-                          <p className="text-[10px] text-indigo-600 uppercase tracking-wider font-semibold mb-0.5">Counterparty</p>
-                          <p className="text-xs font-bold text-indigo-900">{counterpartyName}</p>
-                        </div>
+                          {/* Counterparty */}
+                          <div className="mb-2 rounded-lg border border-indigo-100 dark:border-slate-800 bg-indigo-50 dark:bg-slate-800/40 px-3 py-2">
+                            <p className="text-[10px] text-indigo-600 dark:text-indigo-400 uppercase tracking-wider font-semibold mb-0.5">Counterparty</p>
+                            <p className="text-xs font-bold text-indigo-900 dark:text-indigo-200">{counterpartyName}</p>
+                          </div>
 
-                        {/* Details grid */}
-                        <div className="grid grid-cols-2 gap-2 mb-2">
-                          <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-2 py-1.5">
-                            <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">From</p>
-                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{senderName}</p>
+                          {/* Details grid */}
+                          <div className="grid grid-cols-2 gap-2 mb-2">
+                            <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-2 py-1.5">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">From</p>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{item.fromUserName || item.fromUserId || (item.direction === 'OUT' ? 'You' : item.counterparty)}</p>
+                            </div>
+                            <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-2 py-1.5">
+                              <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">To</p>
+                              <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{item.toUserName || item.toUserId || (item.direction === 'OUT' ? item.counterparty : 'You')}</p>
+                            </div>
                           </div>
-                          <div className="rounded-lg bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 px-2 py-1.5">
-                            <p className="text-[10px] text-slate-500 dark:text-slate-500 uppercase tracking-wider font-semibold">To</p>
-                            <p className="text-xs font-bold text-slate-800 dark:text-slate-200 truncate">{receiverName}</p>
-                          </div>
-                        </div>
 
-                        {/* Transaction ID */}
-                        <div className="border-t border-slate-100 dark:border-slate-800 pt-2 mt-auto">
-                          <div>
-                            <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Transaction ID</p>
-                            <p className="font-mono text-[11px] text-slate-500 dark:text-slate-500 break-all">{item.txnId || item.id}</p>
+                          {/* Transaction ID */}
+                          <div className="border-t border-slate-100 dark:border-slate-800 pt-2 mt-auto">
+                            <div>
+                              <p className="text-[10px] text-slate-400 uppercase tracking-wider font-semibold mb-0.5">Transaction ID</p>
+                              <p className="font-mono text-[11px] text-slate-600 dark:text-slate-400 truncate">{item.txnId || item.id}</p>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+                      );
+                    })
+                  )}
+                </div>
               ) : (
                 <div className="overflow-y-auto flex-1">
                   <table className="w-full text-left text-sm text-slate-600 dark:text-slate-400">
@@ -1354,6 +1385,8 @@ export default function UserPortal({ userId }) {
                           const dateObj = rawDate ? new Date(rawDate) : null;
                           const dateStr = dateObj ? dateObj.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : null;
                           const timeStr = dateObj ? dateObj.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }) : null;
+                          const isRejected = item.status === 'REJECTED' || item.status === 'CANCELLED';
+                          const isDebited = !isRejected && item.direction === 'OUT';
                           return (
                             <tr key={item.id || item.txnId} className="border-b border-slate-100 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
                               <td className="px-4 py-3">
@@ -1362,20 +1395,32 @@ export default function UserPortal({ userId }) {
                               </td>
                               <td className="px-4 py-3">
                                 <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[10px] font-bold ${
-                                  item.direction === 'OUT' ? 'bg-red-50 text-red-700 border border-red-200 dark:bg-red-900/20 dark:border-red-800/50' : 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50'
+                                  isRejected
+                                    ? 'bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300'
+                                    : isDebited
+                                    ? 'bg-amber-50 text-amber-700 border border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/50'
+                                    : 'bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-900/20 dark:border-emerald-800/50'
                                 }`}>
-                                  {item.direction === 'OUT' ? '📤 Out' : '📥 In'}
+                                  {isRejected ? '🚫 Rejected' : isDebited ? '📤 Debited' : '📥 Credited'}
                                 </span>
                               </td>
                               <td className="px-4 py-3 font-bold text-slate-800 dark:text-slate-200">{counterpartyName}</td>
-                              <td className={`px-4 py-3 font-black ${item.direction === 'OUT' ? 'text-red-600 dark:text-red-400' : 'text-emerald-600 dark:text-emerald-400'}`}>
-                                {item.direction === 'OUT' ? '-' : '+'}£{Number(item.amount).toLocaleString()}
+                              <td className={`px-4 py-3 font-black ${
+                                isRejected
+                                  ? 'text-rose-600 dark:text-rose-400'
+                                  : isDebited
+                                  ? 'text-amber-600 dark:text-amber-400'
+                                  : 'text-emerald-600 dark:text-emerald-400'
+                              }`}>
+                                {isRejected ? '' : isDebited ? '-' : '+'}£{Number(item.amount).toLocaleString()}
                               </td>
                               <td className="px-4 py-3">
                                 <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  item.status === 'COMMITTED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
-                                  : item.status === 'APPROVED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                  : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
+                                  isRejected
+                                    ? 'bg-rose-100 text-rose-700 border border-rose-300 dark:bg-rose-950/50 dark:text-rose-300 dark:border-rose-800'
+                                    : item.status === 'COMMITTED' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400'
+                                    : item.status === 'APPROVED' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                    : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'
                                 }`}>
                                   {item.status}
                                 </span>
@@ -1659,16 +1704,13 @@ export default function UserPortal({ userId }) {
                   <h3 className="text-lg font-black text-slate-900 dark:text-slate-100 tracking-tight font-heading">
                     High-Value Compliance Review
                   </h3>
-                  <p className="text-[10px] font-black text-amber-600 dark:text-amber-400 uppercase tracking-widest font-mono">
-                    Canton Ledger Hold Active
-                  </p>
                 </div>
                 <div className="bg-amber-50/50 dark:bg-amber-950/20 rounded-2xl p-4 border border-amber-200/40 dark:border-amber-900/20 text-left space-y-2.5 text-xs text-slate-700 dark:text-slate-300 font-semibold leading-relaxed">
                   <p>
                     Your transfer of <strong className="text-slate-900 dark:text-white">£{Number(transferPrompt.amount).toLocaleString()}</strong> to <strong className="text-slate-900 dark:text-white">{getUserById(transferPrompt.toUserId)?.displayName || transferPrompt.toUserId}</strong> is a high-value transaction.
                   </p>
                   <p className="text-amber-800 dark:text-amber-400">
-                    ⚠️ It is currently being monitored & reviewed by compliance administrators on the Canton ledger. Funds are safely locked in smart ledger escrow pending approval.
+                    ⚠️ It is currently being monitored & reviewed by compliance administrators. Funds are safely locked in smart ledger escrow pending approval.
                   </p>
                 </div>
               </>
